@@ -51,15 +51,15 @@
       <!-- メインナビゲーション -->
       <nav style="border-top:1px solid #f1f5f9;background:#fff;">
         <div style="max-width:1200px;margin:0 auto;padding:0 16px;display:flex;gap:20px;height:44px;align-items:center;">
-          <router-link to="/" style="color:#E60033;text-decoration:none;font-weight:600;border-bottom:2px solid #E60033;padding:12px 0;">おすすめ</router-link>
-          <router-link to="/mylist" style="color:#111827;text-decoration:none;">マイリスト</router-link>
-          <router-link to="/shops" style="color:#111827;text-decoration:none;">メルカリShops</router-link>
-          <router-link to="/games" style="color:#111827;text-decoration:none;">ゲーム・おもちゃ・グッズ</router-link>
-          <router-link to="/books" style="color:#111827;text-decoration:none;">本・雑誌・漫画</router-link>
-          <router-link to="/mens" style="color:#111827;text-decoration:none;">メンズ</router-link>
-          <router-link to="/ladies" style="color:#111827;text-decoration:none;">レディース</router-link>
-          <router-link to="/kids" style="color:#111827;text-decoration:none;">ベビー・キッズ</router-link>
-          <router-link to="/all" style="color:#111827;text-decoration:none;">すべて見る</router-link>
+          <router-link to="/" style="color:#E60033;text-decoration:none;font-weight:600;border-bottom:2px solid #E60033;padding:12px 0;font-size:14px;">おすすめ</router-link>
+          <router-link to="/mylist" style="color:#111827;text-decoration:none;font-size:14px;">マイリスト</router-link>
+          <router-link to="/shops" style="color:#111827;text-decoration:none;font-size:14px;">メルカリShops</router-link>
+          <router-link to="/games" style="color:#111827;text-decoration:none;font-size:14px;">ゲーム・おもちゃ・グッズ</router-link>
+          <router-link to="/books" style="color:#111827;text-decoration:none;font-size:14px;">本・雑誌・漫画</router-link>
+          <router-link to="/mens" style="color:#111827;text-decoration:none;font-size:14px;">メンズ</router-link>
+          <router-link to="/ladies" style="color:#111827;text-decoration:none;font-size:14px;">レディース</router-link>
+          <router-link to="/kids" style="color:#111827;text-decoration:none;font-size:14px;">ベビー・キッズ</router-link>
+          <router-link to="/all" style="color:#111827;text-decoration:none;font-size:14px;">すべて見る</router-link>
         </div>
       </nav>
     </header>
