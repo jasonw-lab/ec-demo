@@ -7,10 +7,10 @@
 
     <!-- 掘り出し物セクション -->
     <div style="margin-bottom:24px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <h2 style="margin:0;font-size:16px;font-weight:600;">掘り出し物300円オークション</h2>
-          <router-link to="/products" style="color:#3b82f6;text-decoration:none;font-size:14px;">すべて見る ></router-link>
-        </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 style="margin:0;font-size:16px;font-weight:600;">掘り出し物300円オークション</h2>
+        <a @click="showUnderConstruction" style="color:#3b82f6;text-decoration:none;font-size:14px;cursor:pointer;">すべて見る ></a>
+      </div>
       
       <!-- 商品グリッド -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
@@ -29,33 +29,38 @@
       </div>
     </div>
 
-    <!-- 商品一覧へのリンク -->
-    <!-- <div style="text-align:center;margin:32px 0;">
-      <router-link to="/products" style="display:inline-block;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:16px 32px;text-decoration:none;font-weight:600;font-size:18px;">
-        すべての商品を見る
-      </router-link>
-    </div> -->
-
-    <!-- 人気のブランドセクション -->
-    <!-- <div style="margin-top:32px;">
- 
-  </div>     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h2 style="margin:0;font-size:20px;font-weight:600;">人気のブランド</h2>
-        <router-link to="/products" style="color:#3b82f6;text-decoration:none;font-size:14px;">すべて見る ></router-link>
+    <!-- 工事中メッセージモーダル -->
+    <div v-if="showModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;">
+      <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;max-width:400px;margin:16px;">
+        <div style="font-size:48px;margin-bottom:16px;">🚧</div>
+        <h3 style="margin:0 0 16px 0;font-size:20px;font-weight:600;color:#111827;">工事中</h3>
+        <p style="margin:0 0 24px 0;color:#6b7280;line-height:1.5;">この機能は現在開発中です。<br>もうしばらくお待ちください。</p>
+        <button @click="hideModal" style="background:#ff6b6b;color:#fff;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-weight:600;font-size:16px;">
+          閉じる
+        </button>
       </div>
-      <div style="background:#fff;border-radius:8px;padding:24px;text-align:center;color:#6b7280;">
-        ブランド情報を読み込み中...
-      </div>　-->
-    </div> 
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useStore, type Product } from '../store'
 
 const store = useStore()
+const showModal = ref<boolean>(false)
 
-function add(product: Product): void { store.addToCart(product, 1) }
+function add(product: Product): void { 
+  store.addToCart(product, 1) 
+}
+
+function showUnderConstruction() {
+  showModal.value = true
+}
+
+function hideModal() {
+  showModal.value = false
+}
 
 // オークション商品（掘り出し物）
 const auctionProducts = computed<Product[]>(() => {
@@ -67,8 +72,7 @@ const auctionProducts = computed<Product[]>(() => {
     { id: 'auction-5', name: 'LooseFit 48 Dickies ショートパンツ ハーフパンツ 4XL相当', price: 300, imageUrl: '/product/LooseFit.jpg' } as Product,
     { id: 'auction-6', name: 'ビューティーアンドユース ユナイテッドアローズ チェックシャツ...', price: 300, imageUrl: '/product/Vanity_United.jpg' } as Product,
     { id: 'auction-7', name: 'ヴィンテージ90s メイドインアメリカusa カレッジ スウェットフーディ 古着..', price: 300, imageUrl: '/product/edwards.jpg' } as Product,
-    { id: 'auction-7', name: 'NMB48 北川謙二 CD/DVD レンタル専用', price: 300, imageUrl: '/product/nmb48.jpg' } as Product
-
+    { id: 'auction-8', name: 'NMB48 北川謙二 CD/DVD レンタル専用', price: 300, imageUrl: '/product/nmb48.jpg' } as Product
   ]
 })
 </script>
