@@ -8,21 +8,21 @@
     <!-- 掘り出し物セクション -->
     <div style="margin-bottom:24px;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <h2 style="margin:0;font-size:20px;font-weight:600;">掘り出し物300円オークション</h2>
+          <h2 style="margin:0;font-size:16px;font-weight:600;">掘り出し物300円オークション</h2>
           <router-link to="/products" style="color:#3b82f6;text-decoration:none;font-size:14px;">すべて見る ></router-link>
         </div>
       
       <!-- 商品グリッド -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
-        <div v-for="(p, idx) in auctionProducts" :key="p.id" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div v-for="(p, idx) in auctionProducts" :key="p.id" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;">
           <img :src="p.imageUrl || '/product.svg'" alt="商品画像" style="width:100%;height:240px;object-fit:cover;background:#f9fafb" />
-          <div style="padding:12px;">
+          <div style="padding:12px;display:flex;flex-direction:column;flex:1;">
             <div style="font-size:14px;line-height:1.4;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
               {{ p.name }}
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;">
               <div style="color:#ff6b6b;font-weight:700;font-size:16px;">現在¥300</div>
-              <button @click="add(p)" style="background:#ff6b6b;color:white;border:none;border-radius:6px;padding:8px;cursor:pointer;font-size:14px;">カートに追加</button>
+              <button @click="add(p)" style="background:#ff6b6b;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;">カートに追加</button>
             </div>
           </div>
         </div>
