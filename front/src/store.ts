@@ -42,6 +42,13 @@ export function useStore() {
     if (index >= 0) state.cart.splice(index, 1)
   }
 
+  function updateCartQuantity(productId: CartItem['productId'], quantity: number): void {
+    const item = state.cart.find((item) => item.productId === productId)
+    if (item) {
+      item.quantity = quantity
+    }
+  }
+
   function clearCart(): void {
     state.cart.splice(0, state.cart.length)
   }
@@ -52,6 +59,7 @@ export function useStore() {
     },
     addToCart,
     removeFromCart,
+    updateCartQuantity,
     clearCart,
   }
 }
