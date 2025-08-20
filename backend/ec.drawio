@@ -1,0 +1,113 @@
+<!;align=center;image;fontSize=12;image=img/lib/mscae/long_vertical_rectangle.svg;" vertex="1" parent="1">
+          <mxGeometry x="255" y="130" width="10" height="600" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="2. 決済作成リクエスト&lt;br&gt;(POST /api/payments/create)" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="270" y="160" as="sourcePoint" />
+            <mxPoint x="495" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="13" value="" style="html=1;points=;align=center;image;fontSize=12;image=img/lib/mscae/long_vertical_rectangle.svg;" vertex="1" parent="1">
+          <mxGeometry x="495" y="160" width="10" height="540" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="3. 注文データをDBに保存&lt;br&gt;(ステータス: PENDING)" style="endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="190" as="sourcePoint" />
+            <mxPoint x="500" y="210" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="15" value="4. コード作成リクエスト&lt;br&gt;(POST /v2/codes)" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="510" y="240" as="sourcePoint" />
+            <mxPoint x="735" y="240" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="16" value="" style="html=1;points=;align=center;image;fontSize=12;image=img/lib/mscae/long_vertical_rectangle.svg;" vertex="1" parent="1">
+          <mxGeometry x="735" y="240" width="10" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="Note" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
+          <mxGeometry x="540" y="255" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="HMAC署名が必要" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="17">
+          <mxGeometry x="5" y="5" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="5. 決済URLを返却" style="endArrow=classic;html=1;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="735" y="300" as="sourcePoint" />
+            <mxPoint x="510" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="20" value="6. 決済URLを返却" style="endArrow=classic;html=1;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="495" y="340" as="sourcePoint" />
+            <mxPoint x="270" y="340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="21" value="7. QRコード表示" style="endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="370" as="sourcePoint" />
+            <mxPoint x="260" y="390" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="22" value="8. QRコードをスキャンして支払い承認" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="80" y="410" as="sourcePoint" />
+            <mxPoint x="735" y="410" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="23" value="loop" style="shape=umlFrame;whiteSpace=wrap;html=1;width=120;height=30;" vertex="1" parent="1">
+          <mxGeometry x="180" y="440" width="380" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="[支払い完了 or タイムアウトまで]" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;" vertex="1" parent="23">
+          <mxGeometry x="5" y="5" width="155" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="9. ステータス確認&lt;br&gt;(GET /api/orders/.../status)" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="270" y="480" as="sourcePoint" />
+            <mxPoint x="495" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="26" value="10. DBからステータスを返却" style="endArrow=classic;html=1;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="495" y="520" as="sourcePoint" />
+            <mxPoint x="270" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="27" value="11. Webhook通知 (PAYMENT.SUCCESS)" style="endArrow=open;html=1;rounded=0;dashed=1;endFill=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="735" y="620" as="sourcePoint" />
+            <mxPoint x="505" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="28" value="Note" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
+          <mxGeometry x="540" y="630" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="29" value="署名検証が必要" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="28">
+          <mxGeometry x="5" y="5" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="30" value="12. DBの注文ステータスを更新&lt;br&gt;(ステータス: COMPLETED)" style="endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="650" as="sourcePoint" />
+            <mxPoint x="500" y="670" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="31" value="13. ポーリング停止" style="endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="680" as="sourcePoint" />
+            <mxPoint x="260" y="700" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="32" value="14. 支払い成功ページを表示" style="endArrow=classic;html=1;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="255" y="720" as="sourcePoint" />
+            <mxPoint x="80" y="720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>]]>
