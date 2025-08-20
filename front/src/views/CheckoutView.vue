@@ -60,7 +60,7 @@
       <!-- 決済ボタン -->
       <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
         <button 
-          @click="submit" 
+          @click="goToPaymentDetail" 
           style="width:100%;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:16px;cursor:pointer;font-size:16px;font-weight:600;margin-bottom:16px;">
           注文確定 & PayPay へ
         </button>
@@ -94,7 +94,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useStore, apiBase, type CartItem } from '../store'
+import { useRouter } from 'vue-router'
+
 const store = useStore()
+const router = useRouter()
 const cart: CartItem[] = store.cart
 const name = ref<string>('山田太郎')
 const email = ref<string>('taro@example.com')
@@ -122,5 +125,28 @@ async function simulateSuccess(): Promise<void> {
     paid.value = true
     store.clearCart()
   }
+}
+
+async function goToPaymentDetail(): Promise<void> {
+  // 既存のsubmitロジックを使ってサーバ側で注文を作成
+  const body = {
+    customerName: name.value,
+    customerEmail: email.value,
+    items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
+  }
+  const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+  const data: { paymentUrl: string; orderId: string; amount?: number } = await res.json()
+  paymentUrl.value = data.paymentUrl
+  orderId.value = data.orderId
+
+  // 支払い詳細画面へ遷移（必要情報をクエリで受け渡し）
+  router.push({
+    path: '/payment-detail',
+    query: {
+      total: String(total.value),
+      orderId: orderId.value,
+      paymentUrl: paymentUrl.value,
+    }
+  })
 }
 </script>
