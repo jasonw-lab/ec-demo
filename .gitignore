@@ -84,3 +84,6 @@ update*.py
 update*.sh
 
 
+
+# dotenv files
+.env

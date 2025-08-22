@@ -40,7 +40,7 @@
             <input 
               v-model="name" 
               required 
-              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;focus:border-color:#ff6b6b;"
+              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;"
               placeholder="山田太郎"
             />
           </div>
@@ -50,7 +50,7 @@
               v-model="email" 
               type="email" 
               required 
-              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;focus:border-color:#ff6b6b;"
+              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;"
               placeholder="taro@example.com"
             />
           </div>
@@ -113,8 +113,8 @@ async function submit(): Promise<void> {
     items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
   }
   const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
-  const data: { paymentUrl: string; orderId: string } = await res.json()
-  paymentUrl.value = data.paymentUrl
+  const data: { orderId: string; amount?: number; status?: string } = await res.json()
+  paymentUrl.value = ''
   orderId.value = data.orderId
 }
 
@@ -128,24 +128,23 @@ async function simulateSuccess(): Promise<void> {
 }
 
 async function goToPaymentDetail(): Promise<void> {
-  // 既存のsubmitロジックを使ってサーバ側で注文を作成
+  // サーバ側で注文を作成（QRは別APIで取得）
   const body = {
     customerName: name.value,
     customerEmail: email.value,
     items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
   }
   const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
-  const data: { paymentUrl: string; orderId: string; amount?: number } = await res.json()
-  paymentUrl.value = data.paymentUrl
+  const data: { orderId: string; amount?: number; status?: string } = await res.json()
+  paymentUrl.value = ''
   orderId.value = data.orderId
 
-  // 支払い詳細画面へ遷移（必要情報をクエリで受け渡し）
+  // 支払い詳細画面へ遷移（QR取得は詳細画面で実施）
   router.push({
     path: '/payment-detail',
     query: {
       total: String(total.value),
       orderId: orderId.value,
-      paymentUrl: paymentUrl.value,
     }
   })
 }
