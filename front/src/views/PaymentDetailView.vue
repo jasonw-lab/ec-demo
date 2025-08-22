@@ -174,13 +174,13 @@ const total = ref<number>(0)
 const orderId = ref<string>('')
 const paymentUrl = ref<string>('')
 
-// QR画像URL（外部サービスで生成）
-const qrImgUrl = computed(() => paymentUrl.value ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(paymentUrl.value)}` : '')
+// QR画像URL（バックエンドから受け取ったURLをそのまま利用）
+const qrImgUrl = computed(() => paymentUrl.value || '')
 
 let pollTimer: number | undefined
 const pollingStart = ref<number>(0)
 const pollingTimeoutMs = 120_000
-const pollIntervalMs = 2000
+const pollIntervalMs = 4000
 
 function handleLogin() {
   showPopup.value = true
@@ -231,12 +231,28 @@ async function simulateSuccess() {
   } catch {}
 }
 
-onMounted(() => {
+async function fetchQr(): Promise<void> {
+  if (!orderId.value) return
+  try {
+    const res = await fetch(`${apiBase}/payments/${orderId.value}/qrcode`)
+    if (res.ok) {
+      const data = await res.json()
+      paymentUrl.value = String(data.paymentUrl || '')
+      if (paymentUrl.value) {
+        startPolling()
+      }
+    }
+  } catch {}
+}
+
+onMounted(async () => {
   const q = route.query
   total.value = Number(q.total || 0)
   orderId.value = String(q.orderId || '')
   paymentUrl.value = String(q.paymentUrl || '')
-  if (paymentUrl.value && orderId.value) {
+  if (orderId.value && !paymentUrl.value) {
+    await fetchQr()
+  } else if (paymentUrl.value && orderId.value) {
     startPolling()
   }
 })
