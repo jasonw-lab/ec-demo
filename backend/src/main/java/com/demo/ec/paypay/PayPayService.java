@@ -126,84 +126,13 @@ public class PayPayService {
     }
 
     /**
-     * Attempt to use the official PayPay Java SDK via reflection (so build doesn’t break if the SDK JAR isn’t available).
-     * Returns the redirect URL if successful; otherwise null.
+     * PayPay公式Java SDKを前提に、分かりやすく実装したQRコード作成処理。
+     * 正常に作成できた場合はリダイレクトURLを返します。失敗した場合は null を返します。
      */
-    private String createPaymentUrlUsingSdk(String orderId, BigDecimal amount, Map<String, Object> metadata) throws Exception {
-        // Load classes reflectively
-        Class<?> apiClientCl = Class.forName("jp.ne.paypay.ApiClient");
-        Class<?> codeApiCl = Class.forName("jp.ne.paypay.api.CodeApi");
-        // Try request classes with possible names
-        Class<?> moneyCl;
-        try { moneyCl = Class.forName("jp.ne.paypay.model.MoneyAmount"); } catch (ClassNotFoundException e) { moneyCl = Class.forName("jp.ne.paypay.model.Amount"); }
-        Class<?> createQrReqCl;
-        try { createQrReqCl = Class.forName("jp.ne.paypay.model.CreateQRCodeRequest"); } catch (ClassNotFoundException e) { createQrReqCl = Class.forName("jp.ne.paypay.model.CreateQrCodeRequest"); }
-
-        Object client = apiClientCl.getConstructor().newInstance();
-        // base URL
-        try { apiClientCl.getMethod("setBasePath", String.class).invoke(client, properties.getBaseUrl()); } catch (NoSuchMethodException ignore) {
-            try { apiClientCl.getMethod("setBaseUrl", String.class).invoke(client, properties.getBaseUrl()); } catch (NoSuchMethodException ignored) {}
-        }
-        // credentials
-        try { apiClientCl.getMethod("setApiKey", String.class).invoke(client, properties.getApiKey()); } catch (NoSuchMethodException ignore) {}
-        try { apiClientCl.getMethod("setApiSecret", String.class).invoke(client, properties.getApiSecret()); } catch (NoSuchMethodException ignore) {}
-        if (!isBlank(properties.getMerchantId())) {
-            try { apiClientCl.getMethod("setAssumeMerchant", String.class).invoke(client, properties.getMerchantId()); } catch (NoSuchMethodException ignore) {}
-        }
-
-        // Build request
-        long jpy = amount.setScale(0, BigDecimal.ROUND_HALF_UP).longValueExact();
-        long requestedAt = Instant.now().getEpochSecond();
-
-        Object money = moneyCl.getConstructor().newInstance();
-        // Try setters: setAmount(BigDecimal) or setAmount(Long)
-        try { moneyCl.getMethod("setAmount", BigDecimal.class).invoke(money, BigDecimal.valueOf(jpy)); } catch (NoSuchMethodException ex) { moneyCl.getMethod("setAmount", Long.TYPE).invoke(money, jpy); }
-        try { moneyCl.getMethod("setCurrency", String.class).invoke(money, "JPY"); } catch (NoSuchMethodException ignore) {}
-
-        Object req = createQrReqCl.getConstructor().newInstance();
-        // merchantPaymentId
-        try { createQrReqCl.getMethod("setMerchantPaymentId", String.class).invoke(req, orderId); } catch (NoSuchMethodException ignore) {}
-        // amount
-        try { createQrReqCl.getMethod("setAmount", moneyCl).invoke(req, money); } catch (NoSuchMethodException ignore) {}
-        // codeType
-        try { createQrReqCl.getMethod("setCodeType", String.class).invoke(req, "ORDER_QR"); } catch (NoSuchMethodException ignore) {}
-        // requestedAt
-        try { createQrReqCl.getMethod("setRequestedAt", Long.TYPE).invoke(req, requestedAt); } catch (NoSuchMethodException ignore) {}
-        // redirect
-        String redirectUrl = properties.getCallbackUrl() + "?orderId=" + orderId;
-        try { createQrReqCl.getMethod("setRedirectUrl", String.class).invoke(req, redirectUrl); } catch (NoSuchMethodException ignore) {}
-        try { createQrReqCl.getMethod("setRedirectType", String.class).invoke(req, "WEB_LINK"); } catch (NoSuchMethodException ignore) {}
-
-        // Instantiate API and invoke create method
-        Object codeApi = codeApiCl.getConstructor(apiClientCl).newInstance(client);
-        Object response = null;
-        Exception last = null;
-        for (String m : new String[]{"createQRCode", "createQrcode", "createCode"}) {
-            try {
-                response = codeApiCl.getMethod(m, createQrReqCl).invoke(codeApi, req);
-                last = null;
-                break;
-            } catch (NoSuchMethodException e) {
-                last = e;
-            }
-        }
-        if (last != null) throw last;
-        if (response == null) return null;
-
-        // Try to get URL from response
-        try {
-            Object url = response.getClass().getMethod("getUrl").invoke(response);
-            if (url != null) return String.valueOf(url);
-        } catch (NoSuchMethodException ignore) {}
-        try {
-            Object data = response.getClass().getMethod("getData").invoke(response);
-            if (data != null) {
-                try {
-                    Object url = data.getClass().getMethod("getUrl").invoke(data);
-                    if (url != null) return String.valueOf(url);
-                } catch (NoSuchMethodException ignore) {}
-            }
-        } catch (NoSuchMethodException ignore) {}
+    private String createPaymentUrlUsingSdk(String orderId, BigDecimal amount, Map<String, Object> metadata) {
+        // Reflection-free implementation: SDK path disabled in this build.
+        // We rely solely on the REST implementation in createPaymentUrl().
+        log.info("createPaymentUrlUsingSdk disabled (no reflection, no SDK); using REST fallback. orderId={}", orderId);
         return null;
     }
 
@@ -270,4 +199,5 @@ public class PayPayService {
     }
 
     private static boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
+
 }
