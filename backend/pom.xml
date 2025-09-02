@@ -45,6 +45,17 @@
       <artifactId>spring-dotenv</artifactId>
       <version>4.0.0</version>
     </dependency>
+    <!-- QR Code generation: ZXing -->
+    <dependency>
+      <groupId>com.google.zxing</groupId>
+      <artifactId>core</artifactId>
+      <version>3.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.zxing</groupId>
+      <artifactId>javase</artifactId>
+      <version>3.5.1</version>
+    </dependency>
     <!-- PayPay Official Java SDK via JitPack -->
     <dependency>
       <groupId>com.github.paypay</groupId>
@@ -54,6 +65,12 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <version>5.4.0</version>
       <scope>test</scope>
     </dependency>
 

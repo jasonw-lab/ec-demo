@@ -1,5 +1,4 @@
-<template>
-  <div style="display:flex;min-height:100vh;background:#f7f7f8;">
+<template> <div style="display:flex;min-height:100vh;background:#f7f7f8;">
     <!-- 左側：支払い詳細とQRコード -->
     <div style="flex:2;padding:40px;background:#fff;">
       <!-- ヘッダー -->
@@ -32,8 +31,11 @@
         <div v-if="qrImgUrl" style="display:inline-block;padding:16px;background:#f8fafc;border-radius:12px;border:2px solid #4ECDC4;">
           <img :src="qrImgUrl" alt="PayPay QRコード" style="width:200px;height:200px;" />
         </div>
-        <div v-else style="display:inline-block;padding:16px;background:#f8fafc;border-radius:12px;border:2px solid #4ECDC4;width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:#6b7280;">
+        <div v-else-if="isLoadingQr" style="display:inline-block;padding:16px;background:#f8fafc;border-radius:12px;border:2px solid #4ECDC4;width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:#6b7280;">
           QRコード読み込み中...
+        </div>
+        <div v-else style="display:inline-block;padding:16px;background:#f8fafc;border-radius:12px;border:2px solid #4ECDC4;width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:#6b7280;">
+          QRコードが利用できません
         </div>
       </div>
       <div style="text-align:center;margin-bottom:32px;">
@@ -173,6 +175,7 @@ const showPopup = ref(false)
 const total = ref<number>(0)
 const orderId = ref<string>('')
 const paymentUrl = ref<string>('')
+const isLoadingQr = ref<boolean>(false)
 
 // QR画像URL（バックエンドから受け取ったURLをそのまま利用）
 const qrImgUrl = computed(() => paymentUrl.value || '')
@@ -233,6 +236,7 @@ async function simulateSuccess() {
 
 async function fetchQr(): Promise<void> {
   if (!orderId.value) return
+  isLoadingQr.value = true
   try {
     const res = await fetch(`${apiBase}/payments/${orderId.value}/qrcode`)
     if (res.ok) {
@@ -242,7 +246,11 @@ async function fetchQr(): Promise<void> {
         startPolling()
       }
     }
-  } catch {}
+  } catch (error) {
+    console.error('Failed to fetch QR code:', error)
+  } finally {
+    isLoadingQr.value = false
+  }
 }
 
 onMounted(async () => {
