@@ -78,52 +78,71 @@ public class CheckoutController {
         if (order == null) return ResponseEntity.notFound().build();
 
         try {
-            Map paypay = payPayService.getPaymentDetails(id);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> paypay = payPayService.getPaymentDetails(id);
             if (paypay != null) {
-                // Extract PayPay status from response
-                String paypayStatus = null;
-                Object data = paypay.get("data");
-                if (data instanceof Map<?,?> dm) {
-                    Object s = ((Map<?,?>) data).get("status");
-                    if (s == null) s = ((Map<?,?>) data).get("paymentStatus");
-                    if (s != null) paypayStatus = String.valueOf(s);
-                }
-                if (paypayStatus == null) {
-                    Object s = paypay.get("status");
-                    if (s != null) paypayStatus = String.valueOf(s);
-                }
-
-                if (paypayStatus != null) {
-                    order.put("paypayStatus", paypayStatus);
-                    String localStatus;
-                    switch (paypayStatus.toUpperCase()) {
-                        case "COMPLETED":
-                        case "SUCCESS":
-                            localStatus = "PAID";
-                            break;
-                        case "AUTHORIZED":
-                            localStatus = "AUTHORIZED";
-                            break;
-                        case "CREATED":
-                        case "PENDING":
-                        case "ACTIVE":
-                            localStatus = "PENDING_PAYMENT";
-                            break;
-                        case "CANCELED":
-                        case "CANCELLED":
-                        case "FAILED":
-                        case "EXPIRED":
-                            localStatus = "PAYMENT_FAILED";
-                            break;
-                        default:
-                            localStatus = String.valueOf(order.getOrDefault("status", "PENDING_PAYMENT"));
+                // Check for PayPay API errors first
+                Object error = paypay.get("error");
+                if (error instanceof Map) {
+                    Map<?, ?> errorMap = (Map<?, ?>) error;
+                    String errorCode = String.valueOf(errorMap.get("code"));
+                    String errorMessage = String.valueOf(errorMap.get("message"));
+                    log.warn("PayPay API error for order {}: {} - {}", id, errorCode, errorMessage);
+                    order.put("paypayError", Map.of("code", errorCode, "message", errorMessage));
+                    
+                    // Handle specific error codes that should fail the payment
+                    if ("00000900".equals(errorCode) || "UNKNOWN".equals(errorCode)) {
+                        order.put("status", "PAYMENT_FAILED");
+                        order.put("paypayStatus", "ERROR");
                     }
-                    order.put("status", localStatus);
+                } else {
+                    // Extract PayPay status from response
+                    String paypayStatus = null;
+                    Object data = paypay.get("data");
+                    if (data instanceof Map<?,?>) {
+                        Map<?,?> dataMap = (Map<?,?>) data;
+                        Object s = dataMap.get("status");
+                        if (s == null) s = dataMap.get("paymentStatus");
+                        if (s != null) paypayStatus = String.valueOf(s);
+                    }
+                    if (paypayStatus == null) {
+                        Object s = paypay.get("status");
+                        if (s != null) paypayStatus = String.valueOf(s);
+                    }
+
+                    if (paypayStatus != null) {
+                        order.put("paypayStatus", paypayStatus);
+                        String localStatus;
+                        switch (paypayStatus.toUpperCase()) {
+                            case "COMPLETED":
+                            case "SUCCESS":
+                                localStatus = "PAID";
+                                break;
+                            case "AUTHORIZED":
+                                localStatus = "AUTHORIZED";
+                                break;
+                            case "CREATED":
+                            case "PENDING":
+                            case "ACTIVE":
+                                localStatus = "PENDING_PAYMENT";
+                                break;
+                            case "CANCELED":
+                            case "CANCELLED":
+                            case "FAILED":
+                            case "EXPIRED":
+                                localStatus = "PAYMENT_FAILED";
+                                break;
+                            default:
+                                localStatus = String.valueOf(order.getOrDefault("status", "PENDING_PAYMENT"));
+                        }
+                        order.put("status", localStatus);
+                    }
                 }
             }
         } catch (Exception e) {
             // Do not break the flow if PayPay call fails; just return current stored order.
             log.error("CheckoutController.getOrder error when fetching PayPay details for id={}: {}", id, e.getMessage(), e);
+            order.put("paypayError", Map.of("code", "SYSTEM_ERROR", "message", e.getMessage()));
         }
 
         log.info("CheckoutController.getOrder END response: order={}", order);
