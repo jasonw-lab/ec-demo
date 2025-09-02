@@ -1,9 +1,9 @@
-package com.demo.ec.paypay;
+package com.demo.ec.pay;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "paypay")
-public class PayPayProperties {
+public class PayProperties {
     /** Enable calling PayPay API. If false, stubbed sandbox link is used. */
     private boolean enabled;
     /** PayPay API base URL (e.g., https://api.paypay.ne.jp for prod, https://stg-api.paypay.ne.jp for sandbox). */

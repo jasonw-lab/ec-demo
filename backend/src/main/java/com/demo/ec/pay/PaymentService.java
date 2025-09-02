@@ -1,0 +1,21 @@
+package com.demo.ec.pay;
+
+import jp.ne.paypay.model.PaymentDetails;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+/**
+ * PaymentService interface that defines PayPay-related payment operations.
+ * Implemented by PaypayPaymentServiceImpl.
+ */
+public interface PaymentService {
+    // High-level operations used by controller
+    String createPaymentUrl(String merchantPaymentId, BigDecimal amountJPY, Map<String, Object> metadata);
+    @SuppressWarnings({"rawtypes"})
+    Map getPaymentDetails(String merchantPaymentId);
+
+    // Low-level SDK operations used by tests/integration
+    String createPaymentUrlUsingSdk(String merchantPaymentId, BigDecimal amountJPY, Map<String, Object> metadata);
+    PaymentDetails getCodesPaymentDetailsUsingSdk(String merchantPaymentId);
+}

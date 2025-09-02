@@ -1,6 +1,6 @@
 package com.demo.ec;
 
-import com.demo.ec.paypay.PayPayProperties;
+import com.demo.ec.pay.PayProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-@EnableConfigurationProperties(PayPayProperties.class)
+@EnableConfigurationProperties(PayProperties.class)
 public class EcBackendApplication {
 
     public static void main(String[] args) {

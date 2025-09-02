@@ -4,12 +4,24 @@ import com.demo.ec.model.CartItem;
 import com.demo.ec.model.OrderRequest;
 import com.demo.ec.model.Product;
 import com.demo.ec.repo.DemoData;
-import com.demo.ec.paypay.PayPayService;
+import com.demo.ec.pay.PaymentService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+// ZXing for QR code generation
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.qrcode.QRCodeWriter;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -22,9 +34,9 @@ public class CheckoutController {
 
     private static final Logger log = LoggerFactory.getLogger(CheckoutController.class);
 
-    private final PayPayService payPayService;
+    private final PaymentService payPayService;
 
-    public CheckoutController(PayPayService payPayService) {
+    public CheckoutController(PaymentService payPayService) {
         this.payPayService = payPayService;
     }
 
@@ -129,7 +141,7 @@ public class CheckoutController {
     }
 
     @GetMapping("/payments/{id}/qrcode")
-    public ResponseEntity<Map<String, Object>> getQRCode(@PathVariable String id) {
+    public ResponseEntity<Map<String, String>> getQRCode(@PathVariable String id) {
         log.info("CheckoutController.getQRCode START request: id={}", id);
         Map<String, Object> order = (Map<String, Object>) DemoData.orders.get(id);
         if (order == null) return ResponseEntity.notFound().build();
@@ -142,13 +154,28 @@ public class CheckoutController {
         } else {
             total = BigDecimal.ZERO;
         }
-        String url = payPayService.createPaymentUrl(id, total, order);
-        // store on order for reference
-        order.put("paymentUrl", url);
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("orderId", id);
-        resp.put("paymentUrl", url);
-        log.info("CheckoutController.getQRCode END response: orderId={}, paymentUrl={}", id, url);
-        return ResponseEntity.ok(resp);
+        try {
+            String url = payPayService.createPaymentUrl(id, total, order);
+            if (url == null || url.isBlank()) {
+                log.error("CheckoutController.getQRCode error: empty paymentUrl for id={}", id);
+                return ResponseEntity.internalServerError().build();
+            }
+            int size = 256;
+            QRCodeWriter qrWriter = new QRCodeWriter();
+            java.util.Map<com.google.zxing.EncodeHintType, Object> hints = new java.util.HashMap<>();
+            hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+            BitMatrix matrix = qrWriter.encode(url, BarcodeFormat.QR_CODE, size, size, hints);
+            BufferedImage image = MatrixToImageWriter.toBufferedImage(matrix);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "PNG", baos);
+            String base64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+            Map<String, String> resp = new HashMap<>();
+            resp.put("base64Image", base64);
+            log.info("CheckoutController.getQRCode END response: base64 length={} for id={}", base64.length(), id);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            log.error("CheckoutController.getQRCode error for id={}: {}", id, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
