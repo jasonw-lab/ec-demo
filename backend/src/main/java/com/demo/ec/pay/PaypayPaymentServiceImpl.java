@@ -56,9 +56,25 @@ public class PaypayPaymentServiceImpl implements PaymentService {
             }
 
             PaymentApi api = new PaymentApi(client);
-            jp.ne.paypay.model.PaymentDetails details = api.getPaymentDetails(merchantPaymentId);
+            // Use codes-specific endpoint for Dynamic QR payments
+            jp.ne.paypay.model.PaymentDetails details = api.getCodesPaymentDetails(merchantPaymentId);
 
             Map result = new HashMap();
+            
+            // Check for error in result info
+            if (details != null && details.getResultInfo() != null) {
+                String resultCode = details.getResultInfo().getCode();
+                String resultMessage = details.getResultInfo().getMessage();
+                log.info("PayPay getPaymentDetails: resultCode={}, resultMessage={}", resultCode, resultMessage);
+                
+                // Handle specific error codes
+                if (resultCode != null && !"SUCCESS".equals(resultCode)) {
+                    log.warn("PayPay API returned error code: {} - {}", resultCode, resultMessage);
+                    result.put("error", Map.of("code", resultCode, "message", resultMessage));
+                    return result;
+                }
+            }
+            
             if (details != null && details.getData() != null) {
                 jp.ne.paypay.model.Payment payment = details.getData();
                 jp.ne.paypay.model.PaymentState.StatusEnum status = payment.getStatus();
@@ -71,7 +87,7 @@ public class PaypayPaymentServiceImpl implements PaymentService {
             return result.isEmpty() ? null : result;
         } catch (Exception e) {
             log.error("Failed to fetch PayPay payment details: {}", e.getMessage(), e);
-            return null;
+            return Map.of("error", Map.of("code", "UNKNOWN", "message", e.getMessage()));
         }
     }
 
@@ -112,18 +128,39 @@ public class PaypayPaymentServiceImpl implements PaymentService {
                     .merchantPaymentId(merchantPaymentId)
                     .codeType("ORDER_QR")
                     .amount(amount)
-                    .metadata(meta);
+                    .metadata(meta)
+                    .requestedAt(System.currentTimeMillis() / 1000L);
+
+            if (!isBlank(properties.getCallbackUrl())) {
+                req.redirectUrl(properties.getCallbackUrl());
+                req.redirectType(QRCode.RedirectTypeEnum.WEB_LINK);
+            }
 
             QRCodeDetails details = paymentApi.createQRCode(req);
             log.info("PayPay SDK returned QR Code details: {}", details);
+            
+            // Check for error in result info
+            if (details != null && details.getResultInfo() != null) {
+                String resultCode = details.getResultInfo().getCode();
+                String resultMessage = details.getResultInfo().getMessage();
+                log.info("PayPay createQRCode: resultCode={}, resultMessage={}", resultCode, resultMessage);
+                
+                // Handle specific error codes
+                if (resultCode != null && !"SUCCESS".equals(resultCode)) {
+                    String errorMsg = String.format("PayPay API returned error code: %s - %s", resultCode, resultMessage);
+                    log.error(errorMsg);
+                    throw new RuntimeException(errorMsg);
+                }
+            }
+            
             String url = null;
             if (details != null) {
                 QRCodeResponse data = details.getData();
                 if (data != null) {
-                    if (data.getUrl() != null) {
-                        url = data.getUrl();
-                    } else if (data.getDeeplink() != null) {
+                    if (data.getDeeplink() != null) {
                         url = data.getDeeplink();
+                    } else if (data.getUrl() != null) {
+                        url = data.getUrl();
                     }
                 }
             }

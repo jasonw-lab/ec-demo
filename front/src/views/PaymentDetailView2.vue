@@ -1,4 +1,5 @@
-<template> <div style="display:flex;min-height:100vh;background:#f7f7f8;">
+<template>
+  <div style="display:flex;min-height:100vh;background:#f7f7f8;">
     <!-- 左側：支払い詳細とQRコード -->
     <div style="flex:2;padding:40px;background:#fff;">
       <!-- ヘッダー -->
@@ -38,23 +39,6 @@
           QRコードが利用できません
         </div>
       </div>
-      
-      <!-- エラー表示 -->
-      <div v-if="paymentError" style="margin-top:24px;padding:16px;background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;text-align:center;">
-        <div style="font-size:16px;font-weight:600;color:#dc2626;margin-bottom:8px;">
-          支払いエラーが発生しました
-        </div>
-        <div style="font-size:14px;color:#991b1b;margin-bottom:8px;">
-          エラーコード: {{ paymentError.code }}
-        </div>
-        <div style="font-size:14px;color:#991b1b;margin-bottom:16px;">
-          {{ paymentError.message }}
-        </div>
-        <button @click="retryPayment" style="background:#E60033;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;">
-          再試行
-        </button>
-      </div>
-      
       <div style="text-align:center;margin-bottom:32px;">
         <a v-if="paymentUrl" :href="paymentUrl" target="_blank" style="color:#3b82f6;text-decoration:none;font-weight:600;">PayPay 決済ページを開く →</a>
       </div>
@@ -193,13 +177,9 @@ const total = ref<number>(0)
 const orderId = ref<string>('')
 const paymentUrl = ref<string>('')
 const isLoadingQr = ref<boolean>(false)
-// バックエンドから受け取る base64 画像（data URL として保持）
-const paymentImageDataUrl = ref<string>('')
-// エラー状態管理
-const paymentError = ref<{code: string, message: string} | null>(null)
 
-// QR画像URL（base64画像があれば優先、それ以外はURLを利用）
-const qrImgUrl = computed(() => paymentImageDataUrl.value || paymentUrl.value || '')
+// QR画像URL（バックエンドから受け取ったURLをそのまま利用）
+const qrImgUrl = computed(() => paymentUrl.value || '')
 
 let pollTimer: number | undefined
 const pollingStart = ref<number>(0)
@@ -219,28 +199,10 @@ async function startPolling() {
       const res = await fetch(`${apiBase}/orders/${orderId.value}`)
       if (res.ok) {
         const data = await res.json()
-        
-        // PayPayエラーの確認
-        if (data.paypayError) {
-          paymentError.value = {
-            code: data.paypayError.code,
-            message: data.paypayError.message
-          }
-          stopPolling()
-          return
-        }
-        
         if (data.status === 'PAID') {
           stopPolling()
           store.clearCart()
           router.push({ path: '/payment-success', query: { orderId: orderId.value, total: String(total.value) } })
-          return
-        } else if (data.status === 'PAYMENT_FAILED') {
-          stopPolling()
-          paymentError.value = {
-            code: 'PAYMENT_FAILED',
-            message: '支払いに失敗しました。もう一度お試しください。'
-          }
           return
         }
       }
@@ -273,13 +235,6 @@ async function simulateSuccess() {
   } catch {}
 }
 
-async function retryPayment() {
-  paymentError.value = null
-  paymentImageDataUrl.value = ''
-  paymentUrl.value = ''
-  await fetchQr()
-}
-
 async function fetchQr(): Promise<void> {
   if (!orderId.value) return
   isLoadingQr.value = true
@@ -287,13 +242,6 @@ async function fetchQr(): Promise<void> {
     const res = await fetch(`${apiBase}/payments/${orderId.value}/qrcode`)
     if (res.ok) {
       const data = await res.json()
-      // base64Image を優先して表示。存在しなければ従来の URL を利用
-      const base64 = String(data.base64Image || '')
-      if (base64) {
-        paymentImageDataUrl.value = `data:image/png;base64,${base64}`
-      } else {
-        paymentImageDataUrl.value = ''
-      }
       paymentUrl.value = String(data.paymentUrl || '')
       if (paymentUrl.value) {
         startPolling()
