@@ -177,8 +177,13 @@ public class PaypayPaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentDetails getCodesPaymentDetailsUsingSdk(String merchantPaymentId) {
+    public PaymentDetails getCodesPaymentDetailsUsingSdk(String merchantPaymentId, BigDecimal amountJPY) {
         Objects.requireNonNull(merchantPaymentId, "merchantPaymentId cannot be null");
+        Objects.requireNonNull(amountJPY, "amountJPY cannot be null");
+        if (amountJPY.signum() < 0) {
+            throw new IllegalArgumentException("amountJPY cannot be negative");
+        }
+        log.info("getCodesPaymentDetailsUsingSdk called with merchantPaymentId={}, amountJPY={}", merchantPaymentId, amountJPY);
 
         if (!properties.isEnabled()) {
             throw new IllegalStateException("PayPay integration is disabled (paypay.enabled=false)");

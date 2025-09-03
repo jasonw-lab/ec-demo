@@ -22,7 +22,7 @@
       <!-- QRコード支払い説明 -->
       <div style="text-align:center;margin-bottom:24px;">
         <div style="font-size:18px;font-weight:600;color:#111827;margin-bottom:16px;">
-          スマートフォンでQRコードをスキャンしてお支払い
+          paypay(developer mode)アプリでQRコードをスキャンしてお支払い
         </div>
       </div>
       
@@ -204,24 +204,31 @@ const qrImgUrl = computed(() => paymentImageDataUrl.value || paymentUrl.value ||
 let pollTimer: number | undefined
 const pollingStart = ref<number>(0)
 const pollingTimeoutMs = 120_000
-const pollIntervalMs = 4000
+const pollIntervalMs = 3000
 
 function handleLogin() {
   showPopup.value = true
 }
 
 async function startPolling() {
+  console.log('🔄 Starting polling for orderId:', orderId.value)
   stopPolling()
   pollingStart.value = Date.now()
   pollTimer = window.setInterval(async () => {
     try {
-      if (!orderId.value) return
-      const res = await fetch(`${apiBase}/orders/${orderId.value}`)
+      if (!orderId.value) {
+        console.log('❌ No orderId, skipping polling')
+        return
+      }
+      console.log('🔍 Polling payment details for orderId:', orderId.value)
+      const res = await fetch(`${apiBase}/payments/${orderId.value}/details`)
       if (res.ok) {
         const data = await res.json()
+        console.log('📊 Payment details response:', data)
         
         // PayPayエラーの確認
         if (data.paypayError) {
+          console.log('❌ PayPay error detected:', data.paypayError)
           paymentError.value = {
             code: data.paypayError.code,
             message: data.paypayError.message
@@ -231,21 +238,30 @@ async function startPolling() {
         }
         
         if (data.status === 'PAID') {
+          console.log('✅ Payment completed, redirecting to success page')
           stopPolling()
           store.clearCart()
           router.push({ path: '/payment-success', query: { orderId: orderId.value, total: String(total.value) } })
           return
         } else if (data.status === 'PAYMENT_FAILED') {
+          console.log('❌ Payment failed')
           stopPolling()
           paymentError.value = {
             code: 'PAYMENT_FAILED',
             message: '支払いに失敗しました。もう一度お試しください。'
           }
           return
+        } else {
+          console.log('⏳ Payment still pending, status:', data.status)
         }
+      } else {
+        console.log('❌ Failed to fetch payment details, status:', res.status)
       }
-    } catch {}
+    } catch (error) {
+      console.log('❌ Error during polling:', error)
+    }
     if (Date.now() - pollingStart.value > pollingTimeoutMs) {
+      console.log('⏰ Polling timeout reached, stopping')
       stopPolling()
     }
   }, pollIntervalMs)
@@ -253,6 +269,7 @@ async function startPolling() {
 
 function stopPolling() {
   if (pollTimer) {
+    console.log('🛑 Stopping polling')
     clearInterval(pollTimer)
     pollTimer = undefined
   }
@@ -281,26 +298,40 @@ async function retryPayment() {
 }
 
 async function fetchQr(): Promise<void> {
-  if (!orderId.value) return
+  if (!orderId.value) {
+    console.log('❌ No orderId for QR code fetch')
+    return
+  }
+  console.log('📱 Fetching QR code for orderId:', orderId.value, 'amount:', total.value)
   isLoadingQr.value = true
   try {
-    const res = await fetch(`${apiBase}/payments/${orderId.value}/qrcode`)
+    const res = await fetch(`${apiBase}/payments/${orderId.value}/qrcode?amount=${total.value}`)
     if (res.ok) {
       const data = await res.json()
+      console.log('📱 QR code response:', data)
       // base64Image を優先して表示。存在しなければ従来の URL を利用
       const base64 = String(data.base64Image || '')
       if (base64) {
         paymentImageDataUrl.value = `data:image/png;base64,${base64}`
+        console.log('🖼️ Base64 image set, length:', base64.length)
       } else {
         paymentImageDataUrl.value = ''
+        console.log('❌ No base64 image in response')
       }
       paymentUrl.value = String(data.paymentUrl || '')
-      if (paymentUrl.value) {
+      console.log('🔗 Payment URL set:', paymentUrl.value)
+      // QRコードが取得できた場合、paymentUrlがなくてもpollingを開始する
+      if (base64 || paymentUrl.value) {
+        console.log('🔄 Starting polling after QR code fetch')
         startPolling()
+      } else {
+        console.log('❌ No QR code or payment URL, cannot start polling')
       }
+    } else {
+      console.log('❌ Failed to fetch QR code, status:', res.status)
     }
   } catch (error) {
-    console.error('Failed to fetch QR code:', error)
+    console.error('❌ Failed to fetch QR code:', error)
   } finally {
     isLoadingQr.value = false
   }
@@ -311,10 +342,18 @@ onMounted(async () => {
   total.value = Number(q.total || 0)
   orderId.value = String(q.orderId || '')
   paymentUrl.value = String(q.paymentUrl || '')
-  if (orderId.value && !paymentUrl.value) {
-    await fetchQr()
-  } else if (paymentUrl.value && orderId.value) {
-    startPolling()
+  console.log('🚀 PaymentDetailView mounted with:', { orderId: orderId.value, paymentUrl: paymentUrl.value, total: total.value })
+  
+  if (orderId.value) {
+    if (!paymentUrl.value) {
+      console.log('📱 No paymentUrl, fetching QR code')
+      await fetchQr()
+    } else {
+      console.log('🔄 PaymentUrl exists, starting polling')
+      startPolling()
+    }
+  } else {
+    console.log('❌ Missing orderId, cannot start polling')
   }
 })
 
