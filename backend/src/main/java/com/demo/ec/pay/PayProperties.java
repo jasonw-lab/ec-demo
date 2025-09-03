@@ -1,13 +1,13 @@
-package com.demo.ec.paypay;
+package com.demo.ec.pay;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "paypay")
-public class PayPayProperties {
+public class PayProperties {
     /** Enable calling PayPay API. If false, stubbed sandbox link is used. */
-    private boolean enabled = false;
-    /** PayPay API base URL (e.g., https://api.paypay.ne.jp or sandbox). */
-    private String baseUrl = "https://sandbox.paypay.ne.jp";
+    private boolean enabled;
+    /** PayPay API base URL (e.g., https://api.paypay.ne.jp for prod, https://stg-api.paypay.ne.jp for sandbox). */
+    private String baseUrl;
     /** Merchant ID to assume (optional). */
     private String merchantId;
     /** API Key (public key) */
@@ -15,7 +15,7 @@ public class PayPayProperties {
     /** API Secret */
     private String apiSecret;
     /** Redirect/Callback URL where PayPay will send the user after payment */
-    private String callbackUrl = "http://localhost:5173/checkout";
+    private String callbackUrl;
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
