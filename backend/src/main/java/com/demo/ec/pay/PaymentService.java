@@ -17,5 +17,5 @@ public interface PaymentService {
 
     // Low-level SDK operations used by tests/integration
     String createPaymentUrlUsingSdk(String merchantPaymentId, BigDecimal amountJPY, Map<String, Object> metadata);
-    PaymentDetails getCodesPaymentDetailsUsingSdk(String merchantPaymentId);
+    PaymentDetails getCodesPaymentDetailsUsingSdk(String merchantPaymentId, BigDecimal amountJPY);
 }
