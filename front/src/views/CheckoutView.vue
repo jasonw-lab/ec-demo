@@ -40,7 +40,7 @@
             <input 
               v-model="name" 
               required 
-              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;focus:border-color:#ff6b6b;"
+              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;"
               placeholder="山田太郎"
             />
           </div>
@@ -50,7 +50,7 @@
               v-model="email" 
               type="email" 
               required 
-              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;focus:border-color:#ff6b6b;"
+              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;"
               placeholder="taro@example.com"
             />
           </div>
@@ -60,7 +60,7 @@
       <!-- 決済ボタン -->
       <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
         <button 
-          @click="submit" 
+          @click="goToPaymentDetail" 
           style="width:100%;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:16px;cursor:pointer;font-size:16px;font-weight:600;margin-bottom:16px;">
           注文確定 & PayPay へ
         </button>
@@ -94,7 +94,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useStore, apiBase, type CartItem } from '../store'
+import { useRouter } from 'vue-router'
+
 const store = useStore()
+const router = useRouter()
 const cart: CartItem[] = store.cart
 const name = ref<string>('山田太郎')
 const email = ref<string>('taro@example.com')
@@ -110,8 +113,8 @@ async function submit(): Promise<void> {
     items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
   }
   const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
-  const data: { paymentUrl: string; orderId: string } = await res.json()
-  paymentUrl.value = data.paymentUrl
+  const data: { orderId: string; amount?: number; status?: string } = await res.json()
+  paymentUrl.value = ''
   orderId.value = data.orderId
 }
 
@@ -122,5 +125,27 @@ async function simulateSuccess(): Promise<void> {
     paid.value = true
     store.clearCart()
   }
+}
+
+async function goToPaymentDetail(): Promise<void> {
+  // サーバ側で注文を作成（QRは別APIで取得）
+  const body = {
+    customerName: name.value,
+    customerEmail: email.value,
+    items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
+  }
+  const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+  const data: { orderId: string; amount?: number; status?: string } = await res.json()
+  paymentUrl.value = ''
+  orderId.value = data.orderId
+
+  // 支払い詳細画面へ遷移（QR取得は詳細画面で実施）
+  router.push({
+    path: '/payment-detail',
+    query: {
+      total: String(total.value),
+      orderId: orderId.value,
+    }
+  })
 }
 </script>

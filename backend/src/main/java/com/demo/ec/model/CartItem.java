@@ -1,3 +1,6 @@
 package com.demo.ec.model;
 
-public record CartItem(Long productId, int quantity) {}
+import com.demo.ec.json.StringToLongDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+public record CartItem(@JsonDeserialize(using = StringToLongDeserializer.class) Long productId, int quantity) {}
