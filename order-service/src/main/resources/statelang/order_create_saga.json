@@ -1,0 +1,152 @@
+{
+  "Name": "order_create_saga",
+  "Comment": "Create order via Saga: storage deduct -> account debit -> create order",
+  "StartState": "StorageDeduct",
+  "Version": "0.0.1",
+  "States": {
+    "StorageDeduct": {
+      "Type": "ServiceTask",
+      "ServiceName": "orderSagaActions",
+      "ServiceMethod": "storageDeduct",
+      "Input": [
+        {
+          "orderNo": "$.[orderNo]",
+          "userId": "$.[userId]",
+          "productId": "$.[productId]",
+          "count": "$.[count]",
+          "amount": "$.[amount]"
+        }
+      ],
+      "CompensateState": "CompensateStorageDeduct",
+      "Status": {
+        "#root == true": "SU",
+        "#root == false": "FA",
+        "$Exception{java.lang.Throwable}": "UN"
+      },
+      "Catch": [
+        {
+          "Exceptions": [
+            "java.lang.Throwable"
+          ],
+          "Next": "CompensationTrigger"
+        }
+      ],
+      "Next": "AccountDebit"
+    },
+    "AccountDebit": {
+      "Type": "ServiceTask",
+      "ServiceName": "orderSagaActions",
+      "ServiceMethod": "accountDebit",
+      "Input": [
+        {
+          "orderNo": "$.[orderNo]",
+          "userId": "$.[userId]",
+          "productId": "$.[productId]",
+          "count": "$.[count]",
+          "amount": "$.[amount]"
+        }
+      ],
+      "CompensateState": "CompensateAccountDebit",
+      "Status": {
+        "#root == true": "SU",
+        "#root == false": "FA",
+        "$Exception{java.lang.Throwable}": "UN"
+      },
+      "Catch": [
+        {
+          "Exceptions": [
+            "java.lang.Throwable"
+          ],
+          "Next": "CompensationTrigger"
+        }
+      ],
+      "Next": "CreateOrder"
+    },
+    "CreateOrder": {
+      "Type": "ServiceTask",
+      "ServiceName": "orderSagaActions",
+      "ServiceMethod": "createOrder",
+      "Input": [
+        {
+          "orderNo": "$.[orderNo]",
+          "userId": "$.[userId]",
+          "productId": "$.[productId]",
+          "count": "$.[count]",
+          "amount": "$.[amount]"
+        }
+      ],
+      "CompensateState": "CompensateCreateOrder",
+      "Status": {
+        "#root == true": "SU",
+        "#root == false": "FA",
+        "$Exception{java.lang.Throwable}": "UN"
+      },
+      "Catch": [
+        {
+          "Exceptions": [
+            "java.lang.Throwable"
+          ],
+          "Next": "CompensationTrigger"
+        }
+      ],
+      "End": true
+    },
+    "CompensateStorageDeduct": {
+      "Type": "ServiceTask",
+      "ServiceName": "orderSagaActions",
+      "ServiceMethod": "compensateStorageDeduct",
+      "Input": [
+        {
+          "orderNo": "$.[orderNo]",
+          "userId": "$.[userId]",
+          "productId": "$.[productId]",
+          "count": "$.[count]",
+          "amount": "$.[amount]"
+        }
+      ],
+      "IsCompensate": true
+    },
+    "CompensateAccountDebit": {
+      "Type": "ServiceTask",
+      "ServiceName": "orderSagaActions",
+      "ServiceMethod": "compensateAccountDebit",
+      "Input": [
+        {
+          "orderNo": "$.[orderNo]",
+          "userId": "$.[userId]",
+          "productId": "$.[productId]",
+          "count": "$.[count]",
+          "amount": "$.[amount]"
+        }
+      ],
+      "IsCompensate": true
+    },
+    "CompensateCreateOrder": {
+      "Type": "ServiceTask",
+      "ServiceName": "orderSagaActions",
+      "ServiceMethod": "compensateCreateOrder",
+      "Input": [
+        {
+          "orderNo": "$.[orderNo]",
+          "userId": "$.[userId]",
+          "productId": "$.[productId]",
+          "count": "$.[count]",
+          "amount": "$.[amount]"
+        }
+      ],
+      "IsCompensate": true
+    },
+    "CompensationTrigger": {
+      "Type": "CompensationTrigger",
+      "Next": "Fail"
+    },
+    "Fail": {
+      "Type": "Fail",
+      "ErrorCode": "ORDER_SAGA_FAILED",
+      "Message": "order saga failed"
+    }
+  }
+}
+
+
+
