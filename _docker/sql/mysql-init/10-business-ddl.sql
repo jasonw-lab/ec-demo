@@ -11,7 +11,11 @@ CREATE TABLE `t_order` (
   `product_id` BIGINT NOT NULL,
   `count` INT NOT NULL,
   `amount` DECIMAL(18,2) NOT NULL,
-  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0: creating, 1: finished',
+  `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+  `fail_code` VARCHAR(64) DEFAULT NULL,
+  `fail_message` VARCHAR(255) DEFAULT NULL,
+  `paid_at` DATETIME DEFAULT NULL,
+  `failed_at` DATETIME DEFAULT NULL,
   `create_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY `uk_order_no` (`order_no`)
@@ -42,6 +46,16 @@ CREATE TABLE `t_storage` (
   `residue` INT NOT NULL,
   `create_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `tx_step_log`;
+CREATE TABLE `tx_step_log` (
+  `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+  `order_no` VARCHAR(128) NOT NULL,
+  `step` VARCHAR(64) NOT NULL,
+  `status` VARCHAR(16) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uk_order_step` (`order_no`, `step`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DROP TABLE IF EXISTS `undo_log`;
@@ -81,4 +95,3 @@ CREATE TABLE `undo_log` (
   `log_modified` DATETIME NOT NULL,
   UNIQUE KEY `ux_undo_log` (`xid`, `branch_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-

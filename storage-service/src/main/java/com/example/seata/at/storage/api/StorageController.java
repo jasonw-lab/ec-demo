@@ -56,26 +56,36 @@ public class StorageController {
     public CommonResponse<String> deductSaga(@Valid @RequestBody DeductRequest req) {
         String orderNo = req.getOrderNo();
         if (orderNo == null || orderNo.isBlank()) {
-            orderNo = java.util.UUID.randomUUID().toString();
+            return CommonResponse.fail("orderNo is required for saga operations");
         }
         String xid = null;
         try { xid = io.seata.core.context.RootContext.getXID(); } catch (Throwable ignore) {}
         log.info("Received DeductRequest SAGA: orderNo={}, productId={}, count={}, xid={}", orderNo, req.getProductId(), req.getCount(), xid);
-        storageSagaService.deduct(req.getProductId(), req.getCount(), orderNo);
-        return CommonResponse.ok("saga-deducted");
+        try {
+            boolean ok = storageSagaService.deduct(req.getProductId(), req.getCount(), orderNo);
+            return ok ? CommonResponse.ok("saga-deducted") : CommonResponse.fail("deduct failed");
+        } catch (StorageATServiceImpl.InsufficientStockException | IllegalArgumentException ex) {
+            log.warn("Saga deduct failed orderNo={} reason={}", orderNo, ex.getMessage());
+            return CommonResponse.fail(ex.getMessage());
+        }
     }
 
     @PostMapping("/compensate/saga")
     public CommonResponse<String> compensateSaga(@Valid @RequestBody DeductRequest req) {
         String orderNo = req.getOrderNo();
         if (orderNo == null || orderNo.isBlank()) {
-            orderNo = java.util.UUID.randomUUID().toString();
+            return CommonResponse.fail("orderNo is required for saga operations");
         }
         String xid = null;
         try { xid = io.seata.core.context.RootContext.getXID(); } catch (Throwable ignore) {}
         log.info("Received CompensateRequest SAGA: orderNo={}, productId={}, count={}, xid={}", orderNo, req.getProductId(), req.getCount(), xid);
-        storageSagaService.compensate(req.getProductId(), req.getCount(), orderNo);
-        return CommonResponse.ok("saga-compensated");
+        try {
+            boolean ok = storageSagaService.compensate(req.getProductId(), req.getCount(), orderNo);
+            return ok ? CommonResponse.ok("saga-compensated") : CommonResponse.fail("compensate failed");
+        } catch (IllegalArgumentException ex) {
+            log.warn("Saga compensate failed orderNo={} reason={}", orderNo, ex.getMessage());
+            return CommonResponse.fail(ex.getMessage());
+        }
     }
 
     @ExceptionHandler(StorageATServiceImpl.InsufficientStockException.class)
