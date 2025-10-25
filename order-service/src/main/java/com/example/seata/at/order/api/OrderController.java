@@ -4,6 +4,7 @@ import com.example.seata.at.order.api.dto.CommonResponse;
 import com.example.seata.at.order.api.dto.OrderDTO;
 import com.example.seata.at.order.domain.entity.Order;
 import com.example.seata.at.order.domain.entity.TccOrder;
+import com.example.seata.at.order.domain.entity.OrderStatus;
 import com.example.seata.at.order.service.OrderATService;
 import com.example.seata.at.order.service.OrderTccService;
 import com.example.seata.at.order.service.OrderSagaService;
@@ -67,12 +68,14 @@ public class OrderController {
             orderDTO.setOrderNo(java.util.UUID.randomUUID().toString());
         }
         Order result = orderSagaService.startOrderCreateSaga(orderDTO);
-        boolean finalSuccess = true;
-        return new CommonResponse<Order>() {{
-            setSuccess(finalSuccess);
-            setMessage(finalSuccess ? "OK" : "FAILED");
-            setData(result);
-        }};
+        boolean finalSuccess = result != null && OrderStatus.PAID.name().equalsIgnoreCase(result.getStatus());
+        CommonResponse<Order> response = new CommonResponse<>();
+        response.setSuccess(finalSuccess);
+        String message = finalSuccess ? "OK" : (result != null && result.getFailMessage() != null
+                ? result.getFailMessage() : "FAILED");
+        response.setMessage(message);
+        response.setData(result);
+        return response;
     }
 
     @PostMapping("/saga/sample")

@@ -6,6 +6,7 @@ import com.example.seata.at.order.api.dto.CommonResponse;
 import com.example.seata.at.order.api.dto.OrderDTO;
 import com.example.seata.at.order.domain.entity.Order;
 import com.example.seata.at.order.domain.mapper.OrderMapper;
+import com.example.seata.at.order.domain.entity.OrderStatus;
 import io.seata.spring.annotation.GlobalTransactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class OrderATServiceImpl implements OrderATService {
         order.setProductId(req.getProductId());
         order.setCount(req.getCount());
         order.setAmount(req.getAmount());
-        order.setStatus(0);
+        order.setStatus(OrderStatus.PENDING.name());
         try {
             log.info("1) 注文レコード作成: inserting new order. orderNo={}, userId={}, productId={}, count={}, amount={}",
                     req.getOrderNo(), req.getUserId(), req.getProductId(), req.getCount(), req.getAmount());
@@ -107,10 +108,10 @@ public class OrderATServiceImpl implements OrderATService {
 
         // 4) 注文確定（主キーで1行更新）
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
-        uw.eq(Order::getId, order.getId()).set(Order::getStatus, 1);
+        uw.eq(Order::getId, order.getId()).set(Order::getStatus, OrderStatus.PAID.name());
         log.info("4) 注文確定: updating status to CONFIRMED. id={}, orderNo={}", order.getId(), order.getOrderNo());
         orderMapper.update(null, uw);
-        order.setStatus(1);
+        order.setStatus(OrderStatus.PAID.name());
         log.info("4) 注文確定: updated. id={}, status={}", order.getId(), order.getStatus());
         log.info("Order placed successfully. orderNo={}, id={}", order.getOrderNo(), order.getId());
         return order;

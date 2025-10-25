@@ -38,3 +38,9 @@ seata:
     type: ${SEATA_CONFIG_TYPE:file}
   enable-auto-data-source-proxy: ${SEATA_ENABLE_AUTO_DATA_SOURCE_PROXY:false}
   data-source-proxy-mode: ${SEATA_DATA_SOURCE_PROXY_MODE:AT}
+
+svc:
+  backend:
+    baseUrl: ${SVC_BACKEND_BASE_URL:http://localhost:8080}
+  storage:
+    baseUrl: ${SVC_STORAGE_BASE_URL:http://localhost:8082}
