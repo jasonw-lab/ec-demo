@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,11 +15,11 @@ import java.util.UUID;
 public class RestClientConfig {
 
     @Bean
-    public RestTemplate restTemplate() {
-        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-        factory.setConnectTimeout(3000);
-        factory.setReadTimeout(3000);
-        RestTemplate restTemplate = new RestTemplate(factory);
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        RestTemplate restTemplate = builder
+                .setConnectTimeout(java.time.Duration.ofSeconds(3))
+                .setReadTimeout(java.time.Duration.ofSeconds(3))
+                .build();
         // Add interceptor to propagate Seata XID header for AT mode cross-service calls
         List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>(restTemplate.getInterceptors());
         interceptors.add((request, body, execution) -> {
