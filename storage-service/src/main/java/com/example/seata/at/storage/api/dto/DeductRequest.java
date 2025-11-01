@@ -16,7 +16,9 @@ public class DeductRequest {
     @BusinessActionContextParameter(paramName = "count")
     private Integer count;
 
-    // Optional business key for TCC orchestration
+    // Optional business key for SAGA/TCC orchestration
+    @JsonProperty("orderNo")
+    @JsonAlias({"order_no", "orderNO", "OrderNo"})
     @BusinessActionContextParameter(paramName = "orderNo")
     private String orderNo;
 
