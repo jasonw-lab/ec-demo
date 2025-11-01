@@ -11,7 +11,16 @@ import java.util.Map;
  */
 public interface PaymentService {
     // High-level operations used by controller
-    String createPaymentUrl(String merchantPaymentId, BigDecimal amountJPY, Map<String, Object> metadata);
+    PaymentSession createPaymentSession(String merchantPaymentId, BigDecimal amountJPY, Map<String, Object> metadata);
+    default String createPaymentUrl(String merchantPaymentId, BigDecimal amountJPY, Map<String, Object> metadata) {
+        PaymentSession session = createPaymentSession(merchantPaymentId, amountJPY, metadata);
+        if (session == null) {
+            return null;
+        }
+        return session.getDeeplink() != null && !session.getDeeplink().isBlank()
+                ? session.getDeeplink()
+                : session.getPaymentUrl();
+    }
     @SuppressWarnings({"rawtypes"})
     Map getPaymentDetails(String merchantPaymentId);
 

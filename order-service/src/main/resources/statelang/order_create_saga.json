@@ -38,15 +38,37 @@
         "$Exception{java.lang.Throwable}": "UN"
       },
       "CompensateState": "ReleaseStock",
-      "Next": "DoPayment"
+      "Next": "RequestPayment"
     },
-    "DoPayment": {
+    "RequestPayment": {
       "Type": "ServiceTask",
       "ServiceName": "orderSagaActions",
-      "ServiceMethod": "doPayment",
+      "ServiceMethod": "requestPayment",
       "Input": [
         "$.[orderNo]",
         "$.[amount]"
+      ],
+      "Status": {
+        "#root == true": "SU",
+        "#root == false": "FA",
+        "$Exception{java.lang.Throwable}": "UN"
+      },
+      "Catch": [
+        {
+          "Exceptions": [
+            "java.lang.Throwable"
+          ],
+          "Next": "CompensationTrigger"
+        }
+      ],
+      "Next": "AwaitPayment"
+    },
+    "AwaitPayment": {
+      "Type": "ServiceTask",
+      "ServiceName": "orderSagaActions",
+      "ServiceMethod": "awaitPaymentResult",
+      "Input": [
+        "$.[orderNo]"
       ],
       "Status": {
         "#root == true": "SU",
