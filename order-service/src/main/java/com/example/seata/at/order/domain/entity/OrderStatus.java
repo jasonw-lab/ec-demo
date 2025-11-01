@@ -2,6 +2,7 @@ package com.example.seata.at.order.domain.entity;
 
 public enum OrderStatus {
     PENDING,
+    WAITING_PAYMENT,
     PAID,
     FAILED;
 

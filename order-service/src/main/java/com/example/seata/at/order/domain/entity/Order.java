@@ -23,9 +23,19 @@ public class Order {
     private Integer count;
     private BigDecimal amount;
     /**
-     * Order status: PENDING / PAID / FAILED.
+     * Order status: PENDING / WAITING_PAYMENT / PAID / FAILED.
      */
     private String status;
+    @TableField("payment_status")
+    private String paymentStatus;
+    @TableField("payment_url")
+    private String paymentUrl;
+    @TableField("payment_requested_at")
+    private LocalDateTime paymentRequestedAt;
+    @TableField("payment_expires_at")
+    private LocalDateTime paymentExpiresAt;
+    @TableField("payment_completed_at")
+    private LocalDateTime paymentCompletedAt;
     @TableField("fail_code")
     private String failCode;
     @TableField("fail_message")
@@ -51,6 +61,16 @@ public class Order {
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+    public String getPaymentUrl() { return paymentUrl; }
+    public void setPaymentUrl(String paymentUrl) { this.paymentUrl = paymentUrl; }
+    public LocalDateTime getPaymentRequestedAt() { return paymentRequestedAt; }
+    public void setPaymentRequestedAt(LocalDateTime paymentRequestedAt) { this.paymentRequestedAt = paymentRequestedAt; }
+    public LocalDateTime getPaymentExpiresAt() { return paymentExpiresAt; }
+    public void setPaymentExpiresAt(LocalDateTime paymentExpiresAt) { this.paymentExpiresAt = paymentExpiresAt; }
+    public LocalDateTime getPaymentCompletedAt() { return paymentCompletedAt; }
+    public void setPaymentCompletedAt(LocalDateTime paymentCompletedAt) { this.paymentCompletedAt = paymentCompletedAt; }
     public String getFailCode() { return failCode; }
     public void setFailCode(String failCode) { this.failCode = failCode; }
     public String getFailMessage() { return failMessage; }

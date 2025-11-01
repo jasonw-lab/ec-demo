@@ -79,11 +79,6 @@
           PayPay 決済ページ (サンドボックス) →
         </a>
       </div>
-      <div style="text-align:center;">
-        <button @click="simulateSuccess" style="background:#10b981;color:white;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-weight:600;">
-          支払い成功(デモ)
-        </button>
-      </div>
       <div v-if="paid" style="margin-top:16px;text-align:center;color:#10b981;font-weight:600;padding:16px;background:#f0fdf4;border-radius:8px;">
         ✅ 支払いが完了しました！
       </div>
@@ -116,15 +111,6 @@ async function submit(): Promise<void> {
   const data: { orderId: string; amount?: number; status?: string } = await res.json()
   paymentUrl.value = ''
   orderId.value = data.orderId
-}
-
-async function simulateSuccess(): Promise<void> {
-  const res = await fetch(`${apiBase}/payments/${orderId.value}/simulate-success`, { method:'POST' })
-  const data: { status: string } = await res.json()
-  if (data.status === 'PAID') {
-    paid.value = true
-    store.clearCart()
-  }
 }
 
 async function goToPaymentDetail(): Promise<void> {

@@ -230,16 +230,6 @@ public class CheckoutController {
         return ResponseEntity.ok(order);
     }
 
-    @PostMapping("/payments/{id}/simulate-success")
-    public ResponseEntity<Map<String, Object>> simulateSuccess(@PathVariable String id) {
-        log.info("CheckoutController.simulateSuccess START request: id={}", id);
-        Map<String, Object> order = (Map<String, Object>) DemoData.orders.get(id);
-        if (order == null) return ResponseEntity.notFound().build();
-        order.put("status", "PAID");
-        log.info("CheckoutController.simulateSuccess END response: order={}", order);
-        return ResponseEntity.ok(order);
-    }
-
     @GetMapping("/payments/{id}/qrcode")
     public ResponseEntity<Map<String, String>> getQRCode(@PathVariable String id, @RequestParam(value = "amount", required = false) BigDecimal amount) {
         log.info("CheckoutController.getQRCode START request: id={}, amountParam={}", id, amount);

@@ -58,9 +58,6 @@
       <div style="text-align:center;margin-bottom:32px;">
         <a v-if="paymentUrl" :href="paymentUrl" target="_blank" style="color:#3b82f6;text-decoration:none;font-weight:600;">PayPay 決済ページを開く →</a>
       </div>
-      <div style="text-align:center;">
-        <button @click="simulateSuccess" style="background:#10b981;color:white;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;">支払い成功(デモ)</button>
-      </div>
       
       <!-- PayPayロゴ -->
       <div style="text-align:center;color:#6b7280;font-size:14px;">
@@ -273,21 +270,6 @@ function stopPolling() {
     clearInterval(pollTimer)
     pollTimer = undefined
   }
-}
-
-async function simulateSuccess() {
-  if (!orderId.value) return
-  try {
-    const res = await fetch(`${apiBase}/payments/${orderId.value}/simulate-success`, { method: 'POST' })
-    if (res.ok) {
-      const data = await res.json()
-      if (data.status === 'PAID') {
-        stopPolling()
-        store.clearCart()
-        router.push({ path: '/payment-success', query: { orderId: orderId.value, total: String(total.value) } })
-      }
-    }
-  } catch {}
 }
 
 async function retryPayment() {

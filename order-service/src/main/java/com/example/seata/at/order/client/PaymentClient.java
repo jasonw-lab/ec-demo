@@ -25,11 +25,11 @@ public class PaymentClient {
 
     public PaymentClient(RestTemplate restTemplate,
                          @Value("${svc.backend.baseUrl:http://localhost:8080}") String backendBaseUrl) {
-        this.restTemplate = restTemplate;
-        this.backendBaseUrl = backendBaseUrl;
+       this.restTemplate = restTemplate;
+       this.backendBaseUrl = backendBaseUrl;
     }
 
-    public PaymentResult pay(String orderNo, BigDecimal amount) {
+    public PaymentResult requestPayment(String orderNo, BigDecimal amount) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Order-No", orderNo);
         Map<String, Object> body = new HashMap<>();
@@ -42,15 +42,24 @@ public class PaymentClient {
                     new HttpEntity<>(body, headers),
                     PaymentResult.class
             );
-            PaymentResult result = response.getBody();
-            if (result == null) {
-                log.warn("PaymentClient.pay received null body for orderNo={}", orderNo);
-                return failure("NO_RESPONSE", "Empty response from payment backend", orderNo);
-            }
-            return result;
+            return bodyOrFailure(response, orderNo);
         } catch (RestClientException ex) {
-            log.warn("PaymentClient.pay failed orderNo={} err={}", orderNo, ex.toString());
+            log.warn("PaymentClient.requestPayment failed orderNo={} err={}", orderNo, ex.toString());
             return failure("HTTP_ERROR", ex.getMessage(), orderNo);
+        }
+    }
+
+    public PaymentResult getStatus(String merchantPaymentId) {
+        try {
+            ResponseEntity<PaymentResult> response = restTemplate.getForEntity(
+                    backendBaseUrl + "/internal/payment/paypay/status/{merchantPaymentId}",
+                    PaymentResult.class,
+                    merchantPaymentId
+            );
+            return bodyOrFailure(response, merchantPaymentId);
+        } catch (RestClientException ex) {
+            log.warn("PaymentClient.getStatus failed merchantPaymentId={} err={}", merchantPaymentId, ex.toString());
+            return failure("HTTP_ERROR", ex.getMessage(), merchantPaymentId);
         }
     }
 
@@ -60,6 +69,18 @@ public class PaymentClient {
         result.setCode(code);
         result.setMessage(message);
         result.setOrderNo(orderNo);
+        return result;
+    }
+
+    private static PaymentResult bodyOrFailure(ResponseEntity<PaymentResult> response, String orderNo) {
+        PaymentResult result = response.getBody();
+        if (result == null) {
+            log.warn("PaymentClient received null body for orderNo={}", orderNo);
+            return failure("NO_RESPONSE", "Empty response from payment backend", orderNo);
+        }
+        if (result.getOrderNo() == null) {
+            result.setOrderNo(orderNo);
+        }
         return result;
     }
 }
