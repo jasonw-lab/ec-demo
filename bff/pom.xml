@@ -1,16 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.demo</groupId>
-  <artifactId>ec-backend</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <groupId>com.demo.ec</groupId>
+  <artifactId>ec-bff</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>ec-backend</name>
-  <description>Demo EC backend with PayPay stub</description>
+  <name>ec-bff</name>
+  <description>Demo EC BFF with PayPay stub</description>
   <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.3.2</version>
-    <relativePath/>
+    <groupId>com.demo.ec</groupId>
+    <artifactId>seata-at-demo-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   
   <properties>
@@ -70,7 +70,7 @@
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
-      <version>5.4.0</version>
+      <version>${restassured.version}</version>
       <scope>test</scope>
     </dependency>
 
