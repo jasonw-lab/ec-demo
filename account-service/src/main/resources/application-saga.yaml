@@ -5,6 +5,9 @@ spring:
   application:
     name: account-service-saga
 
+server:
+  port: 8083
+
 seata:
   enabled: ${SEATA_ENABLED:true}
   application-id: ${SEATA_APPLICATION_ID:account-service-saga}
