@@ -3,3 +3,6 @@ server:
 spring:
   application:
     name: ec-backend
+services:
+  order:
+    base-url: ${ORDER_SERVICE_BASE_URL:http://localhost:8081}

@@ -73,4 +73,13 @@ public class OrderSagaServiceImpl implements OrderSagaService {
         );
         return ExecutionStatus.SU.equals(inst.getStatus());
     }
+
+    @Override
+    public Order findByOrderNo(String orderNo) {
+        if (orderNo == null || orderNo.trim().isEmpty()) {
+            return null;
+        }
+        return orderMapper.selectOne(new LambdaQueryWrapper<Order>()
+                .eq(Order::getOrderNo, orderNo));
+    }
 }

@@ -100,38 +100,60 @@ const total = computed<number>(() => cart.reduce((a,c)=> a + Number(c.product.pr
 const paymentUrl = ref<string>('')
 const orderId = ref<string>('')
 const paid = ref<boolean>(false)
+const channelToken = ref<string>('')
 
 async function submit(): Promise<void> {
-  const body = {
-    customerName: name.value,
-    customerEmail: email.value,
-    items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
+  try {
+    const body = {
+      customerName: name.value,
+      customerEmail: email.value,
+      items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
+    }
+    const res = await fetch(`${apiBase}/orders/purchase`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) {
+      const message = await res.text()
+      throw new Error(message || '注文作成に失敗しました')
+    }
+    const data: { orderId: string; amount?: number; status?: string; channelToken?: string } = await res.json()
+    paymentUrl.value = ''
+    orderId.value = data.orderId
+    channelToken.value = data.channelToken ?? ''
+  } catch (err) {
+    console.error('❌ 注文作成に失敗しました', err)
+    alert('注文の作成に失敗しました。時間をおいて再度お試しください。')
   }
-  const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
-  const data: { orderId: string; amount?: number; status?: string } = await res.json()
-  paymentUrl.value = ''
-  orderId.value = data.orderId
 }
 
 async function goToPaymentDetail(): Promise<void> {
-  // サーバ側で注文を作成（QRは別APIで取得）
-  const body = {
-    customerName: name.value,
-    customerEmail: email.value,
-    items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
-  }
-  const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
-  const data: { orderId: string; amount?: number; status?: string } = await res.json()
-  paymentUrl.value = ''
-  orderId.value = data.orderId
-
-  // 支払い詳細画面へ遷移（QR取得は詳細画面で実施）
-  router.push({
-    path: '/payment-detail',
-    query: {
-      total: String(total.value),
-      orderId: orderId.value,
+  try {
+    // サーバ側で注文を作成（QRは別APIで取得）
+    const body = {
+      customerName: name.value,
+      customerEmail: email.value,
+      items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
     }
-  })
+    const res = await fetch(`${apiBase}/orders/purchase`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) {
+      const message = await res.text()
+      throw new Error(message || '注文作成に失敗しました')
+    }
+    const data: { orderId: string; amount?: number; status?: string; channelToken?: string } = await res.json()
+    paymentUrl.value = ''
+    orderId.value = data.orderId
+    channelToken.value = data.channelToken ?? ''
+
+    // 支払い詳細画面へ遷移（QR取得は詳細画面で実施）
+    router.push({
+      path: '/payment-detail',
+      query: {
+        total: String(total.value),
+        orderId: orderId.value,
+        token: channelToken.value,
+      }
+    })
+  } catch (err) {
+    console.error('❌ 決済ページへの遷移に失敗しました', err)
+    alert('注文の作成に失敗しました。時間をおいて再度お試しください。')
+  }
 }
 </script>

@@ -113,6 +113,7 @@ curl -s localhost:8083/actuator/health | jq
 - エンドポイント:
   - POST `http://localhost:8081/api/orders/saga`（State Language による SAGA 実行）
   - POST `http://localhost:8081/api/orders/saga/sample`（簡易サンプル）
+  - POST `http://localhost:8081/api/orders/{orderNo}/payment/events`（BFF からの決済結果通知: status=COMPLETED / FAILED / TIMED_OUT など）
 - ステートマシン定義:
   - `order-service/src/main/resources/statelang/order_create_saga.json`
 - 簡易テスト:
@@ -126,6 +127,17 @@ curl -s localhost:8083/actuator/health | jq
   ```
 - メモ:
   - 各サービスの `application-saga.yaml` にて `tx-service-group: saga_tx_group` を利用します。
+  - 決済開始後は Order が `WAITING_PAYMENT` 状態となり、BFF からの `COMPLETED / FAILED / TIMED_OUT` 通知で `PAID` / `FAILED` に確定します。
+  - 待機中に `payment_expires_at` を過ぎた注文は `order.payment.timeout-check-interval-ms`（既定 60s）間隔でタイムアウト検知され、自動補償されます。
+  - `t_order` には WebSocket 認証に利用する `payment_channel_token` / `payment_channel_expires_at` および `payment_last_event_id` を保持します。
+
+### BFF（Webhook / WebSocket）
+- `POST /api/orders/purchase` は `orderId` と併せて WebSocket 接続用 `channelToken` を返却します。
+- PayPay Webhook は `POST /api/paypay/webhook` に送付します。payload 内の `merchantPaymentId`（=orderId）と `status` から Order Service へ転送され、重複イベントは `payment_last_event_id` で抑止します。
+- WebSocket エンドポイント: `ws://localhost:8080/ws/orders?orderId={orderId}&token={channelToken}`
+  - 接続直後に最新スナップショット（`type: "ORDER_STATUS"`）を 1 回送信します。
+  - 決済確定/補償/タイムアウト時は `result: SUCCESS | FAILED | TIMEOUT` を push します。
+- `GET /api/payments/{orderId}/details` などの REST API でも同じ情報を取得できます（channelToken も含む）。
 
 ---
 

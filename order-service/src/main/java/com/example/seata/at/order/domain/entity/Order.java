@@ -36,6 +36,12 @@ public class Order {
     private LocalDateTime paymentExpiresAt;
     @TableField("payment_completed_at")
     private LocalDateTime paymentCompletedAt;
+    @TableField("payment_channel_token")
+    private String paymentChannelToken;
+    @TableField("payment_channel_expires_at")
+    private LocalDateTime paymentChannelExpiresAt;
+    @TableField("payment_last_event_id")
+    private String paymentLastEventId;
     @TableField("fail_code")
     private String failCode;
     @TableField("fail_message")
@@ -71,6 +77,12 @@ public class Order {
     public void setPaymentExpiresAt(LocalDateTime paymentExpiresAt) { this.paymentExpiresAt = paymentExpiresAt; }
     public LocalDateTime getPaymentCompletedAt() { return paymentCompletedAt; }
     public void setPaymentCompletedAt(LocalDateTime paymentCompletedAt) { this.paymentCompletedAt = paymentCompletedAt; }
+    public String getPaymentChannelToken() { return paymentChannelToken; }
+    public void setPaymentChannelToken(String paymentChannelToken) { this.paymentChannelToken = paymentChannelToken; }
+    public LocalDateTime getPaymentChannelExpiresAt() { return paymentChannelExpiresAt; }
+    public void setPaymentChannelExpiresAt(LocalDateTime paymentChannelExpiresAt) { this.paymentChannelExpiresAt = paymentChannelExpiresAt; }
+    public String getPaymentLastEventId() { return paymentLastEventId; }
+    public void setPaymentLastEventId(String paymentLastEventId) { this.paymentLastEventId = paymentLastEventId; }
     public String getFailCode() { return failCode; }
     public void setFailCode(String failCode) { this.failCode = failCode; }
     public String getFailMessage() { return failMessage; }

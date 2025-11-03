@@ -20,6 +20,7 @@ public class StorageSagaServiceImpl implements StorageSagaService {
 
     private static final String STEP_DEDUCT = "STORAGE_DEDUCT";
     private static final String STEP_COMPENSATE = "STORAGE_COMPENSATE";
+    private static final String STEP_CONFIRM = "STORAGE_CONFIRM";
 
     public StorageSagaServiceImpl(StorageMapper storageMapper, StorageTxStepLogMapper txStepLogMapper) {
         this.storageMapper = storageMapper;
@@ -67,6 +68,22 @@ public class StorageSagaServiceImpl implements StorageSagaService {
         storageMapper.update(null, uw);
         markStepDone(logId);
         log.info("[SAGA][Storage] compensate success: orderNo={}", orderNo);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean confirm(Long productId, Integer count, String orderNo) {
+        log.info("[SAGA][Storage] confirm begin: orderNo={}, productId={}, count={}", orderNo, productId, count);
+        Long logId = createStepIfAbsent(orderNo, STEP_CONFIRM);
+        if (logId == null) {
+            log.info("[SAGA][Storage] confirm already processed. orderNo={}", orderNo);
+            return true;
+        }
+        // Reservation already deducted residue and added to used at reserve step.
+        // Confirm step simply records completion for idempotency/traceability.
+        markStepDone(logId);
+        log.info("[SAGA][Storage] confirm success: orderNo={}", orderNo);
         return true;
     }
 
