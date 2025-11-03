@@ -13,6 +13,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -68,13 +70,15 @@ public class OrderController {
             orderDTO.setOrderNo(java.util.UUID.randomUUID().toString());
         }
         Order result = orderSagaService.startOrderCreateSaga(orderDTO);
-        boolean finalSuccess = result != null && OrderStatus.PAID.name().equalsIgnoreCase(result.getStatus());
         CommonResponse<Order> response = new CommonResponse<>();
-        response.setSuccess(finalSuccess);
-        String message = finalSuccess ? "OK" : (result != null && result.getFailMessage() != null
-                ? result.getFailMessage() : "FAILED");
-        response.setMessage(message);
-        response.setData(result);
+        if (result == null) {
+            response.setSuccess(false);
+            response.setMessage("FAILED");
+        } else {
+            response.setSuccess(true);
+            response.setMessage(result.getStatus());
+            response.setData(result);
+        }
         return response;
     }
 
@@ -88,6 +92,21 @@ public class OrderController {
         CommonResponse<Void> res = new CommonResponse<>();
         res.setSuccess(success);
         res.setMessage(success ? "OK" : "FAILED");
+        return res;
+    }
+
+    @GetMapping("/{orderNo}")
+    public CommonResponse<Order> getByOrderNo(@PathVariable String orderNo) {
+        Order order = orderSagaService.findByOrderNo(orderNo);
+        CommonResponse<Order> res = new CommonResponse<>();
+        if (order == null) {
+            res.setSuccess(false);
+            res.setMessage("NOT_FOUND");
+            return res;
+        }
+        res.setSuccess(true);
+        res.setMessage("OK");
+        res.setData(order);
         return res;
     }
 

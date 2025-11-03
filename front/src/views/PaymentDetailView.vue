@@ -194,6 +194,11 @@ const isLoadingQr = ref<boolean>(false)
 const paymentImageDataUrl = ref<string>('')
 // エラー状態管理
 const paymentError = ref<{code: string, message: string} | null>(null)
+const channelToken = ref<string>('')
+const ws = ref<WebSocket | null>(null)
+const wsConnected = ref<boolean>(false)
+const hasFinalized = ref<boolean>(false)
+const lastResult = ref<string>('PENDING')
 
 // QR画像URL（base64画像があれば優先、それ以外はURLを利用）
 const qrImgUrl = computed(() => paymentImageDataUrl.value || paymentUrl.value || '')
@@ -209,9 +214,17 @@ function handleLogin() {
 
 async function startPolling() {
   console.log('🔄 Starting polling for orderId:', orderId.value)
+  if (hasFinalized.value) {
+    console.log('✅ Order already finalized, polling skipped')
+    return
+  }
   stopPolling()
   pollingStart.value = Date.now()
   pollTimer = window.setInterval(async () => {
+    if (hasFinalized.value) {
+      stopPolling()
+      return
+    }
     try {
       if (!orderId.value) {
         console.log('❌ No orderId, skipping polling')
@@ -272,10 +285,162 @@ function stopPolling() {
   }
 }
 
+function buildWsUrl(): string {
+  const base = apiBase.replace(/\/?api\/?$/, '')
+  const sanitized = base.replace(/\/$/, '')
+  const scheme = sanitized.startsWith('https://') ? 'wss' : 'ws'
+  const host = sanitized.replace(/^https?:\/\//, '')
+  return `${scheme}://${host}/ws/orders?orderId=${encodeURIComponent(orderId.value)}&token=${encodeURIComponent(channelToken.value)}`
+}
+
+function connectWebSocket() {
+  if (!orderId.value || !channelToken.value) {
+    console.log('🔌 WebSocket setup skipped (missing orderId/token)')
+    return
+  }
+  try {
+    const url = buildWsUrl()
+    console.log('🔌 Connecting WebSocket', url)
+    const socket = new WebSocket(url)
+    ws.value = socket
+    socket.onopen = () => {
+      console.log('✅ WebSocket connected')
+      wsConnected.value = true
+      stopPolling()
+    }
+    socket.onclose = (event) => {
+      console.log('🔌 WebSocket closed', event.code, event.reason)
+      wsConnected.value = false
+      ws.value = null
+      if (!hasFinalized.value) {
+        console.log('🔄 WebSocket closed before completion, fallback to polling')
+        startPolling()
+      }
+    }
+    socket.onerror = (event) => {
+      console.warn('⚠️ WebSocket error', event)
+    }
+    socket.onmessage = (event) => {
+      handleWsMessage(event.data)
+    }
+  } catch (error) {
+    console.error('❌ Failed to connect WebSocket', error)
+    if (!hasFinalized.value) {
+      startPolling()
+    }
+  }
+}
+
+function disconnectWebSocket() {
+  if (ws.value) {
+    try {
+      ws.value.close()
+    } catch (error) {
+      console.warn('⚠️ Error closing WebSocket', error)
+    }
+    ws.value = null
+  }
+  wsConnected.value = false
+}
+
+function handleWsMessage(raw: string) {
+  try {
+    const message = JSON.parse(raw)
+    if (message.type !== 'ORDER_STATUS') {
+      return
+    }
+    console.log('📬 WebSocket status message', message)
+    if (typeof message.paymentUrl === 'string') {
+      paymentUrl.value = message.paymentUrl
+    }
+    if (typeof message.base64Image === 'string' && message.base64Image.length > 0) {
+      paymentImageDataUrl.value = `data:image/png;base64,${message.base64Image}`
+    }
+    if (typeof message.amount === 'number') {
+      total.value = Number(message.amount)
+    }
+    if (message.channelToken && typeof message.channelToken === 'string' && message.channelToken !== channelToken.value) {
+      channelToken.value = message.channelToken
+    }
+    const result = typeof message.result === 'string' ? message.result.toUpperCase() : 'PENDING'
+    lastResult.value = result
+
+    if (result === 'SUCCESS') {
+      finalizeSuccess()
+      return
+    }
+    if (result === 'FAILED') {
+      finalizeFailure(message)
+      return
+    }
+    if (result === 'TIMEOUT') {
+      finalizeTimeout(message)
+      return
+    }
+
+    // Pending update -> clear error if recoverable
+    if (paymentError.value) {
+      paymentError.value = null
+    }
+  } catch (error) {
+    console.error('❌ Failed to parse WebSocket payload', error, raw)
+  }
+}
+
+function finalizeSuccess() {
+  if (hasFinalized.value) {
+    return
+  }
+  hasFinalized.value = true
+  stopPolling()
+  disconnectWebSocket()
+  store.clearCart()
+  router.push({ path: '/payment-success', query: { orderId: orderId.value, total: String(total.value) } })
+}
+
+function finalizeFailure(message: Record<string, unknown>) {
+  if (hasFinalized.value) {
+    if (!paymentError.value) {
+      paymentError.value = { code: 'PAYMENT_FAILED', message: '支払いに失敗しました。もう一度お試しください。' }
+    }
+    return
+  }
+  hasFinalized.value = true
+  stopPolling()
+  disconnectWebSocket()
+  const code = typeof message?.code === 'string' ? message.code : typeof message?.paymentStatus === 'string' ? message.paymentStatus : 'PAYMENT_FAILED'
+  const text = typeof message?.message === 'string'
+    ? message.message
+    : typeof message?.failMessage === 'string'
+      ? message.failMessage
+      : '支払いに失敗しました。もう一度お試しください。'
+  paymentError.value = { code: String(code), message: String(text) }
+}
+
+function finalizeTimeout(message: Record<string, unknown>) {
+  if (hasFinalized.value) {
+    return
+  }
+  hasFinalized.value = true
+  stopPolling()
+  disconnectWebSocket()
+  const text = typeof message?.message === 'string'
+    ? message.message
+    : 'お支払いがタイムアウトしました。最初からやり直してください。'
+  paymentError.value = { code: 'PAYMENT_TIMEOUT', message: String(text) }
+}
+
 async function retryPayment() {
+  hasFinalized.value = false
   paymentError.value = null
   paymentImageDataUrl.value = ''
   paymentUrl.value = ''
+  if (wsConnected.value) {
+    disconnectWebSocket()
+  }
+  if (channelToken.value) {
+    connectWebSocket()
+  }
   await fetchQr()
 }
 
@@ -302,12 +467,18 @@ async function fetchQr(): Promise<void> {
       }
       paymentUrl.value = String(data.paymentUrl || '')
       console.log('🔗 Payment URL set:', paymentUrl.value)
-      // QRコードが取得できた場合、paymentUrlがなくてもpollingを開始する
+      // QRコードが取得できた場合、WebSocket接続がなければポーリングを開始
       if (base64 || paymentUrl.value) {
-        console.log('🔄 Starting polling after QR code fetch')
-        startPolling()
+        if (!wsConnected.value) {
+          console.log('🔄 Starting polling after QR code fetch (WebSocket未接続)')
+          startPolling()
+        }
       } else {
         console.log('❌ No QR code or payment URL, cannot start polling')
+        window.setTimeout(() => {
+          console.log('⏳ Retrying QR code fetch after delay')
+          void fetchQr()
+        }, 2000)
       }
     } else {
       console.log('❌ Failed to fetch QR code, status:', res.status)
@@ -324,14 +495,19 @@ onMounted(async () => {
   total.value = Number(q.total || 0)
   orderId.value = String(q.orderId || '')
   paymentUrl.value = String(q.paymentUrl || '')
+  channelToken.value = String(q.token || q.channelToken || '')
   console.log('🚀 PaymentDetailView mounted with:', { orderId: orderId.value, paymentUrl: paymentUrl.value, total: total.value })
-  
+
+  if (channelToken.value) {
+    connectWebSocket()
+  }
+
   if (orderId.value) {
     if (!paymentUrl.value) {
       console.log('📱 No paymentUrl, fetching QR code')
       await fetchQr()
-    } else {
-      console.log('🔄 PaymentUrl exists, starting polling')
+    } else if (!channelToken.value) {
+      console.log('🔄 PaymentUrl exists, starting polling (no WebSocket token)')
       startPolling()
     }
   } else {
@@ -341,5 +517,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   stopPolling()
+  disconnectWebSocket()
 })
 </script>

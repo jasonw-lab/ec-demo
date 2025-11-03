@@ -61,42 +61,6 @@
           "Next": "CompensationTrigger"
         }
       ],
-      "Next": "AwaitPayment"
-    },
-    "AwaitPayment": {
-      "Type": "ServiceTask",
-      "ServiceName": "orderSagaActions",
-      "ServiceMethod": "awaitPaymentResult",
-      "Input": [
-        "$.[orderNo]"
-      ],
-      "Status": {
-        "#root == true": "SU",
-        "#root == false": "FA",
-        "$Exception{java.lang.Throwable}": "UN"
-      },
-      "Catch": [
-        {
-          "Exceptions": [
-            "java.lang.Throwable"
-          ],
-          "Next": "CompensationTrigger"
-        }
-      ],
-      "Next": "MarkPaid"
-    },
-    "MarkPaid": {
-      "Type": "ServiceTask",
-      "ServiceName": "orderSagaActions",
-      "ServiceMethod": "markPaid",
-      "Input": [
-        "$.[orderNo]"
-      ],
-      "Status": {
-        "#root == true": "SU",
-        "#root == false": "FA",
-        "$Exception{java.lang.Throwable}": "UN"
-      },
       "Next": "Succeed"
     },
     "ReleaseStock": {

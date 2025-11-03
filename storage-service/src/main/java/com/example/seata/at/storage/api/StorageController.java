@@ -88,6 +88,24 @@ public class StorageController {
         }
     }
 
+    @PostMapping("/confirm/saga")
+    public CommonResponse<String> confirmSaga(@Valid @RequestBody DeductRequest req) {
+        String orderNo = req.getOrderNo();
+        if (orderNo == null || orderNo.isBlank()) {
+            return CommonResponse.fail("orderNo is required for saga operations");
+        }
+        String xid = null;
+        try { xid = io.seata.core.context.RootContext.getXID(); } catch (Throwable ignore) {}
+        log.info("Received ConfirmRequest SAGA: orderNo={}, productId={}, count={}, xid={}", orderNo, req.getProductId(), req.getCount(), xid);
+        try {
+            boolean ok = storageSagaService.confirm(req.getProductId(), req.getCount(), orderNo);
+            return ok ? CommonResponse.ok("saga-confirmed") : CommonResponse.fail("confirm failed");
+        } catch (IllegalArgumentException ex) {
+            log.warn("Saga confirm failed orderNo={} reason={}", orderNo, ex.getMessage());
+            return CommonResponse.fail(ex.getMessage());
+        }
+    }
+
     @ExceptionHandler(StorageATServiceImpl.InsufficientStockException.class)
     public ResponseEntity<CommonResponse<Void>> handleStock(StorageATServiceImpl.InsufficientStockException ex) {
         return ResponseEntity.badRequest().body(CommonResponse.fail(ex.getMessage()));

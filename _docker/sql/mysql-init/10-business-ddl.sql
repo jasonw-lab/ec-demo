@@ -17,13 +17,17 @@ CREATE TABLE `t_order` (
   `payment_requested_at` DATETIME DEFAULT NULL,
   `payment_expires_at` DATETIME DEFAULT NULL,
   `payment_completed_at` DATETIME DEFAULT NULL,
+  `payment_channel_token` VARCHAR(128) DEFAULT NULL,
+  `payment_channel_expires_at` DATETIME DEFAULT NULL,
+  `payment_last_event_id` VARCHAR(128) DEFAULT NULL,
   `fail_code` VARCHAR(64) DEFAULT NULL,
   `fail_message` VARCHAR(255) DEFAULT NULL,
   `paid_at` DATETIME DEFAULT NULL,
   `failed_at` DATETIME DEFAULT NULL,
   `create_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY `uk_order_no` (`order_no`)
+  UNIQUE KEY `uk_order_no` (`order_no`),
+  UNIQUE KEY `uk_payment_channel_token` (`payment_channel_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- AT mode requires undo_log in each business DB

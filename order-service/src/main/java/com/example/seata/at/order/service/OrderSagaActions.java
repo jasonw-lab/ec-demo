@@ -21,16 +21,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
-import java.util.Set;
+import java.util.UUID;
 
 @Service("orderSagaActions")
 public class OrderSagaActions {
     private static final Logger log = LoggerFactory.getLogger(OrderSagaActions.class);
     private static final Duration PAYMENT_WAIT_TIMEOUT = Duration.ofMinutes(15);
-    private static final long PAYMENT_STATUS_POLL_INTERVAL_MS = 3_000L;
-    private static final Set<String> PAYPAY_SUCCESS_STATUSES = Set.of("COMPLETED", "SUCCESS", "CAPTURED");
-    private static final Set<String> PAYPAY_FAILURE_STATUSES = Set.of("FAILED", "CANCELED", "CANCELLED", "EXPIRED", "DECLINED");
-
+    private static final Duration CHANNEL_TOKEN_REFRESH_THRESHOLD = Duration.ofMinutes(1);
     private final OrderMapper orderMapper;
     private final StorageClient storageClient;
     private final PaymentClient paymentClient;
@@ -71,6 +68,9 @@ public class OrderSagaActions {
         order.setPaymentRequestedAt(null);
         order.setPaymentExpiresAt(null);
         order.setPaymentCompletedAt(null);
+        order.setPaymentChannelToken(null);
+        order.setPaymentChannelExpiresAt(null);
+        order.setPaymentLastEventId(null);
         order.setCreateTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         int inserted = orderMapper.insert(order);
@@ -86,6 +86,11 @@ public class OrderSagaActions {
     public boolean storageCompensate(String orderNo, Long productId, Integer count) {
         log.info("[SAGA] storageCompensate orderNo={} productId={} count={}", orderNo, productId, count);
         return storageClient.compensate(orderNo, productId, count);
+    }
+
+    public boolean storageConfirm(String orderNo, Long productId, Integer count) {
+        log.info("[SAGA] storageConfirm orderNo={} productId={} count={}", orderNo, productId, count);
+        return storageClient.confirm(orderNo, productId, count);
     }
 
     public boolean requestPayment(String orderNo, BigDecimal amount) {
@@ -124,78 +129,23 @@ public class OrderSagaActions {
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = resolveExpiry(result.getExpiresAt(), now.plus(PAYMENT_WAIT_TIMEOUT));
+        String paypayStatus = normalizeStatus(result.getStatus());
+        String channelToken = ensureChannelToken(order, now);
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
         uw.eq(Order::getOrderNo, orderNo)
                 .in(Order::getStatus, OrderStatus.PENDING.name(), OrderStatus.WAITING_PAYMENT.name())
                 .set(Order::getStatus, OrderStatus.WAITING_PAYMENT.name())
-                .set(Order::getPaymentStatus, normalizeStatus(result.getStatus()))
+                .set(Order::getPaymentStatus, firstNonBlank(paypayStatus, "PENDING"))
                 .set(Order::getPaymentUrl, preferredUrl(result))
                 .set(Order::getPaymentRequestedAt, now)
                 .set(Order::getPaymentExpiresAt, expiresAt)
+                .set(Order::getPaymentChannelToken, channelToken)
+                .set(Order::getPaymentChannelExpiresAt, expiresAt)
+                .set(Order::getPaymentLastEventId, null)
                 .set(Order::getUpdateTime, now);
         int updated = orderMapper.update(null, uw);
-        log.info("[SAGA] requestPayment updated={} orderNo={} expiresAt={}", updated, orderNo, expiresAt);
+        log.info("[SAGA] requestPayment updated={} orderNo={} expiresAt={} channelToken={}", updated, orderNo, expiresAt, channelToken);
         return updated > 0;
-    }
-
-    public boolean awaitPaymentResult(String orderNo) {
-        require(orderNo, "orderNo");
-        log.info("[SAGA] awaitPaymentResult orderNo={}", orderNo);
-
-        Order order = orderMapper.selectOne(new LambdaQueryWrapper<Order>()
-                .eq(Order::getOrderNo, orderNo));
-        if (order == null) {
-            log.warn("[SAGA] awaitPaymentResult order not found orderNo={}", orderNo);
-            return false;
-        }
-
-        while (true) {
-            Order latest = orderMapper.selectOne(new LambdaQueryWrapper<Order>()
-                    .eq(Order::getOrderNo, orderNo));
-            if (latest == null) {
-                log.warn("[SAGA] awaitPaymentResult order disappeared orderNo={}", orderNo);
-                return false;
-            }
-
-            OrderStatus currentStatus = OrderStatus.fromValue(latest.getStatus());
-            LocalDateTime deadline = determineDeadline(latest);
-            if (OrderStatus.PAID.equals(currentStatus)) {
-                log.info("[SAGA] awaitPaymentResult already paid orderNo={}", orderNo);
-                return true;
-            }
-            if (OrderStatus.FAILED.equals(currentStatus)) {
-                log.info("[SAGA] awaitPaymentResult already failed orderNo={}", orderNo);
-                return false;
-            }
-
-            if (LocalDateTime.now().isAfter(deadline)) {
-                log.warn("[SAGA] awaitPaymentResult timed out orderNo={} deadline={}", orderNo, deadline);
-                markFailed(orderNo, "PAYPAY_TIMEOUT", "PayPay payment timed out");
-                return false;
-            }
-
-            PaymentResult statusResult = paymentClient.getStatus(orderNo);
-            if (statusResult != null) {
-                updatePaymentSnapshot(orderNo, statusResult);
-                String paypayStatus = normalizeStatus(statusResult.getStatus());
-                if (paypayStatus != null) {
-                    if (PAYPAY_SUCCESS_STATUSES.contains(paypayStatus)) {
-                        log.info("[SAGA] awaitPaymentResult PayPay success orderNo={} paypayStatus={}", orderNo, paypayStatus);
-                        markPaid(orderNo);
-                        return true;
-                    }
-                    if (PAYPAY_FAILURE_STATUSES.contains(paypayStatus)) {
-                        String code = firstNonBlank(statusResult.getCode(), paypayStatus);
-                        String message = firstNonBlank(statusResult.getMessage(), "PayPay status " + paypayStatus);
-                        log.warn("[SAGA] awaitPaymentResult PayPay failure orderNo={} status={} code={}", orderNo, paypayStatus, code);
-                        markFailed(orderNo, code, message);
-                        return false;
-                    }
-                }
-            }
-
-            sleepQuietly();
-        }
     }
 
     @Transactional
@@ -212,6 +162,8 @@ public class OrderSagaActions {
                 .set(Order::getFailedAt, null)
                 .set(Order::getFailCode, null)
                 .set(Order::getFailMessage, null)
+                .set(Order::getPaymentChannelToken, null)
+                .set(Order::getPaymentChannelExpiresAt, null)
                 .set(Order::getUpdateTime, now);
         int updated = orderMapper.update(null, uw);
         log.info("[SAGA] markPaid updated={} orderNo={}", updated, orderNo);
@@ -233,36 +185,26 @@ public class OrderSagaActions {
                 .set(Order::getFailedAt, now)
                 .set(Order::getPaymentStatus, "FAILED")
                 .set(Order::getPaymentCompletedAt, null)
+                .set(Order::getPaymentChannelToken, null)
+                .set(Order::getPaymentChannelExpiresAt, null)
                 .set(Order::getUpdateTime, now);
         int updated = orderMapper.update(null, uw);
         log.info("[SAGA] markFailed updated={} orderNo={}", updated, orderNo);
         return updated > 0;
     }
 
-    private LocalDateTime determineDeadline(Order order) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime requestedAt = order.getPaymentRequestedAt() != null ? order.getPaymentRequestedAt() : now;
-        LocalDateTime expiresAt = order.getPaymentExpiresAt();
-        if (expiresAt != null) {
-            return expiresAt.isBefore(now) ? now : expiresAt;
+    private String ensureChannelToken(Order order, LocalDateTime now) {
+        if (order != null && StringUtils.hasText(order.getPaymentChannelToken())) {
+            LocalDateTime currentExpiry = order.getPaymentChannelExpiresAt();
+            if (currentExpiry != null && currentExpiry.isAfter(now.plus(CHANNEL_TOKEN_REFRESH_THRESHOLD))) {
+                return order.getPaymentChannelToken();
+            }
         }
-        return requestedAt.plus(PAYMENT_WAIT_TIMEOUT);
+        return generateChannelToken();
     }
 
-    private void updatePaymentSnapshot(String orderNo, PaymentResult result) {
-        if (result == null) {
-            return;
-        }
-        LocalDateTime now = LocalDateTime.now();
-        LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
-        uw.eq(Order::getOrderNo, orderNo)
-                .set(Order::getPaymentStatus, normalizeStatus(result.getStatus()))
-                .set(Order::getPaymentUrl, preferredUrl(result))
-                .set(Order::getUpdateTime, now);
-        if (StringUtils.hasText(result.getExpiresAt())) {
-            uw.set(Order::getPaymentExpiresAt, resolveExpiry(result.getExpiresAt(), now.plus(PAYMENT_WAIT_TIMEOUT)));
-        }
-        orderMapper.update(null, uw);
+    private static String generateChannelToken() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
     private static LocalDateTime resolveExpiry(String expiresAt, LocalDateTime fallback) {
@@ -302,15 +244,6 @@ public class OrderSagaActions {
             }
         }
         return null;
-    }
-
-    private void sleepQuietly() {
-        try {
-            Thread.sleep(PAYMENT_STATUS_POLL_INTERVAL_MS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted while waiting for PayPay status", e);
-        }
     }
 
     private static void require(Object value, String name) {

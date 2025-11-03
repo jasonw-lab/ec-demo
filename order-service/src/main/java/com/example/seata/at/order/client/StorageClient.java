@@ -35,6 +35,10 @@ public class StorageClient {
         return post(orderNo, productId, count, "/api/storage/compensate/saga");
     }
 
+    public boolean confirm(String orderNo, Long productId, Integer count) {
+        return post(orderNo, productId, count, "/api/storage/confirm/saga");
+    }
+
     @SuppressWarnings("unchecked")
     private boolean post(String orderNo, Long productId, Integer count, String path) {
         HttpHeaders headers = new HttpHeaders();

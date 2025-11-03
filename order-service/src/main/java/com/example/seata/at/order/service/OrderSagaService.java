@@ -9,6 +9,7 @@ public interface OrderSagaService {
     Order startOrderCreateSaga(OrderDTO req);
 
     boolean startSampleReduceInventoryAndBalance(OrderDTO req);
-}
 
+    Order findByOrderNo(String orderNo);
+}
 
