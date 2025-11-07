@@ -1,0 +1,58 @@
+-- TCC mode specific tables and schemas
+
+-- Order DB - TCC order table
+USE `seata_order`;
+
+-- TCC order table
+DROP TABLE IF EXISTS `tcc_order`;
+CREATE TABLE `tcc_order` (
+  `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+  `xid` VARCHAR(100) NOT NULL,
+  `order_no` VARCHAR(128) NOT NULL,
+  `user_id` BIGINT NOT NULL,
+  `product_id` BIGINT NOT NULL,
+  `count` INT NOT NULL,
+  `amount` DECIMAL(18,2) NOT NULL,
+  `status` VARCHAR(16) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING, CONFIRMED, CANCELLED',
+  `create_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uk_xid` (`xid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Storage DB - TCC storage table
+USE `seata_storage`;
+
+-- TCC storage table
+DROP TABLE IF EXISTS `tcc_storage`;
+CREATE TABLE `tcc_storage` (
+  `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+  `xid` VARCHAR(100) NOT NULL,  
+  `product_id` BIGINT NOT NULL,
+  `total` INT NOT NULL,
+  `used` INT NOT NULL DEFAULT 0,
+  `residue` INT NOT NULL,
+  `frozen` INT NOT NULL,
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0: PENDING, 1: SUCCESS, 2: FAILED',
+  `create_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Account DB - TCC account table
+USE `seata_account`;
+
+-- TCC account table
+DROP TABLE IF EXISTS `tcc_account`;
+CREATE TABLE `tcc_account` (
+  `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+  `xid` VARCHAR(100) NULL,
+  `order_id` BIGINT NULL,
+  `user_id` BIGINT NOT NULL,
+  `total` DECIMAL(18,2) NOT NULL,
+  `used` DECIMAL(18,2) NOT NULL DEFAULT 0,
+  `residue` DECIMAL(18,2) NOT NULL,
+  `frozen` DECIMAL(18,2) NOT NULL,
+  `status` VARCHAR(16) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING, SUCCESS, FAILED',
+  `create_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uk_xid` (`xid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4

@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0.29
+    platform: linux/arm64
+    container_name: seata-mysql-8
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_ROOT_HOST: "%"
+      TZ: Asia/Tokyo
+      LANG: en_US.UTF-8
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_general_ci"]
+    volumes:
+      - ./sql/mysql-init:/docker-entrypoint-initdb.d
+      - ${basepath}/mysql/conf/my.cnf:/etc/my.cnf # 挂载 my.cnf 文件到容器的指定路径
+      - ${basepath}/mysql/data:/var/lib/mysql # 持久化 MySQL 数据
+      - ${basepath}/mysql/log:/var/log/mysql #日志文件目录挂载
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - seata-net
+
+networks:
+  seata-net:
+    name: seata-net

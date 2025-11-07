@@ -87,3 +87,4 @@ update*.sh
 
 # dotenv files
 .env
+.run

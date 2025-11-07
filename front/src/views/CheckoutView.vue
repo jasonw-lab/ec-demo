@@ -79,11 +79,6 @@
           PayPay 決済ページ (サンドボックス) →
         </a>
       </div>
-      <div style="text-align:center;">
-        <button @click="simulateSuccess" style="background:#10b981;color:white;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-weight:600;">
-          支払い成功(デモ)
-        </button>
-      </div>
       <div v-if="paid" style="margin-top:16px;text-align:center;color:#10b981;font-weight:600;padding:16px;background:#f0fdf4;border-radius:8px;">
         ✅ 支払いが完了しました！
       </div>
@@ -105,47 +100,60 @@ const total = computed<number>(() => cart.reduce((a,c)=> a + Number(c.product.pr
 const paymentUrl = ref<string>('')
 const orderId = ref<string>('')
 const paid = ref<boolean>(false)
+const channelToken = ref<string>('')
 
 async function submit(): Promise<void> {
-  const body = {
-    customerName: name.value,
-    customerEmail: email.value,
-    items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
-  }
-  const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
-  const data: { orderId: string; amount?: number; status?: string } = await res.json()
-  paymentUrl.value = ''
-  orderId.value = data.orderId
-}
-
-async function simulateSuccess(): Promise<void> {
-  const res = await fetch(`${apiBase}/payments/${orderId.value}/simulate-success`, { method:'POST' })
-  const data: { status: string } = await res.json()
-  if (data.status === 'PAID') {
-    paid.value = true
-    store.clearCart()
+  try {
+    const body = {
+      customerName: name.value,
+      customerEmail: email.value,
+      items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
+    }
+    const res = await fetch(`${apiBase}/orders/purchase`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) {
+      const message = await res.text()
+      throw new Error(message || '注文作成に失敗しました')
+    }
+    const data: { orderId: string; amount?: number; status?: string; channelToken?: string } = await res.json()
+    paymentUrl.value = ''
+    orderId.value = data.orderId
+    channelToken.value = data.channelToken ?? ''
+  } catch (err) {
+    console.error('❌ 注文作成に失敗しました', err)
+    alert('注文の作成に失敗しました。時間をおいて再度お試しください。')
   }
 }
 
 async function goToPaymentDetail(): Promise<void> {
-  // サーバ側で注文を作成（QRは別APIで取得）
-  const body = {
-    customerName: name.value,
-    customerEmail: email.value,
-    items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
-  }
-  const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
-  const data: { orderId: string; amount?: number; status?: string } = await res.json()
-  paymentUrl.value = ''
-  orderId.value = data.orderId
-
-  // 支払い詳細画面へ遷移（QR取得は詳細画面で実施）
-  router.push({
-    path: '/payment-detail',
-    query: {
-      total: String(total.value),
-      orderId: orderId.value,
+  try {
+    // サーバ側で注文を作成（QRは別APIで取得）
+    const body = {
+      customerName: name.value,
+      customerEmail: email.value,
+      items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
     }
-  })
+    const res = await fetch(`${apiBase}/orders/purchase`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) {
+      const message = await res.text()
+      throw new Error(message || '注文作成に失敗しました')
+    }
+    const data: { orderId: string; amount?: number; status?: string; channelToken?: string } = await res.json()
+    paymentUrl.value = ''
+    orderId.value = data.orderId
+    channelToken.value = data.channelToken ?? ''
+
+    // 支払い詳細画面へ遷移（QR取得は詳細画面で実施）
+    router.push({
+      path: '/payment-detail',
+      query: {
+        total: String(total.value),
+        orderId: orderId.value,
+        token: channelToken.value,
+      }
+    })
+  } catch (err) {
+    console.error('❌ 決済ページへの遷移に失敗しました', err)
+    alert('注文の作成に失敗しました。時間をおいて再度お試しください。')
+  }
 }
 </script>

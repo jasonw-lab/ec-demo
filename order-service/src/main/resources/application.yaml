@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: order-service-at
+  profiles:
+    active: saga
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration
+  datasource:
+    url: jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      initialization-fail-timeout: -1
+      minimum-idle: 0
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+server:
+  port: 8081
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: false
+logging:
+  level:
+    root: INFO
+
+# Register initializer to load .env, .env-<profile>, or ENV_FILE
+context:
+  initializer:
+    classes: com.example.seata.common.config.DotenvInitializer
+
