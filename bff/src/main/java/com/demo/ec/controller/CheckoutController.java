@@ -147,6 +147,22 @@ public class CheckoutController {
         return ResponseEntity.ok(resp);
     }
 
+    /**
+     * 支払い詳細情報を取得するエンドポイント
+     * 
+     * <p>呼び出し元：
+     * <ul>
+     *   <li>フロントエンド: {@code PaymentDetailView.vue} の {@code startPolling()} 関数から定期的に呼び出される</li>
+     *   <li>ポーリング間隔: 3秒ごと（{@code pollIntervalMs = 3000}）</li>
+     *   <li>目的: 支払いステータス（PAID/FAILED）を検知して画面遷移をトリガー</li>
+     * </ul>
+     * 
+     * <p>注意: 支払い完了後（PAIDステータス）は、フロントエンド側で {@code hasFinalized} フラグにより
+     * ポーリングが停止されるため、このエンドポイントは呼ばれなくなります。
+     * 
+     * @param id 注文ID（orderNo）
+     * @return 支払い詳細情報（ステータス、金額、QRコードURL等）
+     */
     @GetMapping("/payments/{id}/details")
     public ResponseEntity<Map<String, Object>> getPaymentDetails(@PathVariable String id) {
         log.info("CheckoutController.getPaymentDetails START request: id={}", id);
@@ -158,8 +174,14 @@ public class CheckoutController {
 
         OrderSummary summary = orderOpt.get();
         Map<String, Object> payload = toOrderPayload(summary);
+        String status = (String) payload.get("status");
 
-        log.info("CheckoutController.getPaymentDetails END orderId={} status={}", id, payload.get("status"));
+        // 支払い完了済みの場合はログに記録（通常は呼ばれないはず）
+        if ("PAID".equals(status) || "PAYMENT_FAILED".equals(status)) {
+            log.debug("CheckoutController.getPaymentDetails called for finalized order orderId={}, status={}", id, status);
+        }
+
+        log.info("CheckoutController.getPaymentDetails END orderId={} status={}", id, status);
         return ResponseEntity.ok(payload);
     }
 

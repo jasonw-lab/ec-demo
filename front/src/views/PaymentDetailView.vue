@@ -200,6 +200,11 @@ const wsConnected = ref<boolean>(false)
 const hasFinalized = ref<boolean>(false)
 const lastResult = ref<string>('PENDING')
 
+const qrFetchAttempts = ref(0)
+const qrFetchStartedAt = ref<number | null>(null)
+const QR_FETCH_MAX_ATTEMPTS = 20
+const QR_FETCH_MAX_WAIT_MS = 30_000
+
 // QR画像URL（base64画像があれば優先、それ以外はURLを利用）
 const qrImgUrl = computed(() => paymentImageDataUrl.value || paymentUrl.value || '')
 
@@ -249,12 +254,16 @@ async function startPolling() {
         
         if (data.status === 'PAID') {
           console.log('✅ Payment completed, redirecting to success page')
+          // 支払い完了フラグを設定して、以降のポーリングを停止
+          hasFinalized.value = true
           stopPolling()
           store.clearCart()
           router.push({ path: '/payment-success', query: { orderId: orderId.value, total: String(total.value) } })
           return
         } else if (data.status === 'PAYMENT_FAILED') {
           console.log('❌ Payment failed')
+          // 支払い失敗フラグを設定して、以降のポーリングを停止
+          hasFinalized.value = true
           stopPolling()
           paymentError.value = {
             code: 'PAYMENT_FAILED',
@@ -435,6 +444,7 @@ async function retryPayment() {
   paymentError.value = null
   paymentImageDataUrl.value = ''
   paymentUrl.value = ''
+  resetQrFetchTracking()
   if (wsConnected.value) {
     disconnectWebSocket()
   }
@@ -444,49 +454,106 @@ async function retryPayment() {
   await fetchQr()
 }
 
+function resetQrFetchTracking() {
+  qrFetchAttempts.value = 0
+  qrFetchStartedAt.value = null
+}
+
+function registerQrFetchAttempt() {
+  qrFetchAttempts.value += 1
+  if (qrFetchStartedAt.value === null) {
+    qrFetchStartedAt.value = Date.now()
+  }
+}
+
+function exceededQrWaitThreshold(): boolean {
+  const start = qrFetchStartedAt.value ?? Date.now()
+  if (qrFetchAttempts.value >= QR_FETCH_MAX_ATTEMPTS) {
+    return true
+  }
+  return Date.now() - start > QR_FETCH_MAX_WAIT_MS
+}
+
 async function fetchQr(): Promise<void> {
   if (!orderId.value) {
     console.log('❌ No orderId for QR code fetch')
     return
   }
+  registerQrFetchAttempt()
   console.log('📱 Fetching QR code for orderId:', orderId.value, 'amount:', total.value)
   isLoadingQr.value = true
+  let keepLoading = false
   try {
     const res = await fetch(`${apiBase}/payments/${orderId.value}/qrcode?amount=${total.value}`)
-    if (res.ok) {
-      const data = await res.json()
-      console.log('📱 QR code response:', data)
-      // base64Image を優先して表示。存在しなければ従来の URL を利用
-      const base64 = String(data.base64Image || '')
-      if (base64) {
-        paymentImageDataUrl.value = `data:image/png;base64,${base64}`
-        console.log('🖼️ Base64 image set, length:', base64.length)
-      } else {
-        paymentImageDataUrl.value = ''
-        console.log('❌ No base64 image in response')
-      }
-      paymentUrl.value = String(data.paymentUrl || '')
-      console.log('🔗 Payment URL set:', paymentUrl.value)
-      // QRコードが取得できた場合、WebSocket接続がなければポーリングを開始
-      if (base64 || paymentUrl.value) {
-        if (!wsConnected.value) {
-          console.log('🔄 Starting polling after QR code fetch (WebSocket未接続)')
-          startPolling()
+    if (res.status === 202) {
+      const data = await res.json().catch(() => ({}))
+      const status = String((data as Record<string, unknown>).status || '').toUpperCase()
+      console.log('⏳ QR code still pending, status:', status || 'UNKNOWN')
+      if (status === 'PAYMENT_FAILED' || status === 'FAILED') {
+        paymentError.value = {
+          code: 'PAYMENT_FAILED',
+          message: '支払いに失敗しました。もう一度お試しください。'
         }
+      } else if (status === 'PAID') {
+        console.log('✅ Payment already completed while waiting for QR')
+        finalizeSuccess()
       } else {
-        console.log('❌ No QR code or payment URL, cannot start polling')
+        if (exceededQrWaitThreshold()) {
+          console.log('⛔ QR code fetch exceeded wait threshold, aborting loader')
+        } else {
+          keepLoading = true
+          window.setTimeout(() => {
+            console.log('⏳ Retrying QR code fetch after delay')
+            void fetchQr()
+          }, 2000)
+        }
+      }
+      return
+    }
+
+    if (!res.ok) {
+      console.log('❌ Failed to fetch QR code, status:', res.status)
+      return
+    }
+
+    const data = await res.json()
+    console.log('📱 QR code response:', data)
+    // base64Image を優先して表示。存在しなければ従来の URL を利用
+    const base64 = String(data.base64Image || '')
+    if (base64) {
+      paymentImageDataUrl.value = `data:image/png;base64,${base64}`
+      console.log('🖼️ Base64 image set, length:', base64.length)
+    } else {
+      paymentImageDataUrl.value = ''
+      console.log('❌ No base64 image in response')
+    }
+    paymentUrl.value = String(data.paymentUrl || '')
+    console.log('🔗 Payment URL set:', paymentUrl.value)
+    // QRコードが取得できた場合、WebSocket接続がなければポーリングを開始
+    if (base64 || paymentUrl.value) {
+      if (!wsConnected.value) {
+        console.log('🔄 Starting polling after QR code fetch (WebSocket未接続)')
+        startPolling()
+      }
+      resetQrFetchTracking()
+    } else {
+      console.log('❌ No QR code or payment URL, cannot start polling')
+      if (exceededQrWaitThreshold()) {
+        console.log('⛔ QR code response missing data after repeated attempts, aborting loader')
+      } else {
+        keepLoading = true
         window.setTimeout(() => {
           console.log('⏳ Retrying QR code fetch after delay')
           void fetchQr()
         }, 2000)
       }
-    } else {
-      console.log('❌ Failed to fetch QR code, status:', res.status)
     }
   } catch (error) {
     console.error('❌ Failed to fetch QR code:', error)
   } finally {
-    isLoadingQr.value = false
+    if (!keepLoading) {
+      isLoadingQr.value = false
+    }
   }
 }
 

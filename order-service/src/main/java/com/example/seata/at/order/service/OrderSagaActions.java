@@ -93,6 +93,7 @@ public class OrderSagaActions {
         return storageClient.confirm(orderNo, productId, count);
     }
 
+    @Transactional
     public boolean requestPayment(String orderNo, BigDecimal amount) {
         require(orderNo, "orderNo");
         require(amount, "amount");

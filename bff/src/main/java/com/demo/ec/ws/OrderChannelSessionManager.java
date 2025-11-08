@@ -43,4 +43,11 @@ public class OrderChannelSessionManager {
     public String findOrderId(WebSocketSession session) {
         return sessionToOrder.get(session.getId());
     }
+
+    /**
+     * WebSocket接続中のすべての注文IDを取得
+     */
+    public Collection<String> getAllOrderIds() {
+        return Collections.unmodifiableSet(orderSessions.keySet());
+    }
 }
