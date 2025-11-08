@@ -26,15 +26,27 @@ public class OrderPaymentController {
         this.orderPaymentService = orderPaymentService;
     }
 
+    /**
+     * Webhookから呼び出される支払いイベント処理エンドポイント
+     * 
+     * <p>BFFのPayPayWebhookControllerから呼び出され、注文ステータスを更新します。
+     * 
+     * @param orderNo 注文番号
+     * @param request 支払いステータス更新リクエスト
+     * @return 更新された注文
+     */
     @PostMapping("/{orderNo}/payment/events")
     public CommonResponse<Order> handlePaymentEvent(@PathVariable String orderNo,
                                                     @RequestBody PaymentStatusUpdateRequest request) {
-        log.info("[PaymentEvent] orderNo={} status={} eventId={}", orderNo, request.getStatus(), request.getEventId());
+        log.info("[PaymentEvent] Received payment event orderNo={}, status={}, eventId={}", 
+                orderNo, request.getStatus(), request.getEventId());
         Order updated = orderPaymentService.handlePaymentStatus(orderNo, request);
         CommonResponse<Order> res = new CommonResponse<>();
         res.setSuccess(true);
         res.setMessage("OK");
         res.setData(updated);
+        log.info("[PaymentEvent] Payment event processed successfully orderNo={}, newStatus={}", 
+                orderNo, updated.getStatus());
         return res;
     }
 
