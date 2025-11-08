@@ -254,12 +254,16 @@ async function startPolling() {
         
         if (data.status === 'PAID') {
           console.log('✅ Payment completed, redirecting to success page')
+          // 支払い完了フラグを設定して、以降のポーリングを停止
+          hasFinalized.value = true
           stopPolling()
           store.clearCart()
           router.push({ path: '/payment-success', query: { orderId: orderId.value, total: String(total.value) } })
           return
         } else if (data.status === 'PAYMENT_FAILED') {
           console.log('❌ Payment failed')
+          // 支払い失敗フラグを設定して、以降のポーリングを停止
+          hasFinalized.value = true
           stopPolling()
           paymentError.value = {
             code: 'PAYMENT_FAILED',

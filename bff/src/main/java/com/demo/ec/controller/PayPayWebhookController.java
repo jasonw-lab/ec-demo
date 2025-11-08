@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -18,11 +17,25 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Placeholder webhook endpoint for PayPay callbacks.
- * Real-world deployments should verify signatures and forward the event to order-service.
+ * PayPay Webhook受信コントローラー
+ * 
+ * <p>PayPayから送信されるWebhookイベントを受信し、order-serviceに転送します。
+ * Webhookはポーリングよりも優先され、リアルタイムに支払い完了を検知できます。
+ * 
+ * <p>エンドポイント：
+ * <ul>
+ *   <li>/paypay/callback - Cloudflare Tunnel経由でPayPayから呼ばれる</li>
+ *   <li>/api/paypay/webhook - 内部API用（テスト等）</li>
+ * </ul>
+ * 
+ * <p>処理フロー：
+ * <ol>
+ *   <li>Webhookペイロードを受信</li>
+ *   <li>order-serviceに支払いステータス更新を通知</li>
+ *   <li>WebSocketでフロントエンドに通知</li>
+ * </ol>
  */
 @RestController
-@RequestMapping("/api/paypay")
 public class PayPayWebhookController {
 
     private static final Logger log = LoggerFactory.getLogger(PayPayWebhookController.class);
@@ -35,30 +48,90 @@ public class PayPayWebhookController {
         this.broadcaster = broadcaster;
     }
 
-    @PostMapping("/webhook")
+    /**
+     * Cloudflare Tunnel経由でPayPayから呼ばれるコールバックエンドポイント
+     * 
+     * <p>URL: https://skip-denied-oils-reflected.trycloudflare.com/paypay/callback
+     * 
+     * @param payload Webhookペイロード
+     * @return HTTP 200 OK（成功時）
+     */
+    @PostMapping("/paypay/callback")
+    public ResponseEntity<?> callback(@RequestBody Map<String, Object> payload) {
+        log.info("[PayPayWebhook] Received callback at /paypay/callback payloadKeys={}", payload.keySet());
+        return processWebhook(payload);
+    }
+
+    /**
+     * 既存のwebhookエンドポイント（内部API用）
+     * 
+     * <p>URL: /api/paypay/webhook
+     * テストやデバッグ用途で使用します。
+     * 
+     * @param payload Webhookペイロード
+     * @return HTTP 200 OK（成功時）
+     */
+    @PostMapping("/api/paypay/webhook")
     public ResponseEntity<?> webhook(@RequestBody Map<String, Object> payload) {
-        log.info("Received PayPay webhook payload={}", payload);
-        WebhookMessage message = WebhookMessage.fromPayload(payload);
-        if (!StringUtils.hasText(message.orderId()) || !StringUtils.hasText(message.status())) {
-            log.warn("Webhook missing orderId/status payload={}", payload);
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "orderId/status required"));
+        log.info("[PayPayWebhook] Received webhook at /api/paypay/webhook payloadKeys={}", payload.keySet());
+        return processWebhook(payload);
+    }
+
+    /**
+     * Webhookペイロードを処理し、order-serviceに通知します。
+     * 
+     * <p>Webhookはポーリングよりも優先されるため、即座に処理されます。
+     * 
+     * @param payload Webhookペイロード
+     * @return HTTPレスポンス
+     */
+    private ResponseEntity<?> processWebhook(Map<String, Object> payload) {
+        try {
+            // ペイロードから注文情報を抽出
+            WebhookMessage message = WebhookMessage.fromPayload(payload);
+            
+            // 必須項目の検証
+            if (!StringUtils.hasText(message.orderId()) || !StringUtils.hasText(message.status())) {
+                log.warn("[PayPayWebhook] Missing required fields orderId={}, status={}, payload={}", 
+                        message.orderId(), message.status(), payload);
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "orderId/status required"));
+            }
+
+            log.info("[PayPayWebhook] Processing payment status update orderId={}, status={}, eventId={}", 
+                    message.orderId(), message.status(), message.eventId());
+
+            // order-serviceに支払いステータス更新を通知
+            PaymentStatusUpdateRequest request = new PaymentStatusUpdateRequest();
+            request.setStatus(message.status());
+            request.setCode(message.code());
+            request.setMessage(message.message());
+            request.setEventId(message.eventId());
+            request.setEventTime(message.eventTime());
+
+            Optional<OrderSummary> updated = orderServiceClient.notifyPaymentStatus(message.orderId(), request);
+            
+            if (updated.isPresent()) {
+                OrderSummary summary = updated.get();
+                log.info("[PayPayWebhook] Order updated successfully orderId={}, newStatus={}, eventId={}", 
+                        message.orderId(), summary.getStatus(), message.eventId());
+                
+                // WebSocketでフロントエンドに通知
+                broadcaster.broadcast(summary);
+                log.info("[PayPayWebhook] WebSocket broadcast sent orderId={}, eventId={}", 
+                        message.orderId(), message.eventId());
+                
+                return ResponseEntity.ok(Map.of("success", true, "orderId", message.orderId()));
+            } else {
+                log.warn("[PayPayWebhook] Order update failed orderId={}, eventId={} (order service returned empty)", 
+                        message.orderId(), message.eventId());
+                return ResponseEntity.ok(Map.of("success", false, "message", "orderNotUpdated", "orderId", message.orderId()));
+            }
+        } catch (Exception e) {
+            log.error("[PayPayWebhook] Webhook processing failed payload={}, error={}", payload, e.getMessage(), e);
+            return ResponseEntity.status(500)
+                    .body(Map.of("success", false, "message", "Internal server error: " + e.getMessage()));
         }
-
-        PaymentStatusUpdateRequest request = new PaymentStatusUpdateRequest();
-        request.setStatus(message.status());
-        request.setCode(message.code());
-        request.setMessage(message.message());
-        request.setEventId(message.eventId());
-        request.setEventTime(message.eventTime());
-
-        Optional<OrderSummary> updated = orderServiceClient.notifyPaymentStatus(message.orderId(), request);
-        if (updated.isPresent()) {
-            broadcaster.broadcast(updated.get());
-            return ResponseEntity.ok(Map.of("success", true));
-        }
-
-        log.warn("Webhook could not update order orderId={} (order service returned empty)", message.orderId());
-        return ResponseEntity.ok(Map.of("success", false, "message", "orderNotUpdated"));
     }
 
     private record WebhookMessage(String orderId, String status, String code, String message, String eventId, String eventTime) {
