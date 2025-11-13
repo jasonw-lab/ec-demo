@@ -46,7 +46,12 @@ public class OrderStatusPollingService {
     }
 
     /**
-     * WebSocket接続中の注文について、ステータスをチェックして変更があれば通知
+     * WebSocket接続中の注文について、ステータスをチェックして変更があれば通知します。
+     * 
+     * <p>重要な設計判断：
+     * - スケジューラーで定期的に実行されるため、例外処理が重要
+     * - 一つの注文でエラーが発生しても、他の注文の処理は継続
+     * - 完了した注文（PAID/FAILED）はメモリから削除してリソースを節約
      * 
      * <p>デフォルトでは5秒ごとに実行されます。
      * 設定: bff.order.status-check-interval-ms (デフォルト: 5000ms)
@@ -60,74 +65,142 @@ public class OrderStatusPollingService {
 
         int checkedCount = 0;
         int notifiedCount = 0;
+        int errorCount = 0;
+        int finalizedCount = 0;
 
         for (String orderId : activeOrderIds) {
             try {
-                Optional<OrderSummary> summaryOpt = orderServiceClient.getOrder(orderId);
-                if (summaryOpt.isEmpty()) {
-                    continue;
-                }
-
-                OrderSummary summary = summaryOpt.get();
-                String currentStatus = summary.getStatus();
-                String lastStatus = lastStatusMap.get(orderId);
-
+                boolean notified = checkAndNotifyOrderStatus(orderId);
                 checkedCount++;
-
-                // デバッグログ（ステータスがnullの場合を確認）
-                if (currentStatus == null) {
-                    log.debug("[OrderStatusPolling] Order status is null orderId={}, summary={}", 
-                            orderId, summary);
-                }
-
-                // ステータスが変更された場合、または重要なステータス（PAID/FAILED）に到達した場合
-                if (currentStatus != null) {
-                    boolean shouldNotify = false;
+                
+                if (notified) {
+                    notifiedCount++;
                     
-                    if (lastStatus == null) {
-                        // 初回チェックで重要なステータスの場合
-                        if (NOTIFY_STATUSES.contains(currentStatus)) {
-                            shouldNotify = true;
-                            log.info("[OrderStatusPolling] Initial check found important status orderId={}, status={}", 
-                                    orderId, currentStatus);
-                        }
-                    } else if (!currentStatus.equals(lastStatus)) {
-                        // ステータスが変更された場合（常に通知）
-                        shouldNotify = true;
-                        log.info("[OrderStatusPolling] Status changed detected orderId={}, oldStatus={}, newStatus={}", 
-                                orderId, lastStatus, currentStatus);
-                    }
-                    
-                    if (shouldNotify) {
-                        log.info("[OrderStatusPolling] Broadcasting status update orderId={}, status={}", 
+                    // メモリ管理: 完了した注文（PAID/FAILED）は監視対象から除外
+                    // ■ 無限にメモリが増加するのを防ぐ
+                    String currentStatus = lastStatusMap.get(orderId);
+                    if (currentStatus != null && NOTIFY_STATUSES.contains(currentStatus)) {
+                        removeOrder(orderId);
+                        finalizedCount++;
+                        log.debug("[OrderStatusPolling] Removed finalized order from monitoring orderId={}, status={}", 
                                 orderId, currentStatus);
-                        broadcaster.broadcast(summary);
-                        notifiedCount++;
                     }
-                    
-                    lastStatusMap.put(orderId, currentStatus);
-                } else if (lastStatus != null) {
-                    // ステータスがnullになった場合（異常状態）、前回のステータスを保持
-                    log.warn("[OrderStatusPolling] Order status became null orderId={}, keeping lastStatus={}", 
-                            orderId, lastStatus);
                 }
             } catch (Exception e) {
+                errorCount++;
+                // ■ 一つの注文でエラーが発生しても他の注文の処理は続行
+                // スケジューラーが停止すると全体の監視が止まってしまう
                 log.warn("[OrderStatusPolling] Error checking order status orderId={}, error={}", 
-                        orderId, e.getMessage());
+                        orderId, e.getMessage(), e);
             }
         }
 
-        if (notifiedCount > 0) {
-            log.info("[OrderStatusPolling] Status check completed: checked={}, notified={}", 
-                    checkedCount, notifiedCount);
+        // 統計ログ（デバッグや監視に有用）
+        if (notifiedCount > 0 || finalizedCount > 0 || errorCount > 0) {
+            log.info("[OrderStatusPolling] Status check completed: checked={}, notified={}, finalized={}, errors={}", 
+                    checkedCount, notifiedCount, finalizedCount, errorCount);
         }
     }
 
     /**
-     * 注文が完了または失敗した場合、メモリから削除
+     * 単一の注文についてステータスをチェックし、変更があれば通知します。
+     * 
+     * <p>設計判断：
+     * - null安全性を確保（currentStatusがnullの場合の処理）
+     * - 初回チェックと変更検知を明確に分離
+     * - 重要なステータス（PAID/FAILED）は初回でも通知
+     * 
+     * @param orderId 注文ID（非null保証済み）
+     * @return 通知が送信された場合true
+     */
+    private boolean checkAndNotifyOrderStatus(String orderId) {
+        // order-serviceから最新の注文情報を取得
+        Optional<OrderSummary> summaryOpt = orderServiceClient.getOrder(orderId);
+        if (summaryOpt.isEmpty()) {
+            log.debug("[OrderStatusPolling] Order not found orderId={}", orderId);
+            return false;
+        }
+
+        OrderSummary summary = summaryOpt.get();
+        String currentStatus = summary.getStatus();
+        String lastStatus = lastStatusMap.get(orderId);
+
+        // null安全性チェック
+        if (currentStatus == null) {
+            log.debug("[OrderStatusPolling] Order status is null orderId={}", orderId);
+            // null状態が続く場合は、前回のステータスを保持（異常状態の記録）
+            return false;
+        }
+
+        // 通知判定ロジック
+        boolean shouldNotify = shouldNotifyStatusChange(lastStatus, currentStatus, orderId);
+        
+        if (shouldNotify) {
+            log.info("[OrderStatusPolling] Broadcasting status update orderId={}, status={}", 
+                    orderId, currentStatus);
+            broadcaster.broadcast(summary);
+        }
+        
+        // ステータスを記録（次回の変更検知に使用）
+        lastStatusMap.put(orderId, currentStatus);
+        
+        return shouldNotify;
+    }
+
+    /**
+     * ステータス変更時に通知すべきかどうかを判定します。
+     * 
+     * <p>通知条件：
+     * 1. 初回チェックで重要なステータス（PAID/FAILED）に到達
+     * 2. ステータスが変更された（任意のステータス）
+     * 
+     * @param lastStatus 前回のステータス（null可、初回チェック時）
+     * @param currentStatus 現在のステータス（非null保証済み）
+     * @param orderId 注文ID（ログ用）
+     * @return 通知すべき場合true
+     */
+    private boolean shouldNotifyStatusChange(String lastStatus, String currentStatus, String orderId) {
+        if (lastStatus == null) {
+            // 初回チェック: 重要なステータス（PAID/FAILED）の場合のみ通知
+            // ■ 接続時に既に完了している注文も通知する必要がある
+            if (NOTIFY_STATUSES.contains(currentStatus)) {
+                log.info("[OrderStatusPolling] Initial check found important status orderId={}, status={}", 
+                        orderId, currentStatus);
+                return true;
+            }
+            return false;
+        }
+        
+        // ステータス変更検知: 任意の変更を通知
+        // ■ ユーザーに最新の状態を常に反映させる
+        if (!currentStatus.equals(lastStatus)) {
+            log.info("[OrderStatusPolling] Status changed detected orderId={}, oldStatus={}, newStatus={}", 
+                    orderId, lastStatus, currentStatus);
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 注文の監視を停止し、メモリから削除します。
+     * 
+     * <p>使用例：
+     * - 注文が完了（PAID/FAILED）した場合
+     * - WebSocket接続が切断された場合
+     * 
+     * <p>設計判断：
+     * - メモリリークを防ぐため、不要になった監視状態は削除
+     * - ConcurrentHashMapを使用しているため、スレッドセーフ
+     * 
+     * @param orderId 注文ID（非null保証済み）
      */
     public void removeOrder(String orderId) {
-        lastStatusMap.remove(orderId);
+        String removed = lastStatusMap.remove(orderId);
+        if (removed != null) {
+            log.debug("[OrderStatusPolling] Removed order from status tracking orderId={}, lastStatus={}", 
+                    orderId, removed);
+        }
     }
 }
 
