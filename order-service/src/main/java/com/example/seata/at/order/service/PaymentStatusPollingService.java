@@ -58,6 +58,12 @@ public class PaymentStatusPollingService {
      * 待機中の支払いについて、PayPay APIを呼び出してステータスをチェックし、
      * 完了または失敗を検知したら注文ステータスを更新します。
      * 
+     * <p>重要な設計判断：
+     * - スケジューラーで定期的に実行されるため、例外処理が重要
+     * - 一つの注文でエラーが発生しても、他の注文の処理は継続
+     * - バッチサイズを制限してAPI負荷とDB負荷を制御
+     * - トランザクションは各注文ごとに分離（一つの失敗が他に影響しない）
+     * 
      * <p>処理対象：
      * - ステータスが WAITING_PAYMENT の注文
      * - 支払い有効期限がまだ切れていない注文
@@ -71,10 +77,8 @@ public class PaymentStatusPollingService {
         LocalDateTime now = LocalDateTime.now();
         
         // 有効期限内のWAITING_PAYMENT状態の注文を取得
-        List<Order> waitingOrders = orderMapper.selectList(new LambdaQueryWrapper<Order>()
-                .eq(Order::getStatus, OrderStatus.WAITING_PAYMENT.name())
-                .ge(Order::getPaymentExpiresAt, now)
-                .last("LIMIT " + MAX_ORDERS_PER_BATCH));
+        // ■ LIMIT句でバッチサイズを制限し、APIとDBの負荷を抑える
+        List<Order> waitingOrders = findWaitingPaymentOrders(now);
 
         if (waitingOrders.isEmpty()) {
             log.debug("[PaymentPolling] No waiting orders to check");
@@ -85,6 +89,7 @@ public class PaymentStatusPollingService {
         int updatedCount = 0;
         int errorCount = 0;
 
+        // 各注文を個別に処理（一つの失敗が他に影響しない）
         for (Order order : waitingOrders) {
             String orderNo = order.getOrderNo();
             try {
@@ -94,29 +99,64 @@ public class PaymentStatusPollingService {
                 }
             } catch (Exception e) {
                 errorCount++;
+                // ■ 一つの注文でエラーが発生しても他の注文の処理は続行
+                // スケジューラーが停止すると全体の監視が止まるため
                 log.error("[PaymentPolling] Failed to check payment status for orderNo={}, error={}", 
                          orderNo, e.getMessage(), e);
             }
         }
 
-        log.info("[PaymentPolling] Payment status check completed: checked={}, updated={}, errors={}", 
-                waitingOrders.size(), updatedCount, errorCount);
+        // 統計ログ（監視とデバッグに有用）
+        if (updatedCount > 0 || errorCount > 0) {
+            log.info("[PaymentPolling] Payment status check completed: checked={}, updated={}, errors={}", 
+                    waitingOrders.size(), updatedCount, errorCount);
+        }
         
         return updatedCount;
     }
 
     /**
+     * 待機中の支払い注文を取得します。
+     * 
+     * <p>設計判断：
+     * - メソッドを分離することで、テスト容易性を向上
+     * - バッチサイズの制限を明確化
+     * 
+     * @param now 現在時刻（非null保証済み）
+     * @return 待機中の注文リスト（非null保証、空の可能性あり）
+     */
+    private List<Order> findWaitingPaymentOrders(LocalDateTime now) {
+        return orderMapper.selectList(new LambdaQueryWrapper<Order>()
+                .eq(Order::getStatus, OrderStatus.WAITING_PAYMENT.name())
+                .ge(Order::getPaymentExpiresAt, now)
+                .last("LIMIT " + MAX_ORDERS_PER_BATCH));
+    }
+
+    /**
      * 単一の注文についてPayPay APIを呼び出し、ステータスをチェックして更新します。
      * 
-     * @param order チェック対象の注文
+     * <p>設計判断：
+     * - null安全性を確保（APIレスポンスがnullの場合の処理）
+     * - ステータスの正規化（大文字変換、トリム）を統一
+     * - エラーハンドリングは呼び出し元に委譲
+     * 
+     * @param order チェック対象の注文（非null保証済み）
      * @return 更新が行われた場合true
+     * @throws Exception PayPay API呼び出しまたは注文更新でエラーが発生した場合
      */
-    private boolean checkSingleOrder(Order order) {
+    private boolean checkSingleOrder(Order order) throws Exception {
         String orderNo = order.getOrderNo();
+        
+        // null安全性チェック
+        if (!StringUtils.hasText(orderNo)) {
+            log.warn("[PaymentPolling] Order has empty orderNo, orderId={}", order.getId());
+            return false;
+        }
         
         log.debug("[PaymentPolling] Checking payment status for orderNo={}", orderNo);
         
         // PayPay APIを呼び出してステータスを取得
+        // 注意: 外部API呼び出しのため、ネットワークエラーやタイムアウトの可能性がある
         PaymentResult result = paymentClient.getStatus(orderNo);
         
         if (result == null) {
@@ -131,7 +171,8 @@ public class PaymentStatusPollingService {
             return false;
         }
 
-        String normalized = status.trim().toUpperCase();
+        // ステータスの正規化（一貫性のため）
+        String normalized = normalizeStatus(status);
         log.info("[PaymentPolling] PayPay status for orderNo={}: {} (success={})", 
                 orderNo, normalized, result.isSuccess());
 
@@ -148,63 +189,97 @@ public class PaymentStatusPollingService {
     }
 
     /**
+     * ステータス文字列を正規化します。
+     * 
+     * <p>設計判断：
+     * - 大文字変換とトリムを統一して適用
+     * - null安全性を確保
+     * 
+     * @param status 元のステータス（null可）
+     * @return 正規化されたステータス（null可）
+     */
+    private String normalizeStatus(String status) {
+        if (status == null) {
+            return null;
+        }
+        return status.trim().toUpperCase();
+    }
+
+    /**
      * 支払い成功ステータスを処理します。
      * 
-     * @param orderNo 注文番号
-     * @param normalized 正規化されたステータス
-     * @param result PayPay APIレスポンス
+     * <p>設計判断：
+     * - ポーリングのためeventIdは設定しない（Webhookと区別するため）
+     * - エラーは呼び出し元に伝播（トランザクションロールバックのため）
+     * 
+     * @param orderNo 注文番号（非null保証済み）
+     * @param normalized 正規化されたステータス（非null保証済み）
+     * @param result PayPay APIレスポンス（非null保証済み）
      * @return 更新が行われた場合true
+     * @throws Exception 注文更新でエラーが発生した場合
      */
-    private boolean handleSuccessStatus(String orderNo, String normalized, PaymentResult result) {
+    private boolean handleSuccessStatus(String orderNo, String normalized, PaymentResult result) throws Exception {
         log.info("[PaymentPolling] Payment completed detected orderNo={}, status={}", orderNo, normalized);
         
-        try {
-            PaymentStatusUpdateRequest request = new PaymentStatusUpdateRequest();
-            request.setStatus(normalized);
-            request.setCode(result.getCode());
-            request.setMessage(result.getMessage());
-            // ポーリングのためeventIdは設定しない（Webhookと区別するため）
-            
-            orderPaymentService.handlePaymentStatus(orderNo, request);
-            
-            log.info("[PaymentPolling] Order status updated to PAID via polling orderNo={}, status={}", 
-                    orderNo, normalized);
-            return true;
-        } catch (Exception e) {
-            log.error("[PaymentPolling] Failed to update order to PAID orderNo={}, error={}", 
-                     orderNo, e.getMessage(), e);
-            throw e;
-        }
+        // PaymentStatusUpdateRequestを構築
+        // ■ ポーリングなのでeventIdは設定せずにWebhookと区別する
+        PaymentStatusUpdateRequest request = buildPaymentStatusRequest(normalized, result);
+        
+        // 注文ステータスを更新（トランザクション内で実行）
+        // 注意: このメソッド内でトランザクションが開始される
+        orderPaymentService.handlePaymentStatus(orderNo, request);
+        
+        log.info("[PaymentPolling] Order status updated to PAID via polling orderNo={}, status={}", 
+                orderNo, normalized);
+        return true;
     }
 
     /**
      * 支払い失敗ステータスを処理します。
      * 
-     * @param orderNo 注文番号
-     * @param normalized 正規化されたステータス
-     * @param result PayPay APIレスポンス
+     * <p>設計判断：
+     * - ポーリングのためeventIdは設定しない（Webhookと区別するため）
+     * - エラーは呼び出し元に伝播（トランザクションロールバックのため）
+     * 
+     * @param orderNo 注文番号（非null保証済み）
+     * @param normalized 正規化されたステータス（非null保証済み）
+     * @param result PayPay APIレスポンス（非null保証済み）
      * @return 更新が行われた場合true
+     * @throws Exception 注文更新でエラーが発生した場合
      */
-    private boolean handleFailureStatus(String orderNo, String normalized, PaymentResult result) {
+    private boolean handleFailureStatus(String orderNo, String normalized, PaymentResult result) throws Exception {
         log.info("[PaymentPolling] Payment failed detected orderNo={}, status={}", orderNo, normalized);
         
-        try {
-            PaymentStatusUpdateRequest request = new PaymentStatusUpdateRequest();
-            request.setStatus(normalized);
-            request.setCode(result.getCode());
-            request.setMessage(result.getMessage());
-            // ポーリングのためeventIdは設定しない（Webhookと区別するため）
-            
-            orderPaymentService.handlePaymentStatus(orderNo, request);
-            
-            log.info("[PaymentPolling] Order status updated to FAILED via polling orderNo={}, status={}", 
-                    orderNo, normalized);
-            return true;
-        } catch (Exception e) {
-            log.error("[PaymentPolling] Failed to update order to FAILED orderNo={}, error={}", 
-                     orderNo, e.getMessage(), e);
-            throw e;
-        }
+        // PaymentStatusUpdateRequestを構築
+        // ■ ポーリングなのでeventIdは設定せずにWebhookと区別する
+        PaymentStatusUpdateRequest request = buildPaymentStatusRequest(normalized, result);
+        
+        // 注文ステータスを更新（トランザクション内で実行）
+        orderPaymentService.handlePaymentStatus(orderNo, request);
+        
+        log.info("[PaymentPolling] Order status updated to FAILED via polling orderNo={}, status={}", 
+                orderNo, normalized);
+        return true;
+    }
+
+    /**
+     * PaymentStatusUpdateRequestを構築します。
+     * 
+     * <p>設計判断：
+     * - 重複コードを削減（DRY原則）
+     * - ポーリングのためeventIdは設定しない（Webhookと区別するため）
+     * 
+     * @param normalized 正規化されたステータス（非null保証済み）
+     * @param result PayPay APIレスポンス（非null保証済み）
+     * @return 構築されたリクエスト（非null保証）
+     */
+    private PaymentStatusUpdateRequest buildPaymentStatusRequest(String normalized, PaymentResult result) {
+        PaymentStatusUpdateRequest request = new PaymentStatusUpdateRequest();
+        request.setStatus(normalized);
+        request.setCode(result.getCode());
+        request.setMessage(result.getMessage());
+        // ■ ポーリングなのでeventIdは設定せずにWebhookと区別する
+        return request;
     }
 }
 
