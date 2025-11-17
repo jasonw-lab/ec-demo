@@ -1,0 +1,16 @@
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY storage-service/pom.xml ./storage-service/
+RUN mvn dependency:go-offline -pl storage-service -B
+
+COPY storage-service ./storage-service
+RUN mvn clean package -pl storage-service -DskipTests -B
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /app/storage-service/target/*.jar app.jar
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
+

@@ -1,0 +1,59 @@
+version: '3.8'
+
+networks:
+  youlai-boot:
+    external: true
+    name: youlai-boot
+
+services:
+  # MySQL for ec-demo
+  ec-demo-mysql:
+    image: mysql:8.0.29
+    platform: linux/arm64
+    container_name: ec-demo-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_ROOT_HOST: "%"
+      TZ: Asia/Tokyo
+      LANG: en_US.UTF-8
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_general_ci"]
+    volumes:
+      - ./sql/mysql-init:/docker-entrypoint-initdb.d
+      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mysql/conf/my.cnf:/etc/my.cnf
+      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mysql/data:/var/lib/mysql
+      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mysql/log:/var/log/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - youlai-boot
+
+  # Seata Server for ec-demo
+  ec-demo-seata-server:
+    image: seataio/seata-server:2.0.0
+    platform: linux/arm64
+    container_name: ec-demo-seata-server
+    ports:
+      - "7092:7091"   # console
+      - "8092:8091"   # seata server
+    environment:
+      - TZ=${TZ:-Asia/Shanghai}
+      - STORE_MODE=db
+      - SEATA_IP=ec-demo-seata-server
+      - SEATA_PORT=8091
+    volumes:
+      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/seata/conf/application.yml:/seata-server/resources/application.yml:ro
+      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/seata/logs:/root/logs/seata
+    restart: unless-stopped
+    networks:
+      - youlai-boot
+    depends_on:
+      ec-demo-mysql:
+        condition: service_healthy
+
+
