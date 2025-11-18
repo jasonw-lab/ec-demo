@@ -10,7 +10,7 @@ services:
   ec-demo-mysql:
     image: mysql:8.0.29
     platform: linux/arm64
-    container_name: ec-demo-mysql
+    container_name: ec-demo-mysql-8
     ports:
       - "3307:3306"
     environment:
@@ -37,7 +37,7 @@ services:
   ec-demo-seata-server:
     image: seataio/seata-server:2.0.0
     platform: linux/arm64
-    container_name: ec-demo-seata-server
+    container_name: ec-demo-seata-server-2.0
     ports:
       - "7092:7091"   # console
       - "8092:8091"   # seata server
