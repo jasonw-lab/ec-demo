@@ -6,7 +6,8 @@ COPY order-service/pom.xml ./order-service/
 COPY storage-service/pom.xml ./storage-service/
 COPY account-service/pom.xml ./account-service/
 COPY bff/pom.xml ./bff/
-RUN mvn dependency:go-offline -pl storage-service -B
+# Try to download dependencies offline, but don't fail if network issues occur
+RUN mvn dependency:go-offline -pl storage-service -B || true
 
 COPY storage-service ./storage-service
 RUN mvn clean package -pl storage-service -DskipTests -B
