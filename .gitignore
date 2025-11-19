@@ -88,3 +88,4 @@ update*.sh
 # dotenv files
 .env
 .run
+ec-demo-bff.env
