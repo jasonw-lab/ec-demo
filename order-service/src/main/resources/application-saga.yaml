@@ -6,8 +6,8 @@ spring:
     name: order-service-saga
   # Primary business datasource used by MyBatis (Order DB)
   datasource:
-    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}
-    jdbc-url: ${DATASOURCE_JDBC_URL:${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}}
+    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    jdbc-url: ${DATASOURCE_JDBC_URL:${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}}
     username: ${DATASOURCE_USERNAME:root}
     password: ${DATASOURCE_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -16,8 +16,8 @@ spring:
       minimum-idle: 0
   # Separate SAGA persistence datasource (State machine tables)
   saga-datasource:
-    url: ${SAGA_DATASOURCE_URL:jdbc:mysql://localhost:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}
-    jdbc-url: ${SAGA_DATASOURCE_JDBC_URL:${SAGA_DATASOURCE_URL:jdbc:mysql://localhost:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}}
+    url: ${SAGA_DATASOURCE_URL:jdbc:mysql://localhost:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    jdbc-url: ${SAGA_DATASOURCE_JDBC_URL:${SAGA_DATASOURCE_URL:jdbc:mysql://localhost:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}}
     username: ${SAGA_DATASOURCE_USERNAME:root}
     password: ${SAGA_DATASOURCE_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver

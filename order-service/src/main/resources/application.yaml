@@ -7,7 +7,7 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration
   datasource:
-    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}
+    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     username: ${DATASOURCE_USERNAME:root}
     password: ${DATASOURCE_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
