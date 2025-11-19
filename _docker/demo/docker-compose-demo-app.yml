@@ -18,7 +18,7 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_account?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_account?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=123456
       - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
@@ -46,7 +46,7 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=123456
       - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
@@ -74,10 +74,10 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=123456
-      - SAGA_DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+      - SAGA_DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - SAGA_DATASOURCE_USERNAME=root
       - SAGA_DATASOURCE_PASSWORD=123456
       - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
