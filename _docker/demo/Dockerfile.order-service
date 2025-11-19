@@ -1,7 +1,11 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
+# Copy all module pom.xml files so Maven can validate parent POM structure
 COPY order-service/pom.xml ./order-service/
+COPY storage-service/pom.xml ./storage-service/
+COPY account-service/pom.xml ./account-service/
+COPY bff/pom.xml ./bff/
 RUN mvn dependency:go-offline -pl order-service -B
 
 COPY order-service ./order-service
