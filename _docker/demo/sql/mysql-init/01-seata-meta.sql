@@ -53,8 +53,8 @@ CREATE TABLE `lock_table` (
 
 DROP TABLE IF EXISTS `distributed_lock`;
 CREATE TABLE `distributed_lock` (
-  `lock_key`   CHAR(20) NOT NULL,
-  `lock_value` CHAR(20) NOT NULL,
+  `lock_key`   VARCHAR(128) NOT NULL,
+  `lock_value` VARCHAR(512),
   `expire`     BIGINT,
   PRIMARY KEY (`lock_key`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
