@@ -4,9 +4,9 @@ spring:
   profiles:
     active: tcc
   datasource:
-    url: jdbc:mysql://localhost:3307/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
-    username: root
-    password: 123456
+    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}
+    username: ${DATASOURCE_USERNAME:root}
+    password: ${DATASOURCE_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       initialization-fail-timeout: -1
