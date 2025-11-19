@@ -18,10 +18,10 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata_account?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_account?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=123456
-      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server:8091
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=account-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
@@ -31,8 +31,8 @@ services:
     networks:
       - youlai-boot
     external_links:
-      - ec-demo-mysql:ec-demo-mysql
-      - ec-demo-seata-server:ec-demo-seata-server
+      - ec-demo-mysql-8:ec-demo-mysql
+      - ec-demo-seata-server-2.0:ec-demo-seata-server
 
   # Storage Service
   ec-demo-storage-service:
@@ -46,10 +46,10 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=123456
-      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server:8091
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=storage-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
@@ -59,8 +59,8 @@ services:
     networks:
       - youlai-boot
     external_links:
-      - ec-demo-mysql:ec-demo-mysql
-      - ec-demo-seata-server:ec-demo-seata-server
+      - ec-demo-mysql-8:ec-demo-mysql
+      - ec-demo-seata-server-2.0:ec-demo-seata-server
 
   # Order Service
   ec-demo-order-service:
@@ -74,13 +74,13 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=123456
-      - SAGA_DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+      - SAGA_DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
       - SAGA_DATASOURCE_USERNAME=root
       - SAGA_DATASOURCE_PASSWORD=123456
-      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server:8091
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=order-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
@@ -92,8 +92,8 @@ services:
     networks:
       - youlai-boot
     external_links:
-      - ec-demo-mysql:ec-demo-mysql
-      - ec-demo-seata-server:ec-demo-seata-server
+      - ec-demo-mysql-8:ec-demo-mysql
+      - ec-demo-seata-server-2.0:ec-demo-seata-server
     depends_on:
       - ec-demo-storage-service
 
