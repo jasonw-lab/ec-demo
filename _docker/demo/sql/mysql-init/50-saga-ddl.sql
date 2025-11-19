@@ -13,8 +13,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 1) SEATA_STATE_INST
 --    各ステップ（状態）の実行履歴
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS `SEATA_STATE_INST`;
-CREATE TABLE `SEATA_STATE_INST` (
+DROP TABLE IF EXISTS `seata_state_inst`;
+CREATE TABLE `seata_state_inst` (
                                     `ID`                         varchar(128)  NOT NULL COMMENT 'id',
                                     `MACHINE_INST_ID`            varchar(128)  NOT NULL COMMENT 'state machine instance id',
                                     `NAME`                       varchar(128)  NOT NULL COMMENT 'state name',
@@ -42,8 +42,8 @@ CREATE TABLE `SEATA_STATE_INST` (
 -- 2) SEATA_STATE_MACHINE_DEF
 --    ステートマシン定義（JSON 本体やバージョン）
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS `SEATA_STATE_MACHINE_DEF`;
-CREATE TABLE `SEATA_STATE_MACHINE_DEF` (
+DROP TABLE IF EXISTS `seata_state_machine_def`;
+CREATE TABLE `seata_state_machine_def` (
                                            `ID`                varchar(128)  NOT NULL COMMENT 'id',
                                            `NAME`              varchar(128)  NOT NULL COMMENT 'name',
                                            `TENANT_ID`         varchar(64)   NOT NULL COMMENT 'tenant id',
@@ -63,8 +63,8 @@ CREATE TABLE `SEATA_STATE_MACHINE_DEF` (
 -- 3) SEATA_STATE_MACHINE_INST
 --    ステートマシン実行インスタンス
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS `SEATA_STATE_MACHINE_INST`;
-CREATE TABLE `SEATA_STATE_MACHINE_INST` (
+DROP TABLE IF EXISTS `seata_state_machine_inst`;
+CREATE TABLE `seata_state_machine_inst` (
                                             `ID`                     varchar(128)  NOT NULL COMMENT 'id',
                                             `MACHINE_ID`             varchar(128)  NOT NULL COMMENT 'state machine definition id',
                                             `TENANT_ID`              varchar(64)   NOT NULL COMMENT 'tenant id',
