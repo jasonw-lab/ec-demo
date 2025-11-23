@@ -77,4 +77,17 @@ node_modules/
 
 dist/*/
 
+/git-change.sh
 
+rule*.md
+update*.py
+update*.sh
+
+
+
+# dotenv files
+.env
+.run
+ec-demo-bff.env
+ec-demo-bff.env
+ec-demo-bff.env

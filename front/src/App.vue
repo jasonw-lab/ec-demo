@@ -5,7 +5,7 @@
       <div style="max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;">
         <!-- ロゴ -->
         <router-link to="/" style="display:flex;align-items:center;color:inherit;text-decoration:none;">
-          <img src="/mercari-logo-main.jpeg" alt="mercari" style="width:auto;height:36px;object-fit:contain;" />
+          <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" style="width:auto;height:36px;object-fit:contain;" />
         </router-link>
         
         <!-- 検索バー（ロゴに寄せて配置） -->
@@ -29,8 +29,8 @@
         
         <!-- 右側のナビゲーション -->
         <div style="display:flex;align-items:center;gap:16px;margin-left:auto;">
-          <router-link to="/login" style="color:#111827;text-decoration:none;font-size:14px;">ログイン</router-link>
-          <router-link to="/register" style="color:#111827;text-decoration:none;font-size:14px;">会員登録</router-link>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">ログイン</a>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">会員登録</a>
           <div style="position:relative;cursor:pointer;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
@@ -52,14 +52,14 @@
       <nav style="border-top:1px solid #f1f5f9;background:#fff;">
         <div style="max-width:1200px;margin:0 auto;padding:0 16px;display:flex;gap:20px;height:44px;align-items:center;">
           <router-link to="/" style="color:#E60033;text-decoration:none;font-weight:600;border-bottom:2px solid #E60033;padding:12px 0;font-size:14px;">おすすめ</router-link>
-          <router-link to="/mylist" style="color:#111827;text-decoration:none;font-size:14px;">マイリスト</router-link>
-          <router-link to="/shops" style="color:#111827;text-decoration:none;font-size:14px;">メルカリShops</router-link>
-          <router-link to="/games" style="color:#111827;text-decoration:none;font-size:14px;">ゲーム・おもちゃ・グッズ</router-link>
-          <router-link to="/books" style="color:#111827;text-decoration:none;font-size:14px;">本・雑誌・漫画</router-link>
-          <router-link to="/mens" style="color:#111827;text-decoration:none;font-size:14px;">メンズ</router-link>
-          <router-link to="/ladies" style="color:#111827;text-decoration:none;font-size:14px;">レディース</router-link>
-          <router-link to="/kids" style="color:#111827;text-decoration:none;font-size:14px;">ベビー・キッズ</router-link>
-          <router-link to="/all" style="color:#111827;text-decoration:none;font-size:14px;">すべて見る</router-link>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">マイリスト</a>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">メルカリShops</a>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">ゲーム・おもちゃ・グッズ</a>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">本・雑誌・漫画</a>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">メンズ</a>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">レディース</a>
+          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">ベビー・キッズ</a>
+          <router-link to="/products" style="color:#111827;text-decoration:none;font-size:14px;">すべて見る</router-link>
         </div>
       </nav>
     </header>
@@ -67,6 +67,18 @@
     <main style="padding:16px;max-width:1200px;margin:0 auto;">
       <router-view />
     </main>
+
+    <!-- 工事中メッセージモーダル -->
+    <div v-if="showModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;">
+      <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;max-width:400px;margin:16px;">
+        <div style="font-size:48px;margin-bottom:16px;">🚧</div>
+        <h3 style="margin:0 0 16px 0;font-size:20px;font-weight:600;color:#111827;">工事中</h3>
+        <p style="margin:0 0 24px 0;color:#6b7280;line-height:1.5;">この機能は現在開発中です。<br>もうしばらくお待ちください。</p>
+        <button @click="hideModal" style="background:#ff6b6b;color:#fff;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-weight:600;font-size:16px;">
+          閉じる
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -74,7 +86,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from './store'
 import { useRouter } from 'vue-router'
-import { apiBase, type Category } from './store'
+import { apiBase, type Category, getImageUrl } from './store'
 
 const router = useRouter()
 const store = useStore()
@@ -82,9 +94,18 @@ const cartCount = computed(() => store.cart.reduce((acc, item) => acc + item.qua
 const logoUrl = '/logo.svg'
 const keyword = ref<string>('')
 const categories = ref<Category[]>([])
+const showModal = ref<boolean>(false)
 
 function doSearch() {
   router.push({ path: '/search', query: { q: keyword.value } })
+}
+
+function showUnderConstruction() {
+  showModal.value = true
+}
+
+function hideModal() {
+  showModal.value = false
 }
 
 onMounted(async () => {

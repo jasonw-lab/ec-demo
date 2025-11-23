@@ -64,6 +64,25 @@ export function useStore() {
   }
 }
 
-export const apiBase: string = (import.meta.env.VITE_API_BASE || 'http://localhost:8080') + '/api'
+// API base URL configuration:
+// - If VITE_API_BASE is set, use it (for custom configuration)
+// - In development mode, use relative path that goes through Vite proxy
+// - In production (served by nginx), use /ec-api/api which nginx proxies to backend
+export const apiBase: string = import.meta.env.VITE_API_BASE 
+  ? (import.meta.env.VITE_API_BASE.endsWith('/api') 
+      ? import.meta.env.VITE_API_BASE 
+      : import.meta.env.VITE_API_BASE + '/api')
+  : (import.meta.env.DEV ? '/api' : '/ec-api/api')
+
+// ベースパスを考慮した画像パスを返すヘルパー関数
+export function getImageUrl(path: string): string {
+  const base = import.meta.env.BASE_URL
+  // 既にベースパスが含まれている場合はそのまま返す
+  if (path.startsWith(base)) return path
+  // 絶対パスの場合はベースパスを追加
+  if (path.startsWith('/')) return base + path.slice(1)
+  // 相対パスの場合はベースパス + パス
+  return base + path
+}
 
 

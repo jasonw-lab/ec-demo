@@ -1,0 +1,46 @@
+spring:
+  config:
+    activate:
+      on-profile: saga
+  application:
+    name: order-service-saga
+  # Primary business datasource used by MyBatis (Order DB)
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    jdbc-url: ${DATASOURCE_JDBC_URL:${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}}
+    username: ${DATASOURCE_USERNAME:root}
+    password: ${DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      initialization-fail-timeout: -1
+      minimum-idle: 0
+  # Separate SAGA persistence datasource (State machine tables)
+  saga-datasource:
+    url: ${SAGA_DATASOURCE_URL:jdbc:mysql://localhost:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    jdbc-url: ${SAGA_DATASOURCE_JDBC_URL:${SAGA_DATASOURCE_URL:jdbc:mysql://localhost:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}}
+    username: ${SAGA_DATASOURCE_USERNAME:root}
+    password: ${SAGA_DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+seata:
+  enabled: ${SEATA_ENABLED:true}
+  application-id: ${SEATA_APPLICATION_ID:order-service-saga}
+  tx-service-group: ${SEATA_TX_SERVICE_GROUP:saga_tx_group}
+  service:
+    vgroup-mapping:
+      saga_tx_group: ${SEATA_VGROUP_MAPPING_SAGA_TX_GROUP:default}
+      default_tx_group: ${SEATA_VGROUP_MAPPING_DEFAULT_TX_GROUP:default}
+    grouplist:
+      default: ${SEATA_GROUPLIST_DEFAULT:127.0.0.1:8091}
+  registry:
+    type: ${SEATA_REGISTRY_TYPE:file}
+  config:
+    type: ${SEATA_CONFIG_TYPE:file}
+  enable-auto-data-source-proxy: ${SEATA_ENABLE_AUTO_DATA_SOURCE_PROXY:false}
+  data-source-proxy-mode: ${SEATA_DATA_SOURCE_PROXY_MODE:AT}
+
+svc:
+  backend:
+    baseUrl: ${SVC_BACKEND_BASE_URL:http://localhost:8080}
+  storage:
+    baseUrl: ${SVC_STORAGE_BASE_URL:http://localhost:8082}

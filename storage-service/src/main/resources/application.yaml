@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: storage-service-at
+  profiles:
+    active: tcc
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}
+    username: ${DATASOURCE_USERNAME:root}
+    password: ${DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      initialization-fail-timeout: -1
+      minimum-idle: 0
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+server:
+  port: 8082
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: false
+logging:
+  level:
+    root: INFO
+
+# Register initializer to load .env, .env-<profile>, or ENV_FILE
+context:
+  initializer:
+    classes: com.example.seata.common.config.DotenvInitializer
+
