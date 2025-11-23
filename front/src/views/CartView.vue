@@ -15,7 +15,7 @@
       <!-- カート商品一覧 -->
       <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:24px;">
         <div v-for="c in cart" :key="c.productId" style="display:flex;align-items:center;padding:16px;border-bottom:1px solid #f1f5f9;">
-          <img :src="c.product.imageUrl || '/product.svg'" alt="商品画像" style="width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f9fafb;margin-right:16px;" />
+          <img :src="c.product.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f9fafb;margin-right:16px;" />
           <div style="flex:1;">
             <div style="font-weight:600;margin-bottom:4px;line-height:1.4;">{{ c.product.name }}</div>
             <div style="color:#6b7280;font-size:14px;margin-bottom:8px;">{{ c.product.description }}</div>
@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useStore, type CartItem } from '../store'
+import { useStore, type CartItem, getImageUrl } from '../store'
 
 const store = useStore()
 const cart: CartItem[] = store.cart

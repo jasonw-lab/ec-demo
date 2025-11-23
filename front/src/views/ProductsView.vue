@@ -36,7 +36,7 @@
       
       <div v-else style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
         <div v-for="(p, idx) in paged" :key="p.id" style="border:1px solid #f1f5f9;border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column;transition:transform 0.2s;hover:transform:translateY(-2px);">
-          <img :src="p.imageUrl || '/product.svg'" alt="商品画像" style="width:100%;height:200px;object-fit:cover;background:#f9fafb" />
+          <img :src="p.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:100%;height:200px;object-fit:cover;background:#f9fafb" />
           <div style="padding:16px;display:flex;flex-direction:column;gap:12px;flex:1;">
             <div style="display:flex;gap:6px;align-items:center;min-height:20px;">
               <span v-if="idx % 3 === 0" style="font-size:12px;color:#ff6b6b;border:1px solid #ff6b6b;border-radius:4px;padding:0 4px;">人気</span>
@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { apiBase, useStore, type Product, type Category } from '../store'
+import { apiBase, useStore, type Product, type Category, getImageUrl } from '../store'
 import { useRoute, useRouter } from 'vue-router'
 
 const products = ref<Product[]>([])
@@ -133,7 +133,7 @@ const paged = computed<Product[]>(() => {
   const result: Product[] = [...slice]
   const base = sorted.value.length
     ? sorted.value
-    : [{ id: 'demo', name: 'デモ商品', description: 'サンプル', price: 1000, imageUrl: '/product.svg' } as Product]
+    : [{ id: 'demo', name: 'デモ商品', description: 'サンプル', price: 1000, imageUrl: getImageUrl('/product.svg') } as Product]
   let i = 0
   while (result.length < pageSize) {
     const src = base[i % base.length]
