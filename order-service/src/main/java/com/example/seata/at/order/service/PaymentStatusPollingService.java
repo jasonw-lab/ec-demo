@@ -173,17 +173,40 @@ public class PaymentStatusPollingService {
 
         // ステータスの正規化（一貫性のため）
         String normalized = normalizeStatus(status);
-        log.info("[PaymentPolling] PayPay status for orderNo={}: {} (success={})", 
-                orderNo, normalized, result.isSuccess());
+        String code = result.getCode() != null && StringUtils.hasText(result.getCode()) 
+                ? result.getCode().trim().toUpperCase() : null;
+        boolean isSuccess = result.isSuccess();
+        
+        log.info("[PaymentPolling] PayPay status for orderNo={}: {} (success={}, code={})", 
+                orderNo, normalized, isSuccess, code);
+
+        // 支払い成功の判定:
+        // 1. statusがSUCCESS_STATUSESに含まれる
+        // 2. または success=true かつ code="OK" (BFFからのレスポンス)
+        // 一回成功取得後はポーリングを停止するため、成功時は必ず注文ステータスを更新
+        boolean isPaymentSuccess = SUCCESS_STATUSES.contains(normalized) 
+                || (isSuccess && "OK".equals(code));
+        
+        // 支払い失敗の判定:
+        // 1. statusがFAILURE_STATUSESまたはTIMEOUT_STATUSESに含まれる
+        // 2. または success=false かつ codeが失敗を示す
+        boolean isPaymentFailure = FAILURE_STATUSES.contains(normalized) 
+                || TIMEOUT_STATUSES.contains(normalized)
+                || (!isSuccess && code != null && !"PENDING".equals(code) && !"OK".equals(code));
 
         // ステータスに応じて注文を更新
-        if (SUCCESS_STATUSES.contains(normalized)) {
-            return handleSuccessStatus(orderNo, normalized, result);
-        } else if (FAILURE_STATUSES.contains(normalized) || TIMEOUT_STATUSES.contains(normalized)) {
-            return handleFailureStatus(orderNo, normalized, result);
+        if (isPaymentSuccess) {
+            // 成功時はステータスを"COMPLETED"に正規化して処理
+            String successStatus = SUCCESS_STATUSES.contains(normalized) ? normalized : "COMPLETED";
+            return handleSuccessStatus(orderNo, successStatus, result);
+        } else if (isPaymentFailure) {
+            // 失敗時はステータスを正規化して処理
+            String failureStatus = FAILURE_STATUSES.contains(normalized) || TIMEOUT_STATUSES.contains(normalized) 
+                    ? normalized : "FAILED";
+            return handleFailureStatus(orderNo, failureStatus, result);
         } else {
-            log.debug("[PaymentPolling] Payment status is still pending for orderNo={}, status={}", 
-                     orderNo, normalized);
+            log.debug("[PaymentPolling] Payment status is still pending for orderNo={}, status={}, success={}, code={}", 
+                     orderNo, normalized, isSuccess, code);
             return false;
         }
     }
