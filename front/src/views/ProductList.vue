@@ -2,7 +2,7 @@
   <div>
     <!-- メルカリ風のプロモーションバナー -->
     <div style="margin:24px 0;">
-      <img src="/line.jpg" alt="LINE友だち追加" style="width:100%;height:auto;border-radius:8px;" />
+      <img :src="getImageUrl('/line.jpg')" alt="LINE友だち追加" style="width:100%;height:auto;border-radius:8px;" />
     </div>
 
     <!-- 掘り出し物セクション -->
@@ -15,7 +15,7 @@
       <!-- 商品グリッド -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
         <div v-for="(p, idx) in auctionProducts" :key="p.id" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;">
-          <img :src="p.imageUrl || '/product.svg'" alt="商品画像" style="width:100%;height:240px;object-fit:cover;background:#f9fafb" />
+          <img :src="p.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:100%;height:240px;object-fit:cover;background:#f9fafb" />
           <div style="padding:12px;display:flex;flex-direction:column;flex:1;">
             <div style="font-size:14px;line-height:1.4;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
               {{ p.name }}
@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useStore, type Product } from '../store'
+import { useStore, type Product, getImageUrl } from '../store'
 
 const store = useStore()
 const showModal = ref<boolean>(false)
@@ -65,14 +65,14 @@ function hideModal() {
 // オークション商品（掘り出し物）
 const auctionProducts = computed<Product[]>(() => {
   return [
-    { id: 'auction-1', name: '40 Dickies ショートパンツ ハーフパンツ グレー XL相当', price: 300, imageUrl: '/product/40_dickies.jpg' } as Product,
-    { id: 'auction-2', name: '36 Dickies ショートパンツ ハーフパンツ XL相当', price: 300, imageUrl: '/product/36_dickies.jpg' } as Product,
-    { id: 'auction-3', name: '☆Paul Smith 紫色カーディガン☆', price: 300, imageUrl: '/product/Paul_Smith.jpg' } as Product,
-    { id: 'auction-4', name: 'Carhartt ネイビー ワークパンツ メキシコ製 40×34 2XL相当', price: 300, imageUrl: '/product/Carhartt.jpg' } as Product,
-    { id: 'auction-5', name: 'LooseFit 48 Dickies ショートパンツ ハーフパンツ 4XL相当', price: 300, imageUrl: '/product/LooseFit.jpg' } as Product,
-    { id: 'auction-6', name: 'ビューティーアンドユース ユナイテッドアローズ チェックシャツ...', price: 300, imageUrl: '/product/Vanity_United.jpg' } as Product,
-    { id: 'auction-7', name: 'ヴィンテージ90s メイドインアメリカusa カレッジ スウェットフーディ 古着..', price: 300, imageUrl: '/product/edwards.jpg' } as Product,
-    { id: 'auction-8', name: 'NMB48 北川謙二 CD/DVD レンタル専用', price: 300, imageUrl: '/product/nmb48.jpg' } as Product
+    { id: 'auction-1', name: '40 Dickies ショートパンツ ハーフパンツ グレー XL相当', price: 300, imageUrl: getImageUrl('/product/40_dickies.jpg') } as Product,
+    { id: 'auction-2', name: '36 Dickies ショートパンツ ハーフパンツ XL相当', price: 300, imageUrl: getImageUrl('/product/36_dickies.jpg') } as Product,
+    { id: 'auction-3', name: '☆Paul Smith 紫色カーディガン☆', price: 300, imageUrl: getImageUrl('/product/Paul_Smith.jpg') } as Product,
+    { id: 'auction-4', name: 'Carhartt ネイビー ワークパンツ メキシコ製 40×34 2XL相当', price: 300, imageUrl: getImageUrl('/product/Carhartt.jpg') } as Product,
+    { id: 'auction-5', name: 'LooseFit 48 Dickies ショートパンツ ハーフパンツ 4XL相当', price: 300, imageUrl: getImageUrl('/product/LooseFit.jpg') } as Product,
+    { id: 'auction-6', name: 'ビューティーアンドユース ユナイテッドアローズ チェックシャツ...', price: 300, imageUrl: getImageUrl('/product/Vanity_United.jpg') } as Product,
+    { id: 'auction-7', name: 'ヴィンテージ90s メイドインアメリカusa カレッジ スウェットフーディ 古着..', price: 300, imageUrl: getImageUrl('/product/edwards.jpg') } as Product,
+    { id: 'auction-8', name: 'NMB48 北川謙二 CD/DVD レンタル専用', price: 300, imageUrl: getImageUrl('/product/nmb48.jpg') } as Product
   ]
 })
 </script>

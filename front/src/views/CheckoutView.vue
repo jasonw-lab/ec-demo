@@ -16,7 +16,7 @@
       <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:24px;">
         <h3 style="margin:0 0 16px 0;font-size:18px;font-weight:600;">注文内容</h3>
         <div v-for="c in cart" :key="c.productId" style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;">
-          <img :src="c.product.imageUrl || '/product.svg'" alt="商品画像" style="width:60px;height:60px;object-fit:cover;border-radius:6px;background:#f9fafb;margin-right:12px;" />
+          <img :src="c.product.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:60px;height:60px;object-fit:cover;border-radius:6px;background:#f9fafb;margin-right:12px;" />
           <div style="flex:1;">
             <div style="font-weight:600;margin-bottom:4px;">{{ c.product.name }}</div>
             <div style="color:#6b7280;font-size:14px;">数量: {{ c.quantity }}</div>
@@ -88,7 +88,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useStore, apiBase, type CartItem } from '../store'
+import { useStore, apiBase, type CartItem, getImageUrl } from '../store'
 import { useRouter } from 'vue-router'
 
 const store = useStore()
