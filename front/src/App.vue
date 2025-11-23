@@ -5,7 +5,7 @@
       <div style="max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;">
         <!-- ロゴ -->
         <router-link to="/" style="display:flex;align-items:center;color:inherit;text-decoration:none;">
-          <img src="/mercari-logo-main.jpeg" alt="mercari" style="width:auto;height:36px;object-fit:contain;" />
+          <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" style="width:auto;height:36px;object-fit:contain;" />
         </router-link>
         
         <!-- 検索バー（ロゴに寄せて配置） -->
@@ -86,7 +86,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from './store'
 import { useRouter } from 'vue-router'
-import { apiBase, type Category } from './store'
+import { apiBase, type Category, getImageUrl } from './store'
 
 const router = useRouter()
 const store = useStore()

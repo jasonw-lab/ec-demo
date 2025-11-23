@@ -13,7 +13,7 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;">
         <div v-for="c in categories" :key="c.id" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.2s;hover:transform:translateY(-2px);">
           <router-link :to="`/category/${c.id}`" style="display:block;text-decoration:none;color:inherit;">
-            <img :src="c.imageUrl || '/product.svg'" alt="カテゴリ画像" style="width:100%;height:120px;object-fit:cover;background:#f9fafb;">
+            <img :src="c.imageUrl || getImageUrl('/product.svg')" alt="カテゴリ画像" style="width:100%;height:120px;object-fit:cover;background:#f9fafb;">
             <div style="padding:16px;text-align:center;">
               <div style="font-weight:600;font-size:16px;color:#374151;">{{ c.name }}</div>
               <div style="color:#6b7280;font-size:12px;margin-top:4px;">商品を見る →</div>
@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { apiBase, type Category } from '../store'
+import { apiBase, type Category, getImageUrl } from '../store'
 
 const categories = ref<Category[]>([])
 
