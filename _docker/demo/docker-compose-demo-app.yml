@@ -107,7 +107,7 @@ services:
     ports:
       - "18080:8080"
     env_file:
-      - ../../ec-demo-bff.env
+      - /mydata/ec-demo/env/ec-demo-bff.env
     environment:
       - TZ=Asia/Tokyo
     volumes:
