@@ -297,6 +297,16 @@ function stopPolling() {
 function buildWsUrl(): string {
   const base = apiBase.replace(/\/?api\/?$/, '')
   const sanitized = base.replace(/\/$/, '')
+  
+  // If it's a relative path (starts with /), use current origin
+  if (sanitized.startsWith('/')) {
+    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    const host = window.location.host
+    const path = sanitized + '/ws/orders'
+    return `${scheme}://${host}${path}?orderId=${encodeURIComponent(orderId.value)}&token=${encodeURIComponent(channelToken.value)}`
+  }
+  
+  // If it's an absolute URL, extract scheme and host
   const scheme = sanitized.startsWith('https://') ? 'wss' : 'ws'
   const host = sanitized.replace(/^https?:\/\//, '')
   return `${scheme}://${host}/ws/orders?orderId=${encodeURIComponent(orderId.value)}&token=${encodeURIComponent(channelToken.value)}`
