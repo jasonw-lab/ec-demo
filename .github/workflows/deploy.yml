@@ -2,7 +2,7 @@ name: Deploy VPS
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ main ]
     paths:
       - 'front/**'
       - 'front.sh'
