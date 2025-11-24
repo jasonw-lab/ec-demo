@@ -341,8 +341,3 @@ curl -s localhost:8083/actuator/health | jq
 - `GET /api/payments/{orderId}/details` などの REST API でも同じ情報を取得できます（channelToken も含む）。
 
 ---
-
-## トラブルシュート
-- Seata Server が 127.0.0.1:8091 で稼働しているかを確認してください。
-- MySQL が 3307 ポートで起動し、初期データが投入されているかを確認してください。
-- プロファイルは明示指定がおすすめです（例: `-Dspring-boot.run.profiles=saga`）。
