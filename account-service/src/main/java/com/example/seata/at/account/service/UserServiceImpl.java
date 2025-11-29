@@ -66,7 +66,6 @@ public class UserServiceImpl implements UserService {
         account.setTotal(new BigDecimal("1000.00"));
         account.setUsed(BigDecimal.ZERO);
         account.setResidue(new BigDecimal("1000.00"));
-        account.setFrozen(BigDecimal.ZERO);
         accountMapper.insert(account);
 
         log.info("Created new user and account: firebaseUid={}, userId={}", firebaseUid, userId);

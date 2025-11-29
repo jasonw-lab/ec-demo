@@ -193,19 +193,71 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
 
-const apiBase = import.meta.env.VITE_BFF_BASE_URL as string | undefined
+// In development mode, always use relative path to go through Vite proxy (avoids CORS issues)
+// In production, use VITE_BFF_BASE_URL if set, otherwise use relative path
+const getApiBase = () => {
+  // In development, always use relative path to leverage Vite proxy
+  if (import.meta.env.DEV) {
+    return '/api'
+  }
+  // In production, use VITE_BFF_BASE_URL if set
+  if (import.meta.env.VITE_BFF_BASE_URL) {
+    return import.meta.env.VITE_BFF_BASE_URL
+  }
+  // Fallback to relative path in production
+  return '/ec-api/api'
+}
+
+const apiBase = getApiBase()
 
 async function sendTokenToBackend(idToken: string) {
-  const endpoint = (apiBase ?? '') + '/api/auth/login'
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-  })
-  if (!res.ok) {
-    throw new Error('ログインに失敗しました')
+  // Construct endpoint: if apiBase ends with /api, append /auth/login, otherwise append /api/auth/login
+  const endpoint = apiBase.endsWith('/api') 
+    ? apiBase + '/auth/login'
+    : apiBase + '/api/auth/login'
+  console.log('Sending login request to:', endpoint, '(apiBase:', apiBase + ')')
+  
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+      // credentials: 'include' is not needed when using Vite proxy in dev mode
+      // In production, this may be needed for session management
+      credentials: import.meta.env.DEV ? 'same-origin' : 'include',
+    })
+    
+    console.log('Login response status:', res.status, res.statusText)
+    
+    if (!res.ok) {
+      let errorData
+      try {
+        errorData = await res.json()
+      } catch {
+        errorData = { message: `サーバーエラー: ${res.status} ${res.statusText}` }
+      }
+      const errorMessage = errorData.message || `サーバーエラー: ${res.status} ${res.statusText}`
+      console.error('Login failed:', errorMessage, errorData)
+      throw new Error(errorMessage)
+    }
+    
+    const responseData = await res.json()
+    console.log('Login successful:', responseData)
+    return responseData
+  } catch (e: any) {
+    console.error('Backend login error:', e)
+    
+    // Network error (server not running)
+    if (e.name === 'TypeError' && e.message.includes('fetch')) {
+      throw new Error('バックエンドサーバーに接続できません。サーバーが起動しているか確認してください。\n\nエンドポイント: ' + endpoint)
+    }
+    
+    if (e.message) {
+      throw new Error(e.message)
+    }
+    throw new Error('バックエンドへの接続に失敗しました。サーバーが起動しているか確認してください。')
   }
 }
 
@@ -232,13 +284,63 @@ async function handleGoogleLogin() {
   loading.value = true
   try {
     const provider = new GoogleAuthProvider()
-    const cred = await signInWithPopup(auth, provider)
-    const idToken = await cred.user.getIdToken()
-    await sendTokenToBackend(idToken)
-    await router.push('/')
-  } catch (e) {
-    console.error(e)
-    window.alert('Googleでのログインに失敗しました。')
+    // Suppress console warnings for Cross-Origin-Opener-Policy (these are harmless)
+    const originalWarn = console.warn
+    console.warn = (...args: any[]) => {
+      const message = typeof args[0] === 'string' ? args[0] : String(args[0] || '')
+      if (message.includes('Cross-Origin-Opener-Policy')) {
+        return // Suppress this specific warning
+      }
+      originalWarn.apply(console, args)
+    }
+    
+    try {
+      const cred = await signInWithPopup(auth, provider)
+      const idToken = await cred.user.getIdToken()
+      await sendTokenToBackend(idToken)
+      await router.push('/')
+    } finally {
+      console.warn = originalWarn
+    }
+  } catch (e: any) {
+    // Ignore Cross-Origin-Opener-Policy warnings as they don't affect functionality
+    if (e?.message?.includes?.('Cross-Origin-Opener-Policy')) {
+      console.warn('Cross-Origin-Opener-Policy warning (can be ignored):', e.message)
+      return
+    }
+    
+    console.error('Google login error:', e)
+    
+    let errorMessage = 'Googleでのログインに失敗しました。'
+    
+    if (e?.code) {
+      switch (e.code) {
+        case 'auth/popup-blocked':
+          errorMessage = 'ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。'
+          break
+        case 'auth/popup-closed-by-user':
+          errorMessage = 'ログインウィンドウが閉じられました。もう一度お試しください。'
+          break
+        case 'auth/cancelled-popup-request':
+          errorMessage = 'ログインがキャンセルされました。'
+          break
+        case 'auth/unauthorized-domain':
+          errorMessage = 'このドメインは認証されていません。Firebase Consoleで設定を確認してください。'
+          break
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Google認証が有効になっていません。Firebase Consoleで設定を確認してください。'
+          break
+        case 'auth/configuration-not-found':
+          errorMessage = 'Firebase認証の設定が見つかりません。\n\n以下の設定を確認してください：\n1. Firebase Console > 認証 > サインイン方法 で「Google」を有効化\n2. Firebase Console > 認証 > 設定 > 承認済みドメイン に「localhost」を追加\n3. 開発サーバーを再起動してください'
+          break
+        default:
+          errorMessage = `Googleでのログインに失敗しました: ${e.code}`
+      }
+    } else if (e?.message) {
+      errorMessage = `Googleでのログインに失敗しました: ${e.message}`
+    }
+    
+    window.alert(errorMessage)
   } finally {
     loading.value = false
   }

@@ -47,6 +47,7 @@ public class AuthController {
             String uid = decodedToken.getUid();
             String email = decodedToken.getEmail();
             String name = (String) decodedToken.getClaims().getOrDefault("name", "");
+            @SuppressWarnings("unchecked")
             Map<String, Object> firebase = (Map<String, Object>) decodedToken.getClaims().get("firebase");
             String providerId = firebase != null ? (String) firebase.get("sign_in_provider") : null;
 
@@ -65,10 +66,35 @@ public class AuthController {
 
             LoginResponse response = LoginResponse.success(internalUserId, uid, email, name, providerId);
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.warn("Failed to verify Firebase ID token", e);
+        } catch (IllegalStateException e) {
+            log.error("Firebase not initialized. Please check firebase-service-account.json configuration.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(LoginResponse.error("Firebaseが初期化されていません。設定を確認してください。"));
+        } catch (com.google.firebase.auth.FirebaseAuthException e) {
+            log.warn("Failed to verify Firebase ID token: {}", e.getMessage(), e);
+            String errorMessage = "トークンの検証に失敗しました。";
+            if (e.getErrorCode() != null) {
+                String errorCode = e.getErrorCode().name();
+                switch (errorCode) {
+                    case "INVALID_ID_TOKEN":
+                        errorMessage = "無効なトークンです。再度ログインしてください。";
+                        break;
+                    case "EXPIRED_ID_TOKEN":
+                        errorMessage = "トークンの有効期限が切れています。再度ログインしてください。";
+                        break;
+                    case "REVOKED_ID_TOKEN":
+                        errorMessage = "トークンが無効化されています。再度ログインしてください。";
+                        break;
+                    default:
+                        errorMessage = "トークンの検証に失敗しました: " + errorCode;
+                }
+            }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(LoginResponse.error("トークンの検証に失敗しました。"));
+                    .body(LoginResponse.error(errorMessage));
+        } catch (Exception e) {
+            log.error("Unexpected error during login", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(LoginResponse.error("ログイン処理中にエラーが発生しました: " + e.getMessage()));
         }
     }
 

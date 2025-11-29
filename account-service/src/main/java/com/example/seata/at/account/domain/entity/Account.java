@@ -1,6 +1,7 @@
 package com.example.seata.at.account.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -15,6 +16,7 @@ public class Account {
     private BigDecimal total;
     private BigDecimal used;
     private BigDecimal residue;
+    @TableField(exist = false)
     private BigDecimal frozen;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

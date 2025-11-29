@@ -28,6 +28,7 @@ public class AccountServiceClient {
     public Long syncUser(String firebaseUid, String email, String name, String providerId) {
         String url = baseUrl + "/api/account/internal/users/sync";
         try {
+            log.info("Calling account service to sync user: url={}, firebaseUid={}, email={}", url, firebaseUid, email);
             ParameterizedTypeReference<CommonResponse<UserSyncResponse>> type =
                     new ParameterizedTypeReference<>() {};
             UserSyncRequest req = new UserSyncRequest(firebaseUid, email, name, providerId);
@@ -39,12 +40,26 @@ public class AccountServiceClient {
             );
             CommonResponse<UserSyncResponse> body = response.getBody();
             if (body == null || !body.isSuccess() || body.getData() == null) {
-                log.warn("AccountServiceClient.syncUser failed: body={}", body);
+                log.warn("AccountServiceClient.syncUser failed: status={}, body={}", 
+                        response.getStatusCode(), body);
                 return null;
             }
+            log.info("User synced successfully: userId={}", body.getData().id());
             return body.getData().id();
+        } catch (org.springframework.web.client.ResourceAccessException ex) {
+            log.error("AccountServiceClient.syncUser - Cannot connect to account service at {}: {}", 
+                    url, ex.getMessage());
+            return null;
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            log.error("AccountServiceClient.syncUser - HTTP error: status={}, body={}", 
+                    ex.getStatusCode(), ex.getResponseBodyAsString());
+            return null;
+        } catch (org.springframework.web.client.HttpServerErrorException ex) {
+            log.error("AccountServiceClient.syncUser - Server error: status={}, body={}", 
+                    ex.getStatusCode(), ex.getResponseBodyAsString());
+            return null;
         } catch (RestClientException ex) {
-            log.error("AccountServiceClient.syncUser error {}", ex.toString());
+            log.error("AccountServiceClient.syncUser error: {}", ex.getMessage(), ex);
             return null;
         }
     }
