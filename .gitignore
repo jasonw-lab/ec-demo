@@ -94,3 +94,4 @@ ec-demo-bff.env
 serviceAccountKey.json
 **/serviceAccountKey.json
 front/.env.development
+.env.development
