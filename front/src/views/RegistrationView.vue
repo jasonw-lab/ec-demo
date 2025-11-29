@@ -2,7 +2,9 @@
   <div class="registration-wrapper">
     <!-- ロゴ -->
     <div class="registration-logo-container">
-      <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="registration-logo" />
+      <router-link to="/" style="display:flex;align-items:center;color:inherit;text-decoration:none;">
+        <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="registration-logo" />
+      </router-link>
     </div>
 
     <!-- 戻るボタン -->

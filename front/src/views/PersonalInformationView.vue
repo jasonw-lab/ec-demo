@@ -2,7 +2,9 @@
   <div class="personal-info-wrapper">
     <!-- ロゴ -->
     <div class="personal-info-logo-container">
-      <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="personal-info-logo" />
+      <router-link to="/" style="display:flex;align-items:center;color:inherit;text-decoration:none;">
+        <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="personal-info-logo" />
+      </router-link>
     </div>
 
     <!-- 戻るボタン -->
