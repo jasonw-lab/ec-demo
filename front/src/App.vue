@@ -29,14 +29,43 @@
         
         <!-- 右側のナビゲーション -->
         <div style="display:flex;align-items:center;gap:16px;margin-left:auto;">
-          <router-link to="/login" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">ログイン</router-link>
-          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">会員登録</a>
-          <div style="position:relative;cursor:pointer;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-              <path d="m13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-          </div>
+          <!-- ログインしていない場合 -->
+          <template v-if="!isLoggedIn">
+            <router-link to="/login" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">ログイン</router-link>
+            <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">会員登録</a>
+          </template>
+          
+          <!-- ログインしている場合 -->
+          <template v-else>
+            <!-- ユーザープロフィール -->
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" @click="showUnderConstruction">
+              <div style="width:32px;height:32px;border-radius:50%;background-color:#e5e7eb;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <span style="color:#111827;font-size:14px;">{{ userName }}</span>
+            </div>
+            
+            <!-- いいね一覧アイコン -->
+            <div style="cursor:pointer;" @click="showUnderConstruction">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </div>
+            
+            <!-- ベルアイコン（お知らせ一覧） -->
+            <div style="position:relative;cursor:pointer;" @click="showUnderConstruction">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                <path d="m13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span v-if="notificationCount > 0" style="position:absolute;top:-6px;right:-6px;background-color:#e60033;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">{{ notificationCount > 99 ? '99+' : notificationCount }}</span>
+            </div>
+          </template>
+          
+          <!-- カート（常に表示） -->
           <router-link to="/cart" style="display:flex;align-items:center;gap:6px;color:#111827;text-decoration:none;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="9" cy="21" r="1"></circle>
@@ -84,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useStore } from './store'
 import { useRouter, useRoute } from 'vue-router'
 import { apiBase, type Category, getImageUrl } from './store'
@@ -97,7 +126,42 @@ const logoUrl = '/logo.svg'
 const keyword = ref<string>('')
 const categories = ref<Category[]>([])
 const showModal = ref<boolean>(false)
-const isLoginPage = computed(() => route.path === '/login')
+const isLoggedIn = ref<boolean>(false)
+const userName = ref<string>('')
+const notificationCount = ref<number>(23) // 仮の値、後でAPIから取得
+
+const isLoginPage = computed(() => {
+  const path = route.path
+  return path === '/login' || path === '/registration' || path.startsWith('/registration/')
+})
+
+async function checkLoginStatus() {
+  try {
+    // セッションからユーザー情報を取得するAPIを呼び出す
+    const endpoint = apiBase.endsWith('/api') 
+      ? apiBase + '/auth/status'
+      : apiBase + '/api/auth/status'
+    
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && data.userId) {
+        isLoggedIn.value = true
+        userName.value = data.name || data.email || 'ユーザー'
+        return
+      }
+    }
+  } catch (e) {
+    console.log('Not logged in or session expired:', e)
+  }
+  
+  isLoggedIn.value = false
+  userName.value = ''
+}
 
 function doSearch() {
   router.push({ path: '/search', query: { q: keyword.value } })
@@ -111,12 +175,23 @@ function hideModal() {
   showModal.value = false
 }
 
+// ルート変更時にログイン状態をチェック
+watch(() => route.path, () => {
+  if (!isLoginPage.value) {
+    checkLoginStatus()
+  }
+})
+
 onMounted(async () => {
   try {
     const res = await fetch(`${apiBase}/categories`)
     categories.value = await res.json()
   } catch (_) {
     categories.value = []
+  }
+  
+  if (!isLoginPage.value) {
+    await checkLoginStatus()
   }
 })
 </script>
