@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -63,6 +64,7 @@ public class AuthController {
             session.setAttribute("userId", internalUserId);
             session.setAttribute("firebaseUid", uid);
             session.setAttribute("email", email);
+            session.setAttribute("name", name);
 
             LoginResponse response = LoginResponse.success(internalUserId, uid, email, name, providerId);
             return ResponseEntity.ok(response);
@@ -108,7 +110,98 @@ public class AuthController {
         return null;
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<AuthStatusResponse> getAuthStatus(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return ResponseEntity.ok(AuthStatusResponse.notLoggedIn());
+        }
+
+        Long userId = (Long) session.getAttribute("userId");
+        String email = (String) session.getAttribute("email");
+        String name = (String) session.getAttribute("name");
+        
+        if (userId == null) {
+            return ResponseEntity.ok(AuthStatusResponse.notLoggedIn());
+        }
+
+        return ResponseEntity.ok(AuthStatusResponse.loggedIn(userId, email, name));
+    }
+
+    @PostMapping("/personal-information")
+    public ResponseEntity<PersonalInformationResponse> updatePersonalInformation(
+            @RequestBody PersonalInformationRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        try {
+            HttpSession session = httpRequest.getSession(false);
+            if (session == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(PersonalInformationResponse.error("ログインが必要です。"));
+            }
+
+            Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(PersonalInformationResponse.error("ユーザーIDが見つかりません。"));
+            }
+
+            accountServiceClient.updatePersonalInformation(
+                    userId,
+                    request.lastName(),
+                    request.firstName(),
+                    request.lastNameKana(),
+                    request.firstNameKana(),
+                    request.birthDate(),
+                    request.gender()
+            );
+
+            return ResponseEntity.ok(PersonalInformationResponse.ok());
+        } catch (Exception e) {
+            log.error("Error updating personal information", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(PersonalInformationResponse.error("本人情報の登録に失敗しました: " + e.getMessage()));
+        }
+    }
+
     public record LoginRequest(@JsonProperty("idToken") String idToken) {}
+
+    public record PersonalInformationRequest(
+            @JsonProperty("lastName") String lastName,
+            @JsonProperty("firstName") String firstName,
+            @JsonProperty("lastNameKana") String lastNameKana,
+            @JsonProperty("firstNameKana") String firstNameKana,
+            @JsonProperty("birthDate") String birthDate,
+            @JsonProperty("gender") String gender
+    ) {}
+
+    public record PersonalInformationResponse(
+            @JsonProperty("success") boolean success,
+            @JsonProperty("message") String message
+    ) {
+        public static PersonalInformationResponse ok() {
+            return new PersonalInformationResponse(true, "登録完了");
+        }
+
+        public static PersonalInformationResponse error(String message) {
+            return new PersonalInformationResponse(false, message);
+        }
+    }
+
+    public record AuthStatusResponse(
+            @JsonProperty("success") boolean success,
+            @JsonProperty("userId") Long userId,
+            @JsonProperty("email") String email,
+            @JsonProperty("name") String name
+    ) {
+        public static AuthStatusResponse loggedIn(Long userId, String email, String name) {
+            return new AuthStatusResponse(true, userId, email, name);
+        }
+
+        public static AuthStatusResponse notLoggedIn() {
+            return new AuthStatusResponse(false, null, null, null);
+        }
+    }
 
     public record LoginResponse(
             @JsonProperty("success") boolean success,

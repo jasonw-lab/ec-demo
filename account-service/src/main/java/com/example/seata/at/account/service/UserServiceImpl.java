@@ -71,6 +71,27 @@ public class UserServiceImpl implements UserService {
         log.info("Created new user and account: firebaseUid={}, userId={}", firebaseUid, userId);
         return userId;
     }
+
+    @Override
+    @Transactional
+    public void updatePersonalInformation(Long userId, String lastName, String firstName,
+                                          String lastNameKana, String firstNameKana,
+                                          String birthDate, String gender) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found: userId=" + userId);
+        }
+
+        user.setLastName(lastName);
+        user.setFirstName(firstName);
+        user.setLastNameKana(lastNameKana);
+        user.setFirstNameKana(firstNameKana);
+        user.setBirthDate(birthDate);
+        user.setGender(gender);
+
+        userMapper.updateById(user);
+        log.info("Updated personal information: userId={}", userId);
+    }
 }
 
 

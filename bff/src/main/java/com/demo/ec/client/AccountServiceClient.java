@@ -64,6 +64,47 @@ public class AccountServiceClient {
         }
     }
 
+    public void updatePersonalInformation(Long userId, String lastName, String firstName,
+                                         String lastNameKana, String firstNameKana,
+                                         String birthDate, String gender) {
+        String url = baseUrl + "/api/account/internal/users/personal-information";
+        try {
+            log.info("Calling account service to update personal information: url={}, userId={}", url, userId);
+            ParameterizedTypeReference<CommonResponse<Void>> type =
+                    new ParameterizedTypeReference<>() {};
+            PersonalInformationRequest req = new PersonalInformationRequest(
+                    userId, lastName, firstName, lastNameKana, firstNameKana, birthDate, gender);
+            ResponseEntity<CommonResponse<Void>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    new HttpEntity<>(req),
+                    type
+            );
+            CommonResponse<Void> body = response.getBody();
+            if (body == null || !body.isSuccess()) {
+                log.warn("AccountServiceClient.updatePersonalInformation failed: status={}, body={}", 
+                        response.getStatusCode(), body);
+                throw new RuntimeException("Failed to update personal information");
+            }
+            log.info("Personal information updated successfully: userId={}", userId);
+        } catch (org.springframework.web.client.ResourceAccessException ex) {
+            log.error("AccountServiceClient.updatePersonalInformation - Cannot connect to account service at {}: {}", 
+                    url, ex.getMessage());
+            throw new RuntimeException("Cannot connect to account service", ex);
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            log.error("AccountServiceClient.updatePersonalInformation - HTTP error: status={}, body={}", 
+                    ex.getStatusCode(), ex.getResponseBodyAsString());
+            throw new RuntimeException("HTTP error when updating personal information", ex);
+        } catch (org.springframework.web.client.HttpServerErrorException ex) {
+            log.error("AccountServiceClient.updatePersonalInformation - Server error: status={}, body={}", 
+                    ex.getStatusCode(), ex.getResponseBodyAsString());
+            throw new RuntimeException("Server error when updating personal information", ex);
+        } catch (RestClientException ex) {
+            log.error("AccountServiceClient.updatePersonalInformation error: {}", ex.getMessage(), ex);
+            throw new RuntimeException("Error updating personal information", ex);
+        }
+    }
+
     public record UserSyncRequest(
             String firebaseUid,
             String email,
@@ -73,6 +114,16 @@ public class AccountServiceClient {
 
     public record UserSyncResponse(
             Long id
+    ) {}
+
+    public record PersonalInformationRequest(
+            Long userId,
+            String lastName,
+            String firstName,
+            String lastNameKana,
+            String firstNameKana,
+            String birthDate,
+            String gender
     ) {}
 
     public static class CommonResponse<T> {

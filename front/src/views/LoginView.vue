@@ -17,7 +17,7 @@
     <div class="login-page">
       <header class="login-header">
       <h1 class="login-title">ログイン</h1>
-      <button class="register-link" type="button">
+      <button class="register-link" type="button" @click="goToRegistration">
         会員登録はこちら
       </button>
     </header>
@@ -158,7 +158,7 @@
 
       <footer class="login-footer">
         <p class="footer-text">アカウントをお持ちでない方</p>
-        <button class="register-button" type="button">
+        <button class="register-button" type="button" @click="goToRegistration">
           会員登録
         </button>
       </footer>
@@ -182,6 +182,10 @@ const router = useRouter()
 
 function goBack() {
   router.back()
+}
+
+function goToRegistration() {
+  router.push('/registration')
 }
 
 const emailOrPhone = ref('')
