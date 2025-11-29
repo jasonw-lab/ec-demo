@@ -93,6 +93,20 @@ CREATE TABLE `t_account` (
   `update_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- User authentication / ID mapping table
+DROP TABLE IF EXISTS `t_user`;
+CREATE TABLE `t_user` (
+  `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '内部ユーザーID (各サービスで共通利用)',
+  `firebase_uid` VARCHAR(128) NOT NULL COMMENT 'FirebaseのUser ID (sub)',
+  `email` VARCHAR(255) NOT NULL COMMENT 'メールアドレス',
+  `name` VARCHAR(255) DEFAULT NULL COMMENT '表示名',
+  `provider_id` VARCHAR(50) DEFAULT NULL COMMENT '認証プロバイダ (google.com, password 等)',
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uk_firebase_uid` (`firebase_uid`),
+  UNIQUE KEY `uk_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ユーザー認証・ID変換テーブル';
+
 DROP TABLE IF EXISTS `undo_log`;
 CREATE TABLE `undo_log` (
   `branch_id` BIGINT NOT NULL,
