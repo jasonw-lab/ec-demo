@@ -2,7 +2,9 @@
   <div class="login-wrapper">
     <!-- ロゴ -->
     <div class="login-logo-container">
-      <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="login-logo" />
+      <router-link to="/" style="display:flex;align-items:center;color:inherit;text-decoration:none;">
+        <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="login-logo" />
+      </router-link>
     </div>
 
     <!-- 戻るボタン -->
@@ -169,6 +171,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import {
   GoogleAuthProvider,
   OAuthProvider,
