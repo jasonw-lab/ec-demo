@@ -91,3 +91,8 @@ update*.sh
 ec-demo-bff.env
 ec-demo-bff.env
 ec-demo-bff.env
+serviceAccountKey.json
+**/serviceAccountKey.json
+
+.env.development
+front/.env.development

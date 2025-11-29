@@ -1,6 +1,6 @@
 <template>
-  <div style="background:#f7f7f8;min-height:100vh;">
-    <header style="border-bottom:1px solid #eee;background:#fff;">
+  <div :style="{ background: isLoginPage ? '#fff' : '#f7f7f8', minHeight: '100vh' }">
+    <header v-if="!isLoginPage" style="border-bottom:1px solid #eee;background:#fff;">
       <!-- ヘッダー上部 -->
       <div style="max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;">
         <!-- ロゴ -->
@@ -29,7 +29,7 @@
         
         <!-- 右側のナビゲーション -->
         <div style="display:flex;align-items:center;gap:16px;margin-left:auto;">
-          <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">ログイン</a>
+          <router-link to="/login" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">ログイン</router-link>
           <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">会員登録</a>
           <div style="position:relative;cursor:pointer;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -64,9 +64,10 @@
       </nav>
     </header>
     
-    <main style="padding:16px;max-width:1200px;margin:0 auto;">
+    <main v-if="!isLoginPage" style="padding:16px;max-width:1200px;margin:0 auto;">
       <router-view />
     </main>
+    <router-view v-else />
 
     <!-- 工事中メッセージモーダル -->
     <div v-if="showModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;">
@@ -85,16 +86,18 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from './store'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { apiBase, type Category, getImageUrl } from './store'
 
 const router = useRouter()
+const route = useRoute()
 const store = useStore()
 const cartCount = computed(() => store.cart.reduce((acc, item) => acc + item.quantity, 0))
 const logoUrl = '/logo.svg'
 const keyword = ref<string>('')
 const categories = ref<Category[]>([])
 const showModal = ref<boolean>(false)
+const isLoginPage = computed(() => route.path === '/login')
 
 function doSearch() {
   router.push({ path: '/search', query: { q: keyword.value } })

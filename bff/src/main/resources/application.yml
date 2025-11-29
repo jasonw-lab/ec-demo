@@ -6,3 +6,5 @@ spring:
 services:
   order:
     base-url: ${ORDER_SERVICE_BASE_URL:http://localhost:8081}
+  account:
+    base-url: ${ACCOUNT_SERVICE_BASE_URL:http://localhost:8083}

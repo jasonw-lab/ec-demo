@@ -66,6 +66,12 @@
       <artifactId>paypayopa-sdk-java</artifactId>
       <version>1.0.5</version>
     </dependency>
+    <!-- Firebase Admin SDK (includes com.google.auth.oauth2.GoogleCredentials) -->
+    <dependency>
+      <groupId>com.google.firebase</groupId>
+      <artifactId>firebase-admin</artifactId>
+      <version>9.4.1</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

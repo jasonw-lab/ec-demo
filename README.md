@@ -290,6 +290,64 @@ mvn -q -DskipTests=false -pl storage-service test
 mvn -q -DskipTests=false -pl account-service test
 ```
 
+## フロントエンド環境変数の設定
+
+フロントエンドを起動する前に、Firebase設定を含む環境変数を設定する必要があります。
+
+### 1. 環境変数ファイルの作成
+
+`front/.env.development` ファイルを作成し、以下の環境変数を設定してください：
+
+```bash
+# Vite Server Configuration
+VITE_APP_PORT=5173
+VITE_APP_BASE_API=/api
+VITE_APP_API_URL=http://localhost:8080
+
+# Backend BFF Base URL
+VITE_BFF_BASE_URL=http://localhost:8080
+
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=your-firebase-api-key-here
+VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_APP_ID=your-app-id-here
+```
+
+### 2. Firebase設定値の取得方法
+
+1. [Firebase Console](https://console.firebase.google.com/) にアクセス
+2. プロジェクトを選択（または新規作成）
+3. プロジェクト設定（⚙️アイコン）> 全般タブ
+4. 「マイアプリ」セクションでWebアプリを選択（または追加）
+5. 設定値（`apiKey`, `authDomain`, `projectId`, `appId`）をコピーして `.env.development` に設定
+
+### 3. Firebase認証の有効化
+
+Firebase Consoleで以下を設定してください：
+
+1. **認証 > サインイン方法** で「Google」を有効化
+   - Firebase Console > 認証 > サインイン方法 に移動
+   - 「Google」プロバイダーをクリック
+   - 「有効にする」をオンにして保存
+   - プロジェクトのサポートメールを設定（初回のみ）
+
+2. **認証 > 設定 > 承認済みドメイン** に開発環境のドメインを追加
+   - Firebase Console > 認証 > 設定 > 承認済みドメイン に移動
+   - 「ドメインを追加」をクリック
+   - `localhost` を追加（開発環境用）
+   - 本番環境の場合は、実際のドメインも追加
+
+**注意**: `auth/configuration-not-found` エラーが発生する場合は、上記の設定が完了しているか確認してください。
+
+### 4. バックエンドのFirebase設定
+
+バックエンドでもFirebase認証を使用する場合、`bff/src/main/resources/firebase-service-account.json` を配置してください：
+
+1. Firebase Console > プロジェクト設定 > サービスアカウント
+2. 「新しい秘密鍵の生成」をクリック
+3. ダウンロードしたJSONファイルを `bff/src/main/resources/firebase-service-account.json` として配置
+
 ## 実行（共通）
 - Spring Profile は `saga` を使用します
 - 例（それぞれ別ターミナルで起動）:
