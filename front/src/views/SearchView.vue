@@ -26,7 +26,7 @@
       <!-- 商品グリッド -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
         <div v-for="p in results" :key="p.id" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;transition:transform 0.2s;hover:transform:translateY(-2px);">
-          <img :src="p.imageUrl || '/product.svg'" alt="商品画像" style="width:100%;height:200px;object-fit:cover;background:#f9fafb" />
+          <img :src="p.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:100%;height:200px;object-fit:cover;background:#f9fafb" />
           <div style="padding:16px;display:flex;flex-direction:column;gap:12px;flex:1;">
             <div style="font-weight:600;font-size:16px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ p.name }}</div>
             <div style="color:#6b7280;font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ p.description }}</div>
@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import { apiBase, useStore, type Product } from '../store'
+import { apiBase, useStore, type Product, getImageUrl } from '../store'
 
 const route = useRoute()
 const q = ref<string>('')

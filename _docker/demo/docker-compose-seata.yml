@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  seata-server:
+    image: seataio/seata-server:2.0.0
+    platform: linux/arm64
+    container_name: seata-server-2.0.0
+    ports:
+      - "7091:7091"   # console
+      - "8091:8091"   # seata server
+    environment:
+      - TZ=${TZ:-Asia/Shanghai}
+    volumes:
+      - ${basepath}/seata/conf/application.yml:/seata-server/resources/application.yml:ro
+      - ${basepath}/seata/logs:/root/logs/seata
+    restart: unless-stopped
+    networks:
+      - seata-net
+
+networks:
+  seata-net:
+    external: true
+    name: seata-net

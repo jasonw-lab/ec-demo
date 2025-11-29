@@ -1,0 +1,123 @@
+name: Deploy VPS
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'front/**'
+      - 'front.sh'
+      - 'account-service/**'
+      - 'order-service/**'
+      - 'storage-service/**'
+      - 'bff/**'
+      - 'back.sh'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Check for frontend changes
+        id: check_frontend
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -Eq "^(front/|front\.sh$)"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for backend changes
+        id: check_backend
+        run: |
+          CHANGED_FILES="$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} || true)"
+
+          declare -a SERVICES=()
+
+          add_service() {
+            local svc="$1"
+            for existing in "${SERVICES[@]:-}"; do
+              if [[ "$existing" == "$svc" ]]; then
+                return
+              fi
+            done
+            SERVICES+=("$svc")
+          }
+
+          if grep -Eq '^account-service/|^_docker/demo/Dockerfile\.account-service$' <<< "$CHANGED_FILES"; then
+            add_service "account-service"
+          fi
+
+          if grep -Eq '^order-service/|^_docker/demo/Dockerfile\.order-service$' <<< "$CHANGED_FILES"; then
+            add_service "order-service"
+          fi
+
+          if grep -Eq '^storage-service/|^_docker/demo/Dockerfile\.storage-service$' <<< "$CHANGED_FILES"; then
+            add_service "storage-service"
+          fi
+
+          if grep -Eq '^bff/|^_docker/demo/Dockerfile\.bff$' <<< "$CHANGED_FILES"; then
+            add_service "bff"
+          fi
+
+          if grep -q '^_docker/demo/docker-compose-demo-app\.yml$' <<< "$CHANGED_FILES"; then
+            add_service "account-service"
+            add_service "order-service"
+            add_service "storage-service"
+            add_service "bff"
+          fi
+
+          if [[ ${#SERVICES[@]} -gt 0 ]]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "services=${SERVICES[*]}" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "services=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set build arguments
+        id: changes
+        run: |
+          BUILD_ARGS=""
+          if [[ "${{ steps.check_frontend.outputs.changed }}" == "true" ]]; then
+            BUILD_ARGS="frontend"
+          fi
+          if [[ "${{ steps.check_backend.outputs.changed }}" == "true" ]]; then
+            if [[ -n "$BUILD_ARGS" ]]; then
+              BUILD_ARGS="$BUILD_ARGS backend"
+            else
+              BUILD_ARGS="backend"
+            fi
+          fi
+          echo "build_args=$BUILD_ARGS" >> $GITHUB_OUTPUT
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "Working directory: ${{ secrets.PROJECT_PATH }}"
+            cd ${{ secrets.PROJECT_PATH }}
+            BEFORE_SHA=$(git rev-parse HEAD)
+            git pull
+            AFTER_SHA=$(git rev-parse HEAD)
+
+            # Execute front.sh if there are frontend changes
+            if [[ "${{ steps.check_frontend.outputs.changed }}" == "true" ]]; then
+              bash ./front.sh
+            fi
+
+            # Execute back.sh if there are backend changes
+            if [[ "${{ steps.check_backend.outputs.changed }}" == "true" ]]; then
+              SERVICES="${{ steps.check_backend.outputs.services }}"
+              echo "Redeploying backend services: $SERVICES"
+              # shellcheck disable=SC2086
+              bash ./back.sh $SERVICES
+            fi

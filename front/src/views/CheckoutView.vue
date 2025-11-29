@@ -16,7 +16,7 @@
       <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:24px;">
         <h3 style="margin:0 0 16px 0;font-size:18px;font-weight:600;">注文内容</h3>
         <div v-for="c in cart" :key="c.productId" style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;">
-          <img :src="c.product.imageUrl || '/product.svg'" alt="商品画像" style="width:60px;height:60px;object-fit:cover;border-radius:6px;background:#f9fafb;margin-right:12px;" />
+          <img :src="c.product.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:60px;height:60px;object-fit:cover;border-radius:6px;background:#f9fafb;margin-right:12px;" />
           <div style="flex:1;">
             <div style="font-weight:600;margin-bottom:4px;">{{ c.product.name }}</div>
             <div style="color:#6b7280;font-size:14px;">数量: {{ c.quantity }}</div>
@@ -40,7 +40,7 @@
             <input 
               v-model="name" 
               required 
-              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;focus:border-color:#ff6b6b;"
+              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;"
               placeholder="山田太郎"
             />
           </div>
@@ -50,7 +50,7 @@
               v-model="email" 
               type="email" 
               required 
-              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;focus:border-color:#ff6b6b;"
+              style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;outline:none;"
               placeholder="taro@example.com"
             />
           </div>
@@ -60,7 +60,7 @@
       <!-- 決済ボタン -->
       <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
         <button 
-          @click="submit" 
+          @click="goToPaymentDetail" 
           style="width:100%;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:16px;cursor:pointer;font-size:16px;font-weight:600;margin-bottom:16px;">
           注文確定 & PayPay へ
         </button>
@@ -79,11 +79,6 @@
           PayPay 決済ページ (サンドボックス) →
         </a>
       </div>
-      <div style="text-align:center;">
-        <button @click="simulateSuccess" style="background:#10b981;color:white;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-weight:600;">
-          支払い成功(デモ)
-        </button>
-      </div>
       <div v-if="paid" style="margin-top:16px;text-align:center;color:#10b981;font-weight:600;padding:16px;background:#f0fdf4;border-radius:8px;">
         ✅ 支払いが完了しました！
       </div>
@@ -93,8 +88,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useStore, apiBase, type CartItem } from '../store'
+import { useStore, apiBase, type CartItem, getImageUrl } from '../store'
+import { useRouter } from 'vue-router'
+
 const store = useStore()
+const router = useRouter()
 const cart: CartItem[] = store.cart
 const name = ref<string>('山田太郎')
 const email = ref<string>('taro@example.com')
@@ -102,25 +100,60 @@ const total = computed<number>(() => cart.reduce((a,c)=> a + Number(c.product.pr
 const paymentUrl = ref<string>('')
 const orderId = ref<string>('')
 const paid = ref<boolean>(false)
+const channelToken = ref<string>('')
 
 async function submit(): Promise<void> {
-  const body = {
-    customerName: name.value,
-    customerEmail: email.value,
-    items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
+  try {
+    const body = {
+      customerName: name.value,
+      customerEmail: email.value,
+      items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
+    }
+    const res = await fetch(`${apiBase}/orders/purchase`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) {
+      const message = await res.text()
+      throw new Error(message || '注文作成に失敗しました')
+    }
+    const data: { orderId: string; amount?: number; status?: string; channelToken?: string } = await res.json()
+    paymentUrl.value = ''
+    orderId.value = data.orderId
+    channelToken.value = data.channelToken ?? ''
+  } catch (err) {
+    console.error('❌ 注文作成に失敗しました', err)
+    alert('注文の作成に失敗しました。時間をおいて再度お試しください。')
   }
-  const res = await fetch(`${apiBase}/checkout`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
-  const data: { paymentUrl: string; orderId: string } = await res.json()
-  paymentUrl.value = data.paymentUrl
-  orderId.value = data.orderId
 }
 
-async function simulateSuccess(): Promise<void> {
-  const res = await fetch(`${apiBase}/payments/${orderId.value}/simulate-success`, { method:'POST' })
-  const data: { status: string } = await res.json()
-  if (data.status === 'PAID') {
-    paid.value = true
-    store.clearCart()
+async function goToPaymentDetail(): Promise<void> {
+  try {
+    // サーバ側で注文を作成（QRは別APIで取得）
+    const body = {
+      customerName: name.value,
+      customerEmail: email.value,
+      items: cart.map(c => ({ productId: c.productId, quantity: c.quantity }))
+    }
+    const res = await fetch(`${apiBase}/orders/purchase`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) {
+      const message = await res.text()
+      throw new Error(message || '注文作成に失敗しました')
+    }
+    const data: { orderId: string; amount?: number; status?: string; channelToken?: string } = await res.json()
+    paymentUrl.value = ''
+    orderId.value = data.orderId
+    channelToken.value = data.channelToken ?? ''
+
+    // 支払い詳細画面へ遷移（QR取得は詳細画面で実施）
+    router.push({
+      path: '/payment-detail',
+      query: {
+        total: String(total.value),
+        orderId: orderId.value,
+        token: channelToken.value,
+      }
+    })
+  } catch (err) {
+    console.error('❌ 決済ページへの遷移に失敗しました', err)
+    alert('注文の作成に失敗しました。時間をおいて再度お試しください。')
   }
 }
 </script>
