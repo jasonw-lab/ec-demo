@@ -96,3 +96,4 @@ serviceAccountKey.json
 
 .env.development
 front/.env.development
+.env.development
