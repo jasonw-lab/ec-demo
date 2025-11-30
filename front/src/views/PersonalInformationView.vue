@@ -140,6 +140,16 @@
         </a>
       </main>
     </div>
+
+    <!-- 登録完了ポップアップ -->
+    <div v-if="showSuccessModal" class="success-modal-overlay" @click="closeSuccessModal">
+      <div class="success-modal" @click.stop>
+        <div class="success-modal-content">
+          <p class="success-message">登録完了しました。</p>
+          <button class="success-button" @click="closeSuccessModal">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -164,9 +174,16 @@ const formData = ref({
 })
 
 const loading = ref(false)
+const showSuccessModal = ref(false)
 
 function showInfo() {
   window.alert('本人情報の登録についての詳細情報を表示します。')
+}
+
+function closeSuccessModal() {
+  showSuccessModal.value = false
+  // ホーム画面へ遷移
+  router.push('/')
 }
 
 async function handleSubmit() {
@@ -225,11 +242,8 @@ async function handleSubmit() {
       throw new Error(result.message || '登録に失敗しました。')
     }
 
-    // 登録完了メッセージを表示
-    window.alert('登録完了')
-    
-    // ホーム画面へ遷移
-    await router.push('/')
+    // 登録完了ポップアップを表示
+    showSuccessModal.value = true
   } catch (e: any) {
     console.error('Personal information registration error:', e)
     window.alert(e.message || '本人情報の登録に失敗しました。もう一度お試しください。')
@@ -384,12 +398,13 @@ async function handleSubmit() {
   padding: 14px 12px;
   border-radius: 4px;
   border: none;
-  background-color: #e60033;
+  background-color: #ff6b9d;
   color: #fff;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   margin-top: 8px;
+  transition: background-color 0.2s;
 }
 
 .submit-button:disabled {
@@ -398,7 +413,7 @@ async function handleSubmit() {
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #cc0029;
+  background-color: #ff5a8a;
 }
 
 .info-link {
@@ -413,6 +428,57 @@ async function handleSubmit() {
 
 .info-link:hover {
   text-decoration: underline;
+}
+
+.success-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.success-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.success-modal-content {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.success-message {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 24px 0;
+}
+
+.success-button {
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  background-color: #ff6b9d;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.success-button:hover {
+  background-color: #ff5a8a;
 }
 </style>
 
