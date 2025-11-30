@@ -32,7 +32,7 @@
           <!-- ログインしていない場合 -->
           <template v-if="!isLoggedIn">
             <router-link to="/login" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">ログイン</router-link>
-            <a @click="showUnderConstruction" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">会員登録</a>
+            <router-link to="/registration" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">会員登録</router-link>
           </template>
           
           <!-- ログインしている場合 -->
