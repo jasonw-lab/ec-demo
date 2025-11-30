@@ -128,6 +128,21 @@ public class AuthController {
         return ResponseEntity.ok(AuthStatusResponse.loggedIn(userId, email, name));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<LogoutResponse> logout(HttpServletRequest request) {
+        try {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+                log.info("User logged out, session invalidated");
+            }
+            return ResponseEntity.ok(LogoutResponse.ok());
+        } catch (Exception e) {
+            log.error("Error during logout", e);
+            return ResponseEntity.ok(LogoutResponse.ok()); // エラーでも成功として返す
+        }
+    }
+
     @PostMapping("/personal-information")
     public ResponseEntity<PersonalInformationResponse> updatePersonalInformation(
             @RequestBody PersonalInformationRequest request,
@@ -200,6 +215,15 @@ public class AuthController {
 
         public static AuthStatusResponse notLoggedIn() {
             return new AuthStatusResponse(false, null, null, null);
+        }
+    }
+
+    public record LogoutResponse(
+            @JsonProperty("success") boolean success,
+            @JsonProperty("message") String message
+    ) {
+        public static LogoutResponse ok() {
+            return new LogoutResponse(true, "ログアウトしました");
         }
     }
 

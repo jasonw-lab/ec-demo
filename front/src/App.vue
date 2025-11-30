@@ -38,14 +38,58 @@
           <!-- ログインしている場合 -->
           <template v-else>
             <!-- ユーザープロフィール -->
-            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" @click="showUnderConstruction">
-              <div style="width:32px;height:32px;border-radius:50%;background-color:#e5e7eb;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
+            <div style="position:relative;">
+              <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" @click="toggleProfileMenu">
+                <div style="width:32px;height:32px;border-radius:50%;background-color:#e5e7eb;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <span style="color:#111827;font-size:14px;">{{ userName }}</span>
               </div>
-              <span style="color:#111827;font-size:14px;">{{ userName }}</span>
+              
+              <!-- プロフィールメニューポップアップ -->
+              <div v-if="showProfileMenu" class="profile-menu-popup" @click.stop>
+                <div class="profile-menu-item" @click="handleMenuClick('mypage')">
+                  <span>マイページ</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"></path>
+                  </svg>
+                </div>
+                <div class="profile-menu-divider"></div>
+                <div class="profile-menu-item" @click="handleMenuClick('profile')">
+                  <span>プロフィール</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"></path>
+                  </svg>
+                </div>
+                <div class="profile-menu-divider"></div>
+                <div class="profile-menu-item" @click="handleMenuClick('follow-list')">
+                  <span>フォローリスト</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"></path>
+                  </svg>
+                </div>
+                <div class="profile-menu-divider"></div>
+                <div class="profile-menu-item" @click="handleMenuClick('sold-items')">
+                  <span>出品した商品</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"></path>
+                  </svg>
+                </div>
+                <div class="profile-menu-divider"></div>
+                <div class="profile-menu-item" @click="handleMenuClick('purchased-items')">
+                  <span>購入した商品</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"></path>
+                  </svg>
+                </div>
+                <div class="profile-menu-divider"></div>
+                <div class="profile-menu-item profile-menu-item-logout" @click="handleMenuClick('logout')">
+                  <span>ログアウト</span>
+                </div>
+              </div>
             </div>
             
             <!-- いいね一覧アイコン -->
@@ -98,6 +142,9 @@
     </main>
     <router-view v-else />
 
+    <!-- プロフィールメニュー外側クリックで閉じる -->
+    <div v-if="showProfileMenu" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:998;" @click="showProfileMenu = false"></div>
+
     <!-- 工事中メッセージモーダル -->
     <div v-if="showModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;">
       <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;max-width:400px;margin:16px;">
@@ -126,6 +173,7 @@ const logoUrl = '/logo.svg'
 const keyword = ref<string>('')
 const categories = ref<Category[]>([])
 const showModal = ref<boolean>(false)
+const showProfileMenu = ref<boolean>(false)
 const isLoggedIn = ref<boolean>(false)
 const userName = ref<string>('')
 const notificationCount = ref<number>(23) // 仮の値、後でAPIから取得
@@ -175,6 +223,62 @@ function hideModal() {
   showModal.value = false
 }
 
+function toggleProfileMenu() {
+  showProfileMenu.value = !showProfileMenu.value
+}
+
+function handleMenuClick(action: string) {
+  showProfileMenu.value = false
+  
+  switch (action) {
+    case 'mypage':
+      showUnderConstruction()
+      break
+    case 'profile':
+      showUnderConstruction()
+      break
+    case 'follow-list':
+      showUnderConstruction()
+      break
+    case 'sold-items':
+      showUnderConstruction()
+      break
+    case 'purchased-items':
+      showUnderConstruction()
+      break
+    case 'logout':
+      handleLogout()
+      break
+  }
+}
+
+async function handleLogout() {
+  try {
+    // セッションをクリアするAPIを呼び出す
+    const endpoint = apiBase.endsWith('/api') 
+      ? apiBase + '/auth/logout'
+      : apiBase + '/api/auth/logout'
+    
+    await fetch(endpoint, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch (e) {
+    console.error('Logout error:', e)
+  }
+  
+  // ログイン状態をリセット
+  isLoggedIn.value = false
+  userName.value = ''
+  showProfileMenu.value = false
+  
+  // ログイン状態を再確認（セッションがクリアされたことを確認）
+  await checkLoginStatus()
+  
+  // トップ画面へ遷移
+  router.push('/')
+}
+
 // ルート変更時にログイン状態をチェック
 watch(() => route.path, () => {
   if (!isLoginPage.value) {
@@ -199,4 +303,60 @@ onMounted(async () => {
 <style>
 a { text-decoration: none; color: #3b82f6; }
 a.router-link-active { font-weight: bold; }
+
+.profile-menu-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 240px;
+  z-index: 999;
+  overflow: hidden;
+}
+
+.profile-menu-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 0;
+}
+
+.profile-menu-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.2s;
+}
+
+.profile-menu-item:hover {
+  background-color: #f9fafb;
+}
+
+.profile-menu-item span {
+  flex: 1;
+  text-align: left;
+}
+
+.profile-menu-item svg {
+  color: #6b7280;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.profile-menu-item-logout {
+  color: #007aff;
+}
+
+.profile-menu-item-logout:hover {
+  background-color: #f0f7ff;
+}
+
+.profile-menu-item-logout svg {
+  display: none;
+}
 </style>
