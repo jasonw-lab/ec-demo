@@ -19,12 +19,14 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: +env.VITE_APP_PORT,
       open: true,
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+      },
       proxy: {
-        [env.VITE_APP_BASE_API]: {
+        [env.VITE_APP_BASE_API || '/api']: {
           changeOrigin: true,
-          target: env.VITE_APP_API_URL,
-          rewrite: (path) =>
-            path.replace(new RegExp('^' + env.VITE_APP_BASE_API), ''),
+          target: env.VITE_APP_API_URL || 'http://localhost:8080',
+          // Don't rewrite the path - keep /api prefix so backend receives /api/auth/login
         },
       },
     },

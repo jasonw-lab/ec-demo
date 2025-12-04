@@ -2,7 +2,9 @@
   <div class="login-wrapper">
     <!-- ロゴ -->
     <div class="login-logo-container">
-      <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="login-logo" />
+      <router-link to="/" style="display:flex;align-items:center;color:inherit;text-decoration:none;">
+        <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="login-logo" />
+      </router-link>
     </div>
 
     <!-- 戻るボタン -->
@@ -17,7 +19,7 @@
     <div class="login-page">
       <header class="login-header">
       <h1 class="login-title">ログイン</h1>
-      <button class="register-link" type="button">
+      <button class="register-link" type="button" @click="goToRegistration">
         会員登録はこちら
       </button>
     </header>
@@ -158,7 +160,7 @@
 
       <footer class="login-footer">
         <p class="footer-text">アカウントをお持ちでない方</p>
-        <button class="register-button" type="button">
+        <button class="register-button" type="button" @click="goToRegistration">
           会員登録
         </button>
       </footer>
@@ -169,6 +171,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import {
   GoogleAuthProvider,
   OAuthProvider,
@@ -182,6 +185,10 @@ const router = useRouter()
 
 function goBack() {
   router.back()
+}
+
+function goToRegistration() {
+  router.push('/registration')
 }
 
 const emailOrPhone = ref('')

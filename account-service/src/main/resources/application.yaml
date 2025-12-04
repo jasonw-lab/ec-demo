@@ -16,6 +16,9 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      insert-strategy: ignored
 server:
   port: 8083
 management:

@@ -2,6 +2,7 @@ package com.example.seata.at.account.api;
 
 import com.example.seata.at.account.api.dto.CommonResponse;
 import com.example.seata.at.account.service.UserService;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,10 +24,10 @@ public class InternalUserController {
     }
 
     public record UserSyncRequest(
-            String firebaseUid,
-            String email,
-            String name,
-            String providerId
+            @JsonProperty("firebaseUid") String firebaseUid,
+            @JsonProperty("email") String email,
+            @JsonProperty("name") String name,
+            @JsonProperty("providerId") String providerId
     ) {}
 
     public record UserSyncResponse(
@@ -40,6 +41,26 @@ public class InternalUserController {
     public CommonResponse<UserSyncResponse> syncUser(@Valid @RequestBody UserSyncRequest req) {
         Long id = userService.syncUser(req.firebaseUid(), req.email(), req.name(), req.providerId());
         return CommonResponse.ok(new UserSyncResponse(id));
+    }
+
+    public record PersonalInformationRequest(
+            @JsonProperty("userId") Long userId,
+            @JsonProperty("lastName") String lastName,
+            @JsonProperty("firstName") String firstName,
+            @JsonProperty("lastNameKana") String lastNameKana,
+            @JsonProperty("firstNameKana") String firstNameKana,
+            @JsonProperty("birthDate") String birthDate,
+            @JsonProperty("gender") String gender
+    ) {}
+
+    /**
+     * ユーザーIDを基準に本人情報を更新する。
+     */
+    @PostMapping("/personal-information")
+    public CommonResponse<Void> updatePersonalInformation(@Valid @RequestBody PersonalInformationRequest req) {
+        userService.updatePersonalInformation(req.userId(), req.lastName(), req.firstName(),
+                req.lastNameKana(), req.firstNameKana(), req.birthDate(), req.gender());
+        return CommonResponse.ok(null);
     }
 }
 
