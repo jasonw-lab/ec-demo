@@ -126,16 +126,18 @@ const router = useRouter()
 // In development mode, always use relative path to go through Vite proxy (avoids CORS issues)
 // In production, use VITE_BFF_BASE_URL if set, otherwise use relative path
 const getApiBase = () => {
-  // In development, always use relative path to leverage Vite proxy
-  // Use both MODE and DEV for more reliable detection
-  if (import.meta.env.MODE === 'development' || import.meta.env.DEV) {
-    return '/api'
-  }
-  // In production, use VITE_BFF_BASE_URL if set
+  // Check if VITE_BFF_BASE_URL is explicitly set (highest priority)
   if (import.meta.env.VITE_BFF_BASE_URL) {
     return import.meta.env.VITE_BFF_BASE_URL
   }
-  // Fallback to relative path in production
+  
+  // In development mode (DEV === true), use relative path to leverage Vite proxy
+  // Default to production path for safety (when DEV is false/undefined)
+  if (import.meta.env.DEV === true) {
+    return '/api'
+  }
+  
+  // In production mode, use /ec-api/api which nginx proxies to backend
   return '/ec-api/api'
 }
 
@@ -155,7 +157,7 @@ async function sendTokenToBackend(idToken: string) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${idToken}`,
       },
-      credentials: import.meta.env.MODE === 'development' ? 'same-origin' : 'include',
+      credentials: import.meta.env.DEV === true ? 'same-origin' : 'include',
     })
     
     console.log('Login response status:', res.status, res.statusText)

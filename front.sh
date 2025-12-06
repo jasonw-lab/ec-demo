@@ -23,7 +23,8 @@ pnpm install
 
 # Build the project
 echo "Building the project..."
-pnpm build
+pnpm run build -- --mode production
+# npm run build 
 
 # Create target directory if it doesn't exist
 echo "Creating target directory if it doesn't exist..."

@@ -219,15 +219,14 @@ const getApiBase = () => {
     return import.meta.env.VITE_BFF_BASE_URL
   }
   
-  // In development mode, use relative path to leverage Vite proxy
-  // Check both MODE and PROD/DEV flags for reliability
-  const isDev = import.meta.env.MODE === 'development' || import.meta.env.DEV || !import.meta.env.PROD
-  if (isDev) {
+  // In development mode (DEV === true), use relative path to leverage Vite proxy
+  // Default to production path for safety (when PROD is true or DEV is false/undefined)
+  if (import.meta.env.DEV === true) {
     console.log('Using development API base: /api')
     return '/api'
   }
   
-  // In production, use /ec-api/api which nginx proxies to backend
+  // In production mode, use /ec-api/api which nginx proxies to backend
   console.log('Using production API base: /ec-api/api')
   return '/ec-api/api'
 }
@@ -251,7 +250,7 @@ async function sendTokenToBackend(idToken: string) {
       },
       // credentials: 'include' is not needed when using Vite proxy in dev mode
       // In production, this may be needed for session management
-      credentials: import.meta.env.MODE === 'development' ? 'same-origin' : 'include',
+      credentials: import.meta.env.DEV === true ? 'same-origin' : 'include',
     })
     
     console.log('Login response status:', res.status, res.statusText)
