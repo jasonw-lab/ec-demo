@@ -127,7 +127,8 @@ const router = useRouter()
 // In production, use VITE_BFF_BASE_URL if set, otherwise use relative path
 const getApiBase = () => {
   // In development, always use relative path to leverage Vite proxy
-  if (import.meta.env.MODE === 'development') {
+  // Use both MODE and DEV for more reliable detection
+  if (import.meta.env.MODE === 'development' || import.meta.env.DEV) {
     return '/api'
   }
   // In production, use VITE_BFF_BASE_URL if set
