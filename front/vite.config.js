@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
     plugins: [vue()],
     server: {
       host: '0.0.0.0',
-      port: +env.VITE_APP_PORT,
+      port: +env.VITE_APP_PORT || 5173,
       open: true,
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',

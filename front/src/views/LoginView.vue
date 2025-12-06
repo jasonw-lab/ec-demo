@@ -204,7 +204,7 @@ const togglePassword = () => {
 // In production, use VITE_BFF_BASE_URL if set, otherwise use relative path
 const getApiBase = () => {
   // In development, always use relative path to leverage Vite proxy
-  if (import.meta.env.DEV) {
+  if (import.meta.env.MODE === 'development') {
     return '/api'
   }
   // In production, use VITE_BFF_BASE_URL if set
@@ -233,7 +233,7 @@ async function sendTokenToBackend(idToken: string) {
       },
       // credentials: 'include' is not needed when using Vite proxy in dev mode
       // In production, this may be needed for session management
-      credentials: import.meta.env.DEV ? 'same-origin' : 'include',
+      credentials: import.meta.env.MODE === 'development' ? 'same-origin' : 'include',
     })
     
     console.log('Login response status:', res.status, res.statusText)
