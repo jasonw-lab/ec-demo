@@ -72,7 +72,7 @@ export const apiBase: string = import.meta.env.VITE_API_BASE
   ? (import.meta.env.VITE_API_BASE.endsWith('/api') 
       ? import.meta.env.VITE_API_BASE 
       : import.meta.env.VITE_API_BASE + '/api')
-  : (import.meta.env.DEV ? '/api' : '/ec-api/api')
+  : (import.meta.env.MODE === 'development' ? '/api' : '/ec-api/api')
 
 // ベースパスを考慮した画像パスを返すヘルパー関数
 export function getImageUrl(path: string): string {
