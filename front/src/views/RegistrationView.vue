@@ -123,21 +123,18 @@ import { getImageUrl, apiBase } from '../store'
 
 const router = useRouter()
 
-// In development mode, always use relative path to go through Vite proxy (avoids CORS issues)
-// In production, use VITE_BFF_BASE_URL if set, otherwise use relative path
 const getApiBase = () => {
-  // Check if VITE_BFF_BASE_URL is explicitly set (highest priority)
-  if (import.meta.env.VITE_BFF_BASE_URL) {
-    return import.meta.env.VITE_BFF_BASE_URL
+  // Highest priority: user-specified base URL
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE
   }
-  
-  // In development mode (DEV === true), use relative path to leverage Vite proxy
-  // Default to production path for safety (when DEV is false/undefined)
+
+  // Development: go through Vite proxy
   if (import.meta.env.DEV === true) {
     return '/api'
   }
-  
-  // In production mode, use /ec-api/api which nginx proxies to backend
+
+  // Production default: nginx proxies /ec-api/ -> BFF
   return '/ec-api/api'
 }
 

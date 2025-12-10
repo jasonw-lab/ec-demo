@@ -200,34 +200,18 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
 
-// In development mode, always use relative path to go through Vite proxy (avoids CORS issues)
-// In production, use VITE_BFF_BASE_URL if set, otherwise use relative path
 const getApiBase = () => {
-  // Debug: log environment info
-  console.log('Environment check:', {
-    MODE: import.meta.env.MODE,
-    PROD: import.meta.env.PROD,
-    DEV: import.meta.env.DEV,
-    VITE_BFF_BASE_URL: import.meta.env.VITE_BFF_BASE_URL,
-    VITE_API_BASE: import.meta.env.VITE_API_BASE,
-    BASE_URL: import.meta.env.BASE_URL,
-  })
-  
-  // Check if VITE_BFF_BASE_URL is explicitly set (highest priority)
-  if (import.meta.env.VITE_BFF_BASE_URL) {
-    console.log('Using VITE_BFF_BASE_URL:', import.meta.env.VITE_BFF_BASE_URL)
-    return import.meta.env.VITE_BFF_BASE_URL
+  // Highest priority: user-specified base URL
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE
   }
-  
-  // In development mode (DEV === true), use relative path to leverage Vite proxy
-  // Default to production path for safety (when PROD is true or DEV is false/undefined)
+
+  // Development: go through Vite proxy
   if (import.meta.env.DEV === true) {
-    console.log('Using development API base: /api')
     return '/api'
   }
-  
-  // In production mode, use /ec-api/api which nginx proxies to backend
-  console.log('Using production API base: /ec-api/api')
+
+  // Production default: nginx proxies /ec-api/ -> BFF
   return '/ec-api/api'
 }
 
