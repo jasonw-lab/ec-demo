@@ -200,22 +200,23 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
 
-// In development mode, always use relative path to go through Vite proxy (avoids CORS issues)
-// In production, use VITE_BFF_BASE_URL if set, otherwise use relative path
 const getApiBase = () => {
-  // In development, always use relative path to leverage Vite proxy
-  if (import.meta.env.DEV) {
+  // Highest priority: user-specified base URL
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE
+  }
+
+  // Development: go through Vite proxy
+  if (import.meta.env.DEV === true) {
     return '/api'
   }
-  // In production, use VITE_BFF_BASE_URL if set
-  if (import.meta.env.VITE_BFF_BASE_URL) {
-    return import.meta.env.VITE_BFF_BASE_URL
-  }
-  // Fallback to relative path in production
+
+  // Production default: nginx proxies /ec-api/ -> BFF
   return '/ec-api/api'
 }
 
 const apiBase = getApiBase()
+console.log('Final apiBase:', apiBase)
 
 async function sendTokenToBackend(idToken: string) {
   // Construct endpoint: if apiBase ends with /api, append /auth/login, otherwise append /api/auth/login
@@ -233,7 +234,7 @@ async function sendTokenToBackend(idToken: string) {
       },
       // credentials: 'include' is not needed when using Vite proxy in dev mode
       // In production, this may be needed for session management
-      credentials: import.meta.env.DEV ? 'same-origin' : 'include',
+      credentials: import.meta.env.DEV === true ? 'same-origin' : 'include',
     })
     
     console.log('Login response status:', res.status, res.statusText)

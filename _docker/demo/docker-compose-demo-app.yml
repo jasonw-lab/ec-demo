@@ -110,6 +110,8 @@ services:
       - /mydata/ec-demo/env/ec-demo-bff.env
     environment:
       - TZ=Asia/Tokyo
+      - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8081
+      - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
     volumes:
       - /mydata/ec-demo/app/bff/logs:/var/logs
       - /etc/localtime:/etc/localtime

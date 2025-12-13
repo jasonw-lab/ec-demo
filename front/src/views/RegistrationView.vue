@@ -123,18 +123,18 @@ import { getImageUrl, apiBase } from '../store'
 
 const router = useRouter()
 
-// In development mode, always use relative path to go through Vite proxy (avoids CORS issues)
-// In production, use VITE_BFF_BASE_URL if set, otherwise use relative path
 const getApiBase = () => {
-  // In development, always use relative path to leverage Vite proxy
-  if (import.meta.env.DEV) {
+  // Highest priority: user-specified base URL
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE
+  }
+
+  // Development: go through Vite proxy
+  if (import.meta.env.DEV === true) {
     return '/api'
   }
-  // In production, use VITE_BFF_BASE_URL if set
-  if (import.meta.env.VITE_BFF_BASE_URL) {
-    return import.meta.env.VITE_BFF_BASE_URL
-  }
-  // Fallback to relative path in production
+
+  // Production default: nginx proxies /ec-api/ -> BFF
   return '/ec-api/api'
 }
 
@@ -154,7 +154,7 @@ async function sendTokenToBackend(idToken: string) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${idToken}`,
       },
-      credentials: import.meta.env.DEV ? 'same-origin' : 'include',
+      credentials: import.meta.env.DEV === true ? 'same-origin' : 'include',
     })
     
     console.log('Login response status:', res.status, res.statusText)

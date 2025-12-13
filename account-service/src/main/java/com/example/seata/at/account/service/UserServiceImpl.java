@@ -7,6 +7,8 @@ import com.example.seata.at.account.domain.mapper.AccountMapper;
 import com.example.seata.at.account.domain.mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,25 +53,47 @@ public class UserServiceImpl implements UserService {
             return existing.getId();
         }
 
-        User user = new User();
-        user.setFirebaseUid(firebaseUid);
-        user.setEmail(email);
-        user.setName(name);
-        user.setProviderId(providerId);
-        userMapper.insert(user);
-        Long userId = user.getId();
+        // Try to create new user - handle race condition where another thread might have created it
+        try {
+            User user = new User();
+            user.setFirebaseUid(firebaseUid);
+            user.setEmail(email);
+            user.setName(name);
+            user.setProviderId(providerId);
+            userMapper.insert(user);
+            Long userId = user.getId();
 
-        // Create initial account row logically linked to the user
-        Account account = new Account();
-        account.setUserId(userId);
-        // simple initial balance: 1000.00
-        account.setTotal(new BigDecimal("1000.00"));
-        account.setUsed(BigDecimal.ZERO);
-        account.setResidue(new BigDecimal("1000.00"));
-        accountMapper.insert(account);
+            if (userId == null) {
+                log.error("User insert succeeded but userId is null for firebaseUid={}", firebaseUid);
+                throw new RuntimeException("Failed to create user: userId is null after insert");
+            }
 
-        log.info("Created new user and account: firebaseUid={}, userId={}", firebaseUid, userId);
-        return userId;
+            // Create initial account row logically linked to the user
+            Account account = new Account();
+            account.setUserId(userId);
+            // simple initial balance: 1000.00
+            account.setTotal(new BigDecimal("1000.00"));
+            account.setUsed(BigDecimal.ZERO);
+            account.setResidue(new BigDecimal("1000.00"));
+            accountMapper.insert(account);
+
+            log.info("Created new user and account: firebaseUid={}, userId={}", firebaseUid, userId);
+            return userId;
+        } catch (DuplicateKeyException | DataIntegrityViolationException ex) {
+            // Race condition: another thread created the user between our select and insert
+            // Re-query to get the existing user
+            log.warn("Duplicate key violation during user creation (race condition), re-querying: firebaseUid={}, error={}", 
+                    firebaseUid, ex.getMessage());
+            User existingAfterRace = userMapper.selectOne(wrapper);
+            if (existingAfterRace != null) {
+                log.info("Found existing user after race condition: firebaseUid={}, userId={}", 
+                        firebaseUid, existingAfterRace.getId());
+                return existingAfterRace.getId();
+            }
+            // If still not found, re-throw the exception
+            log.error("Duplicate key exception but user not found on re-query: firebaseUid={}", firebaseUid, ex);
+            throw new RuntimeException("Failed to sync user: duplicate key violation and user not found on retry", ex);
+        }
     }
 
     @Override
