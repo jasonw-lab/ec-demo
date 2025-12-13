@@ -3,6 +3,9 @@
 # Backend deployment script that selectively rebuilds services based on args.
 set -euo pipefail
 
+# Set default for iTerm2 variable if not set (prevents unbound variable error)
+export ITERM2_SQUELCH_MARK="${ITERM2_SQUELCH_MARK:-0}"
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
