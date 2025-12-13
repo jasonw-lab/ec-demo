@@ -8,7 +8,6 @@ import com.example.seata.at.account.domain.mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,7 +78,7 @@ public class UserServiceImpl implements UserService {
 
             log.info("Created new user and account: firebaseUid={}, userId={}", firebaseUid, userId);
             return userId;
-        } catch (DuplicateKeyException | DataIntegrityViolationException ex) {
+        } catch (DataIntegrityViolationException ex) {
             // Race condition: another thread created the user between our select and insert
             // Re-query to get the existing user
             log.warn("Duplicate key violation during user creation (race condition), re-querying: firebaseUid={}, error={}", 
