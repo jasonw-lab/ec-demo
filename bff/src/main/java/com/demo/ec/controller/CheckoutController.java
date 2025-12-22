@@ -1,5 +1,7 @@
 package com.demo.ec.controller;
 
+import com.demo.ec.auth.AuthSessionFilter;
+import com.demo.ec.auth.SessionData;
 import com.demo.ec.client.OrderServiceClient;
 import com.demo.ec.client.dto.OrderServiceRequest;
 import com.demo.ec.client.dto.OrderSummary;
@@ -7,6 +9,7 @@ import com.demo.ec.model.CartItem;
 import com.demo.ec.model.OrderRequest;
 import com.demo.ec.model.Product;
 import com.demo.ec.repo.DemoData;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +41,6 @@ import java.util.UUID;
 public class CheckoutController {
 
     private static final Logger log = LoggerFactory.getLogger(CheckoutController.class);
-    private static final long DEFAULT_USER_ID = 1L;
     private static final Duration PAYMENT_URL_WAIT = Duration.ofSeconds(5);
 
     private final OrderServiceClient orderServiceClient;
@@ -48,8 +50,14 @@ public class CheckoutController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<Map<String, Object>> checkout(@Valid @RequestBody OrderRequest request) {
+    public ResponseEntity<Map<String, Object>> checkout(@Valid @RequestBody OrderRequest request,
+                                                        HttpServletRequest httpRequest) {
         log.info("CheckoutController.checkout START request: customerName={}, customerEmail={}, items={}", request.customerName(), request.customerEmail(), request.items());
+        SessionData session = (SessionData) httpRequest.getAttribute(AuthSessionFilter.REQ_ATTR_SESSION);
+        if (session == null || session.getUserId() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("code", "UNAUTHORIZED", "message", "ログインが必要です"));
+        }
         // calculate total
         BigDecimal total = BigDecimal.ZERO;
         for (CartItem item : request.items()) {
@@ -74,13 +82,20 @@ public class CheckoutController {
         resp.put("orderId", orderId);
         resp.put("amount", total);
         resp.put("status", "PENDING_PAYMENT");
+        resp.put("userId", session.getUserId());
         log.info("CheckoutController.checkout END response: orderId={}, amount={}, status={}", orderId, total, "PENDING_PAYMENT");
         return ResponseEntity.ok(resp);
     }
 
     @PostMapping("/orders/purchase")
-    public ResponseEntity<Map<String, Object>> purchase(@Valid @RequestBody OrderRequest request) {
+    public ResponseEntity<Map<String, Object>> purchase(@Valid @RequestBody OrderRequest request,
+                                                        HttpServletRequest httpRequest) {
         log.info("CheckoutController.purchase START customerName={} email={} items={}", request.customerName(), request.customerEmail(), request.items());
+        SessionData session = (SessionData) httpRequest.getAttribute(AuthSessionFilter.REQ_ATTR_SESSION);
+        if (session == null || session.getUserId() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("code", "UNAUTHORIZED", "message", "ログインが必要です"));
+        }
         if (request.items() == null || request.items().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("code", "NO_ITEMS", "message", "購入する商品が選択されていません"));
@@ -111,7 +126,7 @@ public class CheckoutController {
         String orderNo = UUID.randomUUID().toString();
 
         OrderServiceRequest orderReq = new OrderServiceRequest();
-        orderReq.setUserId(DEFAULT_USER_ID);
+        orderReq.setUserId(session.getUserId());
         orderReq.setProductId(productId);
         orderReq.setCount(count);
         orderReq.setAmount(total);
