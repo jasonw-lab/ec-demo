@@ -5,6 +5,21 @@ IFS=$'\n\t'
 # init.sh
 # プロジェクト内の指定された環境ファイルを
 # /Dev/_Env/app 以下にプロジェクトと同じパス構造でコピーするスクリプト
+#
+# 使い方（コマンド実行サンプル）
+#
+# 1) 実行権限を付与してデフォルト（push）を実行（プロジェクト -> DEST_BASE、上書き）
+#    chmod +x ./init.sh
+#    ./init.sh
+#
+# 2) 明示的に push を実行（上書き）
+#    ./init.sh push
+#
+# 3) pull を実行して DEST_BASE からプロジェクトへコピー（プロジェクト側にファイルがあればスキップ）
+#    ./init.sh pull
+#
+# 例: CI/CD の前に環境ファイルをローカルから集約する場合は push を使い、
+#     ローカルに環境ファイルが無ければチーム共通の DEST_BASE から pull で配布します。
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 DEST_BASE="/Users/wangjw/Dev/_Env/app"
