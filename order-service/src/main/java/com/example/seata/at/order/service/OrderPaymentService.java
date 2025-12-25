@@ -266,6 +266,12 @@ public class OrderPaymentService {
                                    String failMessage,
                                    String failCode) {
         LocalDateTime now = LocalDateTime.now();
+        // Ensure failMessage fits DB column (<=255). Truncate if necessary to avoid DataTruncation.
+        if (failMessage != null && failMessage.length() > 255) {
+            int originalLen = failMessage.length();
+            log.warn("[PaymentService] updatePaymentMeta failMessage too long ({} chars), truncating to 255 for orderNo={}", originalLen, orderNo);
+            failMessage = failMessage.substring(0, 255);
+        }
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
         uw.eq(Order::getOrderNo, orderNo)
           .set(Order::getPaymentStatus, paymentStatus)
