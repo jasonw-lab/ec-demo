@@ -173,6 +173,12 @@ public class OrderSagaActions {
 
     @Transactional
     public boolean markFailed(String orderNo, String failCode, String failMessage) {
+        // Truncate failMessage to DB column limit to avoid DataTruncation exceptions
+        if (failMessage != null && failMessage.length() > 255) {
+            int originalLen = failMessage.length();
+            log.warn("[SAGA] markFailed failMessage too long ({} chars), truncating to 255 for orderNo={}", originalLen, orderNo);
+            failMessage = failMessage.substring(0, 255);
+        }
         log.info("[SAGA] markFailed orderNo={} code={} message={}", orderNo, failCode, failMessage);
         LocalDateTime now = LocalDateTime.now();
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();

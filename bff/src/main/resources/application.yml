@@ -3,8 +3,21 @@ server:
 spring:
   application:
     name: ec-backend
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:123456}
+      ssl:
+        enabled: ${REDIS_SSL:false}
 services:
   order:
     base-url: ${ORDER_SERVICE_BASE_URL:http://localhost:8081}
   account:
     base-url: ${ACCOUNT_SERVICE_BASE_URL:http://localhost:8083}
+auth:
+  session:
+    prefix: "auth:session:"
+    cookie-name: sid
+    secure: ${AUTH_COOKIE_SECURE:true}
+    same-site: Lax

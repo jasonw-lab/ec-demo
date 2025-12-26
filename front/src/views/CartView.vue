@@ -45,11 +45,12 @@
           <div style="font-size:18px;font-weight:600;">合計</div>
           <div style="font-size:24px;font-weight:700;color:#ff6b6b;">¥ {{ total.toLocaleString() }}</div>
         </div>
-        <router-link to="/checkout" style="display:block;width:100%;">
-          <button style="width:100%;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:16px;cursor:pointer;font-size:16px;font-weight:600;">
-            レジへ進む
-          </button>
-        </router-link>
+        <button
+          style="width:100%;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:16px;cursor:pointer;font-size:16px;font-weight:600;"
+          @click="handleCheckout"
+        >
+          レジへ進む
+        </button>
       </div>
     </div>
   </div>
@@ -57,17 +58,41 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useStore, type CartItem, getImageUrl } from '../store'
+import { useRouter } from 'vue-router'
+import { useStore, type CartItem, getImageUrl, apiBase } from '../store'
 
 const store = useStore()
 const cart: CartItem[] = store.cart
 const remove = store.removeFromCart
+const router = useRouter()
 
 const total = computed<number>(() => cart.reduce((a,c)=> a + Number(c.product.price)*c.quantity, 0))
 
 function updateQuantity(productId: string, newQuantity: number) {
   if (newQuantity > 0) {
     store.updateCartQuantity(productId, newQuantity)
+  }
+}
+
+async function handleCheckout(): Promise<void> {
+  try {
+    const endpoint = apiBase.endsWith('/api')
+      ? `${apiBase}/auth/status`
+      : `${apiBase}/api/auth/status`
+
+    const res = await fetch(endpoint, { method: 'GET', credentials: 'include' })
+    if (res.ok) {
+      const data: { success?: boolean; userId?: string } = await res.json()
+      if (data.success && data.userId) {
+        router.push('/checkout')
+        return
+      }
+    }
+
+    router.push('/login')
+  } catch (err) {
+    console.error('Failed to check login status before checkout', err)
+    router.push('/login')
   }
 }
 </script>

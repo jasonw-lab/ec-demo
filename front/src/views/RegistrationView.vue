@@ -141,10 +141,10 @@ const getApiBase = () => {
 const registrationApiBase = getApiBase()
 
 async function sendTokenToBackend(idToken: string) {
-  // Construct endpoint: if apiBase ends with /api, append /auth/login, otherwise append /api/auth/login
+  // Construct endpoint: if apiBase ends with /api, append /auth/session, otherwise append /api/auth/session
   const endpoint = registrationApiBase.endsWith('/api') 
-    ? registrationApiBase + '/auth/login'
-    : registrationApiBase + '/api/auth/login'
+    ? registrationApiBase + '/auth/session'
+    : registrationApiBase + '/api/auth/session'
   console.log('Sending login request to:', endpoint, '(apiBase:', registrationApiBase + ')')
   
   try {
