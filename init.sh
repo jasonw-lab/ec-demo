@@ -23,6 +23,7 @@ IFS=$'\n\t'
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 DEST_BASE="/Users/wangjw/Dev/_Env/app"
+APP_NAME="ec-demo"
 
 FILES=(
   "bff/src/main/resources/serviceAccountKey.json"
@@ -43,10 +44,10 @@ EOF
 action="${1:-push}"
 
 if [ "$action" = "push" ]; then
-  echo "Pushing environment files to $DEST_BASE (preserving path structure)..."
+  echo "Pushing environment files to $DEST_BASE/$APP_NAME (preserving path structure)..."
   for rel in "${FILES[@]}"; do
     src="$REPO_ROOT/$rel"
-    dest_dir="$DEST_BASE/$(dirname "$rel")"
+    dest_dir="$DEST_BASE/$APP_NAME/$(dirname "$rel")"
     if [ ! -e "$src" ]; then
       echo "Warning: source not found: $src" >&2
       continue
@@ -57,9 +58,9 @@ if [ "$action" = "push" ]; then
   done
   echo "Push done."
 elif [ "$action" = "pull" ]; then
-  echo "Pulling environment files from $DEST_BASE -> project (skipping existing files)..."
+  echo "Pulling environment files from $DEST_BASE/$APP_NAME -> project (skipping existing files)..."
   for rel in "${FILES[@]}"; do
-    src="$DEST_BASE/$rel"
+    src="$DEST_BASE/$APP_NAME/$rel"
     dest_dir="$REPO_ROOT/$(dirname "$rel")"
     dest_file="$dest_dir/$(basename "$rel")"
     if [ ! -e "$src" ]; then
@@ -67,12 +68,20 @@ elif [ "$action" = "pull" ]; then
       continue
     fi
     if [ -e "$dest_file" ]; then
-      echo "Skip (exists): $dest_file"
-      continue
+      echo "File exists: $dest_file"
+      read -r -p "Overwrite? Type 'yes' to overwrite: " answer
+      if [ "$answer" != "yes" ]; then
+        echo "Skip (user chose not to overwrite): $dest_file"
+        continue
+      fi
     fi
     mkdir -p "$dest_dir"
     cp -p "$src" "$dest_dir/"
-    echo "Pulled: $src -> $dest_dir/"
+    if [ -e "$dest_file" ]; then
+      echo "Pulled (overwritten): $src -> $dest_dir/"
+    else
+      echo "Pulled: $src -> $dest_dir/"
+    fi
   done
   echo "Pull done."
 else
