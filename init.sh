@@ -28,6 +28,7 @@ FILES=(
   "bff/src/main/resources/serviceAccountKey.json"
   "front/.env"
   "front/.env.developemnt"
+  ".env"
 )
 
 usage() {

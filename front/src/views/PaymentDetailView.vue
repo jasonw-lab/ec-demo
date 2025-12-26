@@ -34,26 +34,18 @@
         <div v-else-if="isLoadingQr" style="display:inline-block;padding:16px;background:#f8fafc;border-radius:12px;border:2px solid #4ECDC4;width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:#6b7280;">
           QRコード読み込み中...
         </div>
-        <div v-else style="display:inline-block;padding:16px;background:#f8fafc;border-radius:12px;border:2px solid #4ECDC4;width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:#6b7280;">
-          QRコードが利用できません
+        <div v-else style="display:inline-block;padding:12px;background:#fff7ed;border-radius:12px;border:2px dashed #f59e0b;width:240px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#92400e;">
+          <div style="font-weight:600;margin-bottom:8px;">QRコードが利用できません</div>
+          <div style="font-size:13px;color:#7c4a1f;text-align:center;margin-bottom:12px;padding:0 8px;">
+            QRコードの生成に失敗しました。ネットワークや支払いプロバイダの一時的な問題の可能性があります。
+          </div>
+          <button @click="retryPayment" style="background:#f59e0b;color:#fff;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">
+            再試行
+          </button>
         </div>
       </div>
       
-      <!-- エラー表示 -->
-      <div v-if="paymentError" style="margin-top:24px;padding:16px;background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;text-align:center;">
-        <div style="font-size:16px;font-weight:600;color:#dc2626;margin-bottom:8px;">
-          支払いエラーが発生しました
-        </div>
-        <div style="font-size:14px;color:#991b1b;margin-bottom:8px;">
-          エラーコード: {{ paymentError.code }}
-        </div>
-        <div style="font-size:14px;color:#991b1b;margin-bottom:16px;">
-          {{ paymentError.message }}
-        </div>
-        <button @click="retryPayment" style="background:#E60033;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;">
-          再試行
-        </button>
-      </div>
+      <!-- エラー表示（UIから削除） -->
       
       <div style="text-align:center;margin-bottom:32px;">
         <a v-if="paymentUrl" :href="paymentUrl" target="_blank" style="color:#3b82f6;text-decoration:none;font-weight:600;">PayPay 決済ページを開く →</a>
