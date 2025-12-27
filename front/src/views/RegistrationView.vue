@@ -40,7 +40,7 @@
           <button
             type="button"
             class="registration-button apple"
-            :disabled="loading"
+            disabled
             @click="handleAppleRegistration"
           >
             <span class="registration-icon apple-icon">
@@ -71,7 +71,7 @@
           <button
             type="button"
             class="registration-button line"
-            :disabled="loading"
+            disabled
             @click="handleLineRegistration"
           >
             <span class="registration-icon line-icon-wrapper">

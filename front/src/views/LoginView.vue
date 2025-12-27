@@ -91,7 +91,7 @@
         <button
           type="button"
           class="social-button apple"
-          :disabled="loading"
+          disabled
           @click="handleAppleLogin"
         >
           <span class="social-icon"></span>
@@ -118,7 +118,7 @@
         <button
           type="button"
           class="social-button line"
-          :disabled="loading"
+          disabled
           @click="handleLineLogin"
         >
           <span class="social-icon">
