@@ -27,9 +27,10 @@ PayPay決済を統合したECサイトのマイクロサービスアーキテク
 - **Vite** - 高速な開発環境
 
 ### バックエンド
+- **JDK 17** - LTS前提の統一ランタイムで運用コストを最小化
 - **Spring Boot 3.x** - エンタープライズJavaフレームワーク
-- **マイクロサービスアーキテクチャ** - サービス間の疎結合設計
-- **分散トランザクション管理 (Saga)** - Seata Sagaパターンによる分散トランザクション制御
+- **モダンマイクロサービス** - ドメイン境界で独立開発・独立デプロイ
+- **分散トランザクション管理 (Saga)** - Seata Sagaモードによる最終整合性制御
 - **WebSocket** - リアルタイムな決済ステータス通知
 - **Spring Cloud OpenFeign** - サービス間通信
 
@@ -37,6 +38,10 @@ PayPay決済を統合したECサイトのマイクロサービスアーキテク
 - **Docker / Docker Compose** - コンテナ化とオーケストレーション
 - **MySQL 8.0** - リレーショナルデータベース
 - **Seata 2.0** - 分散トランザクション管理フレームワーク
+- **Redis** - ログインセッションの高速キャッシュ
+- **Firebase Authentication** - ID Token検証による認証基盤
+- **Kafka / Kafka Streams** - 注文、決済不整合検知し、alert出力
+- **Elasticsearch** - 商品検索とオートコンプリート
 - **MyBatis-Plus** - ORMフレームワーク
 
 ### 監視・運用
@@ -91,6 +96,15 @@ PayPay決済を統合したECサイトのマイクロサービスアーキテク
 **ポーリングとの併用**:
 - WebSocket接続中の注文について、BFFが定期的にステータスをチェック
 - 変更検知時にWebSocketで通知（Webhookが来ない場合の保険）
+
+### 5. Kafka Streamsによる整合性アラート（kafka-alert）
+
+**目的**: 分散環境で「注文」と「決済」のイベント到達順序や欠落に起因する整合性崩れを、運用観点で早期検知して復旧を加速します。
+
+- **出力**: `alerts.order_payment_inconsistency.v1` に `AlertRaised`（`orderNo`キー / `ruleId` / `observed` / `expected` / `detectedAt` など）をpublish
+- **Rule A（決済成功→注文未反映）**: 決済が `COMPLETED|SUCCESS|CAPTURED` を観測したにも関わらず、一定猶予後も注文が `WAITING_PAYMENT|PENDING` のまま（イベント欠落・Saga停滞・DB更新失敗の疑い）
+- **Rule B（注文PAID→決済不成立）**: 注文が `PAID` に遷移したのに、決済側は成功ステータスが観測できない／直近が `FAILED|CANCELLED|EXPIRED`（二重更新・冪等性逸脱・誤遷移の疑い）
+- **Rule C（期限/失敗後の遅延決済）**: `payment_expires_at` 超過または注文が `FAILED` になった後に決済成功を観測（PayPay側の遅延/再送・監視系の遅延により、返金/補償判断が必要になり得る）
 
 ---
 
@@ -246,15 +260,6 @@ PayPay決済を統合したECサイトのマイクロサービスアーキテク
 - **命名規則**: 明確で一貫性のある命名規則
 - **コードコメント**: 複雑なロジックに対する適切なコメント
 
----
-
-## 技術スタック（詳細）
-- Java 17
-- Spring Boot 3.x
-- Seata 2.0
-- MyBatis-Plus
-- MySQL 8.0
-- Docker Compose
 
 ## 更新履歴
 - Firebase ID Token を初回のみ検証し、`sid` を Redis（`auth:session:{sid}`）に保存するBFFセッションを追加（TTLは`exp-now`）。
@@ -262,147 +267,3 @@ PayPay決済を統合したECサイトのマイクロサービスアーキテク
 - `/api/**` への通常アクセスは Redis からセッション取得、見つからない場合は 401（Redis 障害時は 503）。
 - `/auth/logout` はセッションキーを即時削除し `sid` クッキーを `Max-Age=0` で失効させる。
 - 監査ログとして `session_created` / `session_missing` / `session_deleted` を出力。
-
-
-## 事前準備（MySQL と Seata Server）
-- MySQL はリポジトリ直下の `_docker/docker-compose-mysql.yml` で起動します（8.0, 3307, Apple Silicon/M1 対応）。
-  ```bash
-  cd _docker
-  docker compose -f docker-compose-mysql.yml up -d
-  ```
-- 起動時に自動作成されるもの:
-  - DB: seata_order, seata_storage, seata_account, seata
-  - テーブル: 各ビジネス DDL＋undo_log、Seata メタテーブル
-  - 初期データ: 在庫とアカウント残高
-- 接続情報:
-  - host: 127.0.0.1
-  - port: 3307
-  - user: root / pass: 123456
-- Seata Server は `_docker/docker-compose-seata.yml` で起動します（2.0.0, Apple Silicon/M1 対応）。
-  ```bash
-  cd _docker
-  docker compose -f docker-compose-seata.yml up -d
-  ```
-  - コンソール: http://127.0.0.1:7091
-  - サーバーポート: 8091（application.yml の既定: server.port 7091 → service-port 8091）
-  - ログ: `${basepath}/seata/logs` にホスト共有（`.env` の basepath を参照）
-  - コンフィグ: `_docker/seata-2.0.0/conf/application.yml`（添付ファイルをベースに file/db モードで構成）
-
-## ビルド/基本テスト
-各サービスは Spring Boot アプリとしてビルドできます。現時点の自動テストは Actuator のヘルスのみです。
-```bash
-# 本ディレクトリで
-mvn -q -DskipTests=false -pl order-service test
-mvn -q -DskipTests=false -pl storage-service test
-mvn -q -DskipTests=false -pl account-service test
-```
-
-## フロントエンド環境変数の設定
-
-フロントエンドを起動する前に、Firebase設定を含む環境変数を設定する必要があります。
-
-### 1. 環境変数ファイルの作成
-
-`front/.env.development` ファイルを作成し、以下の環境変数を設定してください：
-
-```bash
-# Vite Server Configuration
-VITE_APP_PORT=5173
-VITE_APP_BASE_API=/api
-VITE_APP_API_URL=http://localhost:8080
-
-# Backend BFF Base URL
-VITE_BFF_BASE_URL=http://localhost:8080
-
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=your-firebase-api-key-here
-VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_APP_ID=your-app-id-here
-```
-
-### 2. Firebase設定値の取得方法
-
-1. [Firebase Console](https://console.firebase.google.com/) にアクセス
-2. プロジェクトを選択（または新規作成）
-3. プロジェクト設定（⚙️アイコン）> 全般タブ
-4. 「マイアプリ」セクションでWebアプリを選択（または追加）
-5. 設定値（`apiKey`, `authDomain`, `projectId`, `appId`）をコピーして `.env.development` に設定
-
-### 3. Firebase認証の有効化
-
-Firebase Consoleで以下を設定してください：
-
-1. **認証 > サインイン方法** で「Google」を有効化
-   - Firebase Console > 認証 > サインイン方法 に移動
-   - 「Google」プロバイダーをクリック
-   - 「有効にする」をオンにして保存
-   - プロジェクトのサポートメールを設定（初回のみ）
-
-2. **認証 > 設定 > 承認済みドメイン** に開発環境のドメインを追加
-   - Firebase Console > 認証 > 設定 > 承認済みドメイン に移動
-   - 「ドメインを追加」をクリック
-   - `localhost` を追加（開発環境用）
-   - 本番環境の場合は、実際のドメインも追加
-
-**注意**: `auth/configuration-not-found` エラーが発生する場合は、上記の設定が完了しているか確認してください。
-
-### 4. バックエンドのFirebase設定
-
-バックエンドでもFirebase認証を使用する場合、`bff/src/main/resources/firebase-service-account.json` を配置してください：
-
-1. Firebase Console > プロジェクト設定 > サービスアカウント
-2. 「新しい秘密鍵の生成」をクリック
-3. ダウンロードしたJSONファイルを `bff/src/main/resources/firebase-service-account.json` として配置
-
-## 実行（共通）
-- Spring Profile は `saga` を使用します
-- 例（それぞれ別ターミナルで起動）:
-  ```bash
-  mvn -q -pl storage-service spring-boot:run -Dspring-boot.run.profiles=saga
-  mvn -q -pl account-service  spring-boot:run -Dspring-boot.run.profiles=saga
-  mvn -q -pl order-service    spring-boot:run -Dspring-boot.run.profiles=saga
-  mvn -q -pl bff              spring-boot:run
-  ```
-
-ヘルス確認:
-```bash
-curl -s localhost:8081/actuator/health | jq
-curl -s localhost:8082/actuator/health | jq
-curl -s localhost:8083/actuator/health | jq
-```
-
----
-
-## SAGA モード
-- Profile: `saga`
-- エンドポイント:
-  - POST `http://localhost:8081/api/orders/saga`（State Language による SAGA 実行）
-  - POST `http://localhost:8081/api/orders/saga/sample`（簡易サンプル）
-  - POST `http://localhost:8081/api/orders/{orderNo}/payment/events`（BFF からの決済結果通知: status=COMPLETED / FAILED / TIMED_OUT など）
-- ステートマシン定義:
-  - `order-service/src/main/resources/statelang/order_create_saga.json`
-- 簡易テスト:
-  ```bash
-  # 既定値(count=10, amount=10.0)
-  ./test-saga.sh
-
-  # パラメータを変えて異常系を再現
-  ./test-saga.sh 999999 10.0     # 在庫不足
-  ./test-saga.sh 1 1000000.0     # 残高不足
-  ```
-- メモ:
-  - 各サービスの `application-saga.yaml` にて `tx-service-group: saga_tx_group` を利用します。
-  - 決済開始後は Order が `WAITING_PAYMENT` 状態となり、BFF からの `COMPLETED / FAILED / TIMED_OUT` 通知で `PAID` / `FAILED` に確定します。
-  - 待機中に `payment_expires_at` を過ぎた注文は `order.payment.timeout-check-interval-ms`（既定 60s）間隔でタイムアウト検知され、自動補償されます。
-  - `t_order` には WebSocket 認証に利用する `payment_channel_token` / `payment_channel_expires_at` および `payment_last_event_id` を保持します。
-
-### BFF（Webhook / WebSocket）
-- `POST /api/orders/purchase` は `orderId` と併せて WebSocket 接続用 `channelToken` を返却します。
-- PayPay Webhook は `POST /api/paypay/webhook` に送付します。payload 内の `merchantPaymentId`（=orderId）と `status` から Order Service へ転送され、重複イベントは `payment_last_event_id` で抑止します。
-- WebSocket エンドポイント: `ws://localhost:8080/ws/orders?orderId={orderId}&token={channelToken}`
-  - 接続直後に最新スナップショット（`type: "ORDER_STATUS"`）を 1 回送信します。
-  - 決済確定/補償/タイムアウト時は `result: SUCCESS | FAILED | TIMEOUT` を push します。
-- `GET /api/payments/{orderId}/details` などの REST API でも同じ情報を取得できます（channelToken も含む）。
-
----
