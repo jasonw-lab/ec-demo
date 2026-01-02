@@ -29,6 +29,7 @@ public class OrderStatusBroadcaster {
     public void sendInitialSnapshot(WebSocketSession session, OrderSummary summary) {
         try {
             session.sendMessage(new TextMessage(buildPayload(summary, "SNAPSHOT")));
+            log.info("[WS] snapshot sent orderId={} sessionId={}", summary.getOrderNo(), session.getId());
         } catch (IOException e) {
             log.warn("Failed to send initial snapshot orderId={} sessionId={} err={}", summary.getOrderNo(), session.getId(), e.getMessage());
         }
@@ -39,6 +40,8 @@ public class OrderStatusBroadcaster {
         if (sessions.isEmpty()) {
             return;
         }
+        log.info("[WS] broadcast orderId={} sessions={} orderStatus={} paymentStatus={}",
+                summary.getOrderNo(), sessions.size(), summary.getStatus(), summary.getPaymentStatus());
         String payload = buildPayload(summary, "UPDATE");
         TextMessage message = new TextMessage(payload);
         for (WebSocketSession session : sessions) {

@@ -22,14 +22,15 @@ IFS=$'\n\t'
 #     ローカルに環境ファイルが無ければチーム共通の DEST_BASE から pull で配布します。
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-DEST_BASE="/Users/wangjw/Dev/_Env/app"
+DEST_BASE="/Users/wangjw/Dev/_Env/app-key"
 APP_NAME="ec-demo"
 
 FILES=(
   "bff/src/main/resources/serviceAccountKey.json"
   "front/.env"
-  "front/.env.developemnt"
+  "front/.env.development"
   ".env"
+  ".idea/runConfigurations"
 )
 
 usage() {
@@ -53,7 +54,7 @@ if [ "$action" = "push" ]; then
       continue
     fi
     mkdir -p "$dest_dir"
-    cp -p "$src" "$dest_dir/"
+    cp -rp "$src" "$dest_dir/"
     echo "Copied: $src -> $dest_dir/"
   done
   echo "Push done."
@@ -68,7 +69,7 @@ elif [ "$action" = "pull" ]; then
       continue
     fi
     if [ -e "$dest_file" ]; then
-      echo "File exists: $dest_file"
+      echo "File/directory exists: $dest_file"
       read -r -p "Overwrite? Type 'yes' to overwrite: " answer
       if [ "$answer" != "yes" ]; then
         echo "Skip (user chose not to overwrite): $dest_file"
@@ -76,7 +77,7 @@ elif [ "$action" = "pull" ]; then
       fi
     fi
     mkdir -p "$dest_dir"
-    cp -p "$src" "$dest_dir/"
+    cp -rp "$src" "$dest_dir/"
     if [ -e "$dest_file" ]; then
       echo "Pulled (overwritten): $src -> $dest_dir/"
     else

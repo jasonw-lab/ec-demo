@@ -8,6 +8,7 @@ import com.example.seata.at.order.client.dto.PaymentResult;
 import com.example.seata.at.order.domain.entity.Order;
 import com.example.seata.at.order.domain.entity.OrderStatus;
 import com.example.seata.at.order.domain.mapper.OrderMapper;
+import com.example.seata.at.order.kafka.OrderEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,11 +32,13 @@ public class OrderSagaActions {
     private final OrderMapper orderMapper;
     private final StorageClient storageClient;
     private final PaymentClient paymentClient;
+    private final OrderEventPublisher eventPublisher;
 
-    public OrderSagaActions(OrderMapper orderMapper, StorageClient storageClient, PaymentClient paymentClient) {
+    public OrderSagaActions(OrderMapper orderMapper, StorageClient storageClient, PaymentClient paymentClient, OrderEventPublisher eventPublisher) {
         this.orderMapper = orderMapper;
         this.storageClient = storageClient;
         this.paymentClient = paymentClient;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -75,6 +78,12 @@ public class OrderSagaActions {
         order.setUpdateTime(LocalDateTime.now());
         int inserted = orderMapper.insert(order);
         log.info("[SAGA] initOrderPending created orderNo={} inserted={}", orderNo, inserted);
+        if (inserted == 1) {
+            // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
+            log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={}",
+                    orderNo, null, OrderStatus.PENDING.name());
+            eventPublisher.publishStatusChanged(order, null, OrderStatus.PENDING.name(), null, null, null);
+        }
         return inserted == 1;
     }
 
@@ -131,12 +140,13 @@ public class OrderSagaActions {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = resolveExpiry(result.getExpiresAt(), now.plus(PAYMENT_WAIT_TIMEOUT));
         String paypayStatus = normalizeStatus(result.getStatus());
+        String resolvedPaymentStatus = firstNonBlank(paypayStatus, "PENDING");
         String channelToken = ensureChannelToken(order, now);
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
         uw.eq(Order::getOrderNo, orderNo)
                 .in(Order::getStatus, OrderStatus.PENDING.name(), OrderStatus.WAITING_PAYMENT.name())
                 .set(Order::getStatus, OrderStatus.WAITING_PAYMENT.name())
-                .set(Order::getPaymentStatus, firstNonBlank(paypayStatus, "PENDING"))
+                .set(Order::getPaymentStatus, resolvedPaymentStatus)
                 .set(Order::getPaymentUrl, preferredUrl(result))
                 .set(Order::getPaymentRequestedAt, now)
                 .set(Order::getPaymentExpiresAt, expiresAt)
@@ -146,12 +156,20 @@ public class OrderSagaActions {
                 .set(Order::getUpdateTime, now);
         int updated = orderMapper.update(null, uw);
         log.info("[SAGA] requestPayment updated={} orderNo={} expiresAt={} channelToken={}", updated, orderNo, expiresAt, channelToken);
+        if (updated > 0) {
+            // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
+            log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={} paymentStatus={}",
+                    orderNo, order.getStatus(), OrderStatus.WAITING_PAYMENT.name(), resolvedPaymentStatus);
+            eventPublisher.publishStatusChanged(order, order.getStatus(), OrderStatus.WAITING_PAYMENT.name(), resolvedPaymentStatus, null, null);
+        }
         return updated > 0;
     }
 
     @Transactional
     public boolean markPaid(String orderNo) {
         log.info("[SAGA] markPaid orderNo={}", orderNo);
+        Order before = orderMapper.selectOne(new LambdaQueryWrapper<Order>()
+                .eq(Order::getOrderNo, orderNo));
         LocalDateTime now = LocalDateTime.now();
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
         uw.eq(Order::getOrderNo, orderNo)
@@ -168,6 +186,12 @@ public class OrderSagaActions {
                 .set(Order::getUpdateTime, now);
         int updated = orderMapper.update(null, uw);
         log.info("[SAGA] markPaid updated={} orderNo={}", updated, orderNo);
+        if (updated > 0 && before != null) {
+            // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
+            log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={} paymentStatus={}",
+                    orderNo, before.getStatus(), OrderStatus.PAID.name(), "COMPLETED");
+            eventPublisher.publishStatusChanged(before, before.getStatus(), OrderStatus.PAID.name(), "COMPLETED", null, null);
+        }
         return updated > 0;
     }
 
@@ -180,6 +204,8 @@ public class OrderSagaActions {
             failMessage = failMessage.substring(0, 255);
         }
         log.info("[SAGA] markFailed orderNo={} code={} message={}", orderNo, failCode, failMessage);
+        Order before = orderMapper.selectOne(new LambdaQueryWrapper<Order>()
+                .eq(Order::getOrderNo, orderNo));
         LocalDateTime now = LocalDateTime.now();
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
         uw.eq(Order::getOrderNo, orderNo)
@@ -197,6 +223,12 @@ public class OrderSagaActions {
                 .set(Order::getUpdateTime, now);
         int updated = orderMapper.update(null, uw);
         log.info("[SAGA] markFailed updated={} orderNo={}", updated, orderNo);
+        if (updated > 0 && before != null) {
+            // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
+            log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={} paymentStatus={} reason={}",
+                    orderNo, before.getStatus(), OrderStatus.FAILED.name(), "FAILED", failMessage);
+            eventPublisher.publishStatusChanged(before, before.getStatus(), OrderStatus.FAILED.name(), "FAILED", failMessage, null);
+        }
         return updated > 0;
     }
 

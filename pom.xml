@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.demo.ec</groupId>
-    <artifactId>seata-at-demo-parent</artifactId>
+    <artifactId>ec-demo-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Seata AT Demo (Parent)</name>
