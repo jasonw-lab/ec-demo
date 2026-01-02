@@ -26,7 +26,7 @@
 - **Observability**: 全服务标准化 `actuator/health`，加速故障排查
 - **Resilience**: Webhook优先 + 轮询兜底、幂等性、补偿事务安全收敛
 - **Security**: Firebase ID Token验证 + Redis会话，Cookie前提 `HttpOnly` / `SameSite` / `Secure`
-- **Fail-safe**: Redis故障等重要依赖损坏时返回 503，向安全侧倒（详情见 `_document/`）
+- **Fail-safe**: Redis故障等重要依赖损坏时返回 503，向安全侧倒（详情见 `_docs/`）
 
 ## 风险与对策（摘录）
 
@@ -87,10 +87,10 @@
 ### 可观测性
 - **Spring Boot Actuator**
 
-## 架构图与文档（详细见 `_document/`）
+## 架构图与文档（详细见 `_docs/`）
 
 - Draw.io 架构图：`docs/ec-demo-architecture.drawio`（Overview / DataFlow）
-- 本地启动手册：`_document/README_LOCAL_SETUP.md`
-- 架构深挖（Saga 范围、状态机、kafka-alert 契约、非功能）：`_document/README_ARCHITECTURE.md`
-- 部署手册（偏 VPS）：`_document/docker/demo/deploy.md`
-- 更新记录：`_document/CHANGELOG.md`
+- 本地启动手册：`_docs/README_LOCAL_SETUP.md`
+- 架构深挖（Saga 范围、状态机、kafka-alert 契约、非功能）：`_docs/README_ARCHITECTURE.md`
+- 部署手册（偏 VPS）：`_docs/docker/demo/deploy.md`
+- 更新记录：`_docs/CHANGELOG.md`

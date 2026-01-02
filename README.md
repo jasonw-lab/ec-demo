@@ -26,7 +26,7 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
 - **Observability**: `actuator/health` を全サービスに標準化し、障害切り分けを高速化
 - **Resilience**: Webhook優先 + ポーリングフォールバック、冪等性、補償トランザクションで安全に収束
 - **Security**: Firebase ID Token検証 + Redisセッション、Cookieは `HttpOnly` / `SameSite` / `Secure` を前提
-- **Fail-safe**: Redis障害など重要依存が壊れた場合は 503 を返し安全側に倒す（詳細は `_document/`）
+- **Fail-safe**: Redis障害など重要依存が壊れた場合は 503 を返し安全側に倒す（詳細は `_docs/`）
 
 ## リスクと対策（抜粋）
 
@@ -87,10 +87,10 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
 ### 監視・運用
 - **Spring Boot Actuator** - ヘルスチェック・メトリクス収集
 
-## 図とドキュメント（詳細は `_document/` 参照）
+## 図とドキュメント（詳細は `_docs/` 参照）
 
 - 図（Draw.io）: `docs/ec-demo-architecture.drawio`（ページ: Overview / DataFlow）
-- 起動手順（確定版）: `_document/README_LOCAL_SETUP.md`
-- アーキテクチャ詳細（Saga保証範囲、状態機械、kafka-alert契約、非機能）: `_document/README_ARCHITECTURE.md`
-- デプロイ手順（VPS想定）: `_document/docker/demo/deploy.md`
-- 更新履歴: `_document/CHANGELOG.md`
+- 起動手順（確定版）: `_docs/README_LOCAL_SETUP.md`
+- アーキテクチャ詳細（Saga保証範囲、状態機械、kafka-alert契約、非機能）: `_docs/README_ARCHITECTURE.md`
+- デプロイ手順（VPS想定）: `_docs/docker/demo/deploy.md`
+- 更新履歴: `_docs/CHANGELOG.md`

@@ -26,7 +26,7 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 - **Observability**: Standardized `actuator/health` across all services to accelerate troubleshooting
 - **Resilience**: Webhook-first + polling fallback, idempotency, compensation transactions for safe convergence
 - **Security**: Firebase ID Token verification + Redis sessions, cookies assume `HttpOnly` / `SameSite` / `Secure`
-- **Fail-safe**: Return 503 for critical dependency failures like Redis, fail safely (details in `_document/`)
+- **Fail-safe**: Return 503 for critical dependency failures like Redis, fail safely (details in `_docs/`)
 
 ## Risks and countermeasures (excerpt)
 
@@ -87,10 +87,10 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 ### Observability
 - **Spring Boot Actuator**
 
-## Diagrams & docs (see `_document/` for details)
+## Diagrams & docs (see `_docs/` for details)
 
 - Draw.io diagram: `docs/ec-demo-architecture.drawio` (pages: Overview / DataFlow)
-- Local startup guide: `_document/README_LOCAL_SETUP.md`
-- Architecture deep dive (Saga scope, state machine, kafka-alert contract, non-functional): `_document/README_ARCHITECTURE.md`
-- Deployment guide (VPS-oriented): `_document/docker/demo/deploy.md`
-- Changelog: `_document/CHANGELOG.md`
+- Local startup guide: `_docs/README_LOCAL_SETUP.md`
+- Architecture deep dive (Saga scope, state machine, kafka-alert contract, non-functional): `_docs/README_ARCHITECTURE.md`
+- Deployment guide (VPS-oriented): `_docs/docker/demo/deploy.md`
+- Changelog: `_docs/CHANGELOG.md`

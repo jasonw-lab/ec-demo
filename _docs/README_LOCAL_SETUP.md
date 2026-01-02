@@ -21,7 +21,7 @@
 ### 2.1 起動
 
 ```bash
-cd _document/docker/local
+cd _docs/docker/local
 docker compose up -d
 ```
 
@@ -30,7 +30,7 @@ docker compose up -d
 Kafka / Elasticsearch は重いので任意にしています。
 
 ```bash
-cd _document/docker/local
+cd _docs/docker/local
 docker compose --profile kafka --profile elastic up -d
 ```
 
@@ -55,16 +55,16 @@ docker compose --profile kafka --profile elastic up -d
 
 ### 2.5 初期データ投入
 
-MySQLコンテナ初回起動時に `_document/docker/demo/sql/mysql-init` 配下のSQLを自動実行します。
+MySQLコンテナ初回起動時に `_docs/docker/demo/sql/mysql-init` 配下のSQLを自動実行します。
 
 再投入したい場合は、MySQLのデータボリュームを消してから再起動します（環境により手順が異なるため、ローカルのDockerボリューム管理ポリシーに従ってください）。
 
 ## 3. VPS/デモ環境向けCompose（参考）
 
-`_document/docker/demo` は以下を前提にしたデプロイ用です。
+`_docs/docker/demo` は以下を前提にしたデプロイ用です。
 
 - `docker_youlai-boot` という外部ネットワークが存在する
 - `/mydata` 配下へのボリュームマウントが前提
 - BFFの `env_file` はホスト側の `/mydata/ec-demo/env/ec-demo-bff.env` を参照する
 
-詳細: `_document/docker/demo/deploy.md`
+詳細: `_docs/docker/demo/deploy.md`
