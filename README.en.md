@@ -90,7 +90,6 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 ## Diagrams & docs (see `_docs/` for details)
 
 - Draw.io diagram: `docs/ec-demo-architecture.drawio` (pages: Overview / DataFlow)
-- Local startup guide: `_docs/README_LOCAL_SETUP.md`
-- Architecture deep dive (Saga scope, state machine, kafka-alert contract, non-functional): `_docs/README_ARCHITECTURE.md`
+- Local startup guide: `_docs/runbook/README_LOCAL_SETUP.md`
+- Architecture deep dive (Saga scope, state machine, kafka-alert contract, non-functional): `_docs/architecture/README_ARCHITECTURE.md`
 - Deployment guide (VPS-oriented): `_docs/docker/demo/deploy.md`
-- Changelog: `_docs/CHANGELOG.md`

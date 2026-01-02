@@ -90,7 +90,6 @@
 ## 架构图与文档（详细见 `_docs/`）
 
 - Draw.io 架构图：`docs/ec-demo-architecture.drawio`（Overview / DataFlow）
-- 本地启动手册：`_docs/README_LOCAL_SETUP.md`
-- 架构深挖（Saga 范围、状态机、kafka-alert 契约、非功能）：`_docs/README_ARCHITECTURE.md`
+- 本地启动手册：`_docs/runbook/README_LOCAL_SETUP.md`
+- 架构深挖（Saga 范围、状态机、kafka-alert 契约、非功能）：`_docs/architecture/README_ARCHITECTURE.md`
 - 部署手册（偏 VPS）：`_docs/docker/demo/deploy.md`
-- 更新记录：`_docs/CHANGELOG.md`

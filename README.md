@@ -90,7 +90,6 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
 ## 図とドキュメント（詳細は `_docs/` 参照）
 
 - 図（Draw.io）: `docs/ec-demo-architecture.drawio`（ページ: Overview / DataFlow）
-- 起動手順（確定版）: `_docs/README_LOCAL_SETUP.md`
-- アーキテクチャ詳細（Saga保証範囲、状態機械、kafka-alert契約、非機能）: `_docs/README_ARCHITECTURE.md`
+- 起動手順（確定版）: `_docs/runbook/README_LOCAL_SETUP.md`
+- アーキテクチャ詳細（Saga保証範囲、状態機械、kafka-alert契約、非機能）: `_docs/architecture/README_ARCHITECTURE.md`
 - デプロイ手順（VPS想定）: `_docs/docker/demo/deploy.md`
-- 更新履歴: `_docs/CHANGELOG.md`
