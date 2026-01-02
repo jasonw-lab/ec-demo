@@ -1,4 +1,4 @@
-package com.example.seata.at.order.kafka;
+package com.example.seata.at.order.infrastructure.messaging.kafka;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

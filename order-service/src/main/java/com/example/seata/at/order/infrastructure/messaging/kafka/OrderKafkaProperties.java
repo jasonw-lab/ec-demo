@@ -1,4 +1,4 @@
-package com.example.seata.at.order.kafka;
+package com.example.seata.at.order.infrastructure.messaging.kafka;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,4 +15,3 @@ public class OrderKafkaProperties {
         return ordersEventsTopic;
     }
 }
-

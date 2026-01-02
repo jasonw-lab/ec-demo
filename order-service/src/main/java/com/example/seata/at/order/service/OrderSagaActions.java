@@ -8,7 +8,7 @@ import com.example.seata.at.order.client.dto.PaymentResult;
 import com.example.seata.at.order.domain.entity.Order;
 import com.example.seata.at.order.domain.entity.OrderStatus;
 import com.example.seata.at.order.domain.mapper.OrderMapper;
-import com.example.seata.at.order.kafka.OrderEventPublisher;
+import com.example.seata.at.order.infrastructure.messaging.kafka.OrderEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

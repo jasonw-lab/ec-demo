@@ -1,4 +1,4 @@
-package com.example.seata.at.order.kafka;
+package com.example.seata.at.order.infrastructure.messaging.kafka;
 
 import com.example.seata.at.order.domain.entity.Order;
 import com.fasterxml.jackson.databind.ObjectMapper;
