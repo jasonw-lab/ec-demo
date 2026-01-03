@@ -1,23 +1,28 @@
-version: '3.8'
+version: "3.8"
 
 services:
   ec-demo-elasticsearch:
-    # NOTE: Elasticsearch 9.x の実在するタグに合わせて調整してください（例: 9.0.0）。
-    image: ${ELASTICSEARCH_IMAGE:-docker.elastic.co/elasticsearch/elasticsearch:9.0.0}
+    # kuromoji / icu / ingest-attachment を組み込んだカスタムES
+    build:
+      context: .
+      dockerfile: Dockerfile.elasticsearch
+      args:
+        ES_IMAGE: ${ELASTICSEARCH_IMAGE:-docker.elastic.co/elasticsearch/elasticsearch:9.0.0}
     platform: linux/arm64
     container_name: ec-demo-elasticsearch9
     restart: unless-stopped
+
     environment:
       - TZ=Asia/Tokyo
       - discovery.type=single-node
       - xpack.security.enabled=false
       - xpack.security.enrollment.enabled=false
       - ES_JAVA_OPTS=-Xms${ES_HEAP:-1g} -Xmx${ES_HEAP:-1g}
-      - http.port=9200
-      - transport.port=9300
+
     ports:
       - "${ES_HTTP_PORT:-9200}:9200"
       - "${ES_TRANSPORT_PORT:-9300}:9300"
+
     ulimits:
       memlock:
         soft: -1
@@ -25,15 +30,66 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+
     volumes:
+      # ⚠ disk watermark 対策：ホストの空き容量 10%以上必須
       - ${basepath:-/mydata/ec-demo}/elasticsearch/data:/usr/share/elasticsearch/data
+
+    # 「9200が開いた」ではなく「clusterがyellow以上」を待つ
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/9200'"]
+      test: ["CMD-SHELL", "curl -fsS 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null || exit 1"]
       interval: 10s
-      timeout: 3s
-      retries: 30
+      timeout: 5s
+      retries: 60
+
     networks:
       - seata-net
+
+  ec-demo-kibana:
+    image: ${KIBANA_IMAGE:-docker.elastic.co/kibana/kibana:9.0.0}
+    platform: linux/arm64
+    container_name: ec-demo-kibana9
+    restart: unless-stopped
+
+    depends_on:
+      ec-demo-elasticsearch:
+        condition: service_healthy
+
+    environment:
+      - TZ=Asia/Tokyo
+      - SERVER_NAME=ec-demo-kibana
+      - SERVER_HOST=0.0.0.0
+      - ELASTICSEARCH_HOSTS=http://ec-demo-elasticsearch:9200
+      - xpack.security.enabled=false
+      # SavedObjects migration / Chromium対策
+      - NODE_OPTIONS=--max-old-space-size=2048
+
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+
+    networks:
+      - seata-net
+
+  # =========================
+  # MinIO (stable, version pinned)
+  # =========================
+  ec-demo-minio:
+    image: minio/minio:RELEASE.2024-12-13T22-19-12Z
+    platform: linux/arm64
+    container_name: ec-demo-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - TZ=Asia/Tokyo
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - ${basepath:-/mydata/ec-demo}/minio/data:/data
+    networks: [seata-net]
+
 
 networks:
   seata-net:
