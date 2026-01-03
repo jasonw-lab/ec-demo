@@ -79,7 +79,7 @@ dist/*/
 
 /git-change.sh
 
-rule*.md
+rule*
 update*.py
 update*.sh
 
@@ -89,12 +89,9 @@ update*.sh
 .env
 .run
 ec-demo-bff.env
-ec-demo-bff.env
-ec-demo-bff.env
 serviceAccountKey.json
 **/serviceAccountKey.json
+.env.development
+env.production
+feature-README.md
 
-.env.development
-front/.env.development
-.env.development
-front/.env.production
