@@ -95,3 +95,5 @@ serviceAccountKey.json
 env.production
 feature-README.md
 
+/alert-streams-service/
+/alert-process-service/
