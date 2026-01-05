@@ -20,7 +20,6 @@ spring:
     name: seata-server
 
 logging:
-  config: classpath:logback-spring.xml
   file:
     # by default resolves to /root/logs/seata inside the container
     path: ${log.home:${user.home}/logs/seata}
