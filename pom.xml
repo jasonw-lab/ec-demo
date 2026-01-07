@@ -32,6 +32,8 @@
         <module>bff</module>
         <module>payment-service</module>
         <module>alert-service</module>
+        <module>es-service</module>
+
     </modules>
 
     <dependencyManagement>
