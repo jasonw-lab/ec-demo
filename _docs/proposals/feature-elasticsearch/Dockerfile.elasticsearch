@@ -1,9 +1,0 @@
-ARG ES_IMAGE=docker.elastic.co/elasticsearch/elasticsearch:9.0.0
-FROM ${ES_IMAGE}
-
-# Install plugins (non-interactive)
-RUN bin/elasticsearch-plugin install --batch analysis-kuromoji && \
-    bin/elasticsearch-plugin install --batch analysis-icu && \
-    bin/elasticsearch-plugin install --batch ingest-attachment
-
-# docker exec -it ec-demo-elasticsearch9 bin/elasticsearch-plugin list
