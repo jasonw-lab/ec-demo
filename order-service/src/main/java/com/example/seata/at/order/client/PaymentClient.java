@@ -30,6 +30,8 @@ public class PaymentClient {
     }
 
     public PaymentResult requestPayment(String orderNo, BigDecimal amount) {
+        log.info("PaymentClient.requestPayment orderNo={}, amount={}", orderNo, amount);
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Order-No", orderNo);
         Map<String, Object> body = new HashMap<>();
@@ -37,6 +39,7 @@ public class PaymentClient {
         body.put("amount", amount);
 
         try {
+
             ResponseEntity<PaymentResult> response = restTemplate.postForEntity(
                     backendBaseUrl + "/internal/payment/paypay/pay",
                     new HttpEntity<>(body, headers),
