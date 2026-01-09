@@ -49,9 +49,11 @@ docker compose --profile kafka --profile elastic up -d
 
 - MySQL: `docker logs ec-demo-mysql-8` / `docker exec -it ec-demo-mysql-8 mysql -uroot -p123456 -e "SHOW DATABASES;"`
 - Seata Console: `http://localhost:7092`
-- order-service: `http://localhost:8081/actuator/health`
-- storage-service: `http://localhost:8082/actuator/health`
-- account-service: `http://localhost:8083/actuator/health`
+- order-service: `http://localhost:8082/actuator/health`
+- storage-service: `http://localhost:8083/actuator/health`
+- account-service: `http://localhost:8081/actuator/health`
+- payment-service: `http://localhost:8084/actuator/health`
+- alert-service: `http://localhost:8085/actuator/health`
 
 ### 2.5 初期データ投入
 
