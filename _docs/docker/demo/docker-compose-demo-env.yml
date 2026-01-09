@@ -190,3 +190,16 @@ services:
     networks:
       - ${EC_DEMO_NETWORK:-seata-net}
 
+  # MongoDB 6.0 LTS for ec-demo
+  ec-demo-mongodb:
+    image: mongo:6.0
+    container_name: ec-demo-mongodb-6
+    ports:
+      - "27017:27017"
+    environment:
+      - TZ=Asia/Tokyo
+    volumes:
+      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mongodb/data:/data/db
+    restart: unless-stopped
+    networks:
+      - ${EC_DEMO_NETWORK:-seata-net}
