@@ -5,13 +5,13 @@ spring:
     name: ec-backend
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:${EC_DEMO_SERVER:localhost}}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:123456}
       ssl:
         enabled: ${REDIS_SSL:false}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${EC_DEMO_SERVER:localhost}:29092}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP_ID:bff-order-events-consumer}
       auto-offset-reset: latest
@@ -26,9 +26,9 @@ ec-demo:
       orders-events: ${EC_DEMO_ORDERS_EVENTS_TOPIC:ec-demo.orders.events.v1}
 services:
   order:
-    base-url: ${ORDER_SERVICE_BASE_URL:http://localhost:8081}
+    base-url: ${ORDER_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8081}
   account:
-    base-url: ${ACCOUNT_SERVICE_BASE_URL:http://localhost:8083}
+    base-url: ${ACCOUNT_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8083}
 auth:
   session:
     prefix: "auth:session:"

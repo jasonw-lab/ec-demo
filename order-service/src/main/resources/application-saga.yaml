@@ -6,8 +6,8 @@ spring:
     name: order-service-saga
   # Primary business datasource used by MyBatis (Order DB)
   datasource:
-    url: ${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-    jdbc-url: ${DATASOURCE_JDBC_URL:${DATASOURCE_URL:jdbc:mysql://localhost:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}}
+    url: ${DATASOURCE_URL:jdbc:mysql://${EC_DEMO_SERVER:localhost}:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    jdbc-url: ${DATASOURCE_JDBC_URL:${DATASOURCE_URL:jdbc:mysql://${EC_DEMO_SERVER:localhost}:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}}
     username: ${DATASOURCE_USERNAME:root}
     password: ${DATASOURCE_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -16,8 +16,8 @@ spring:
       minimum-idle: 0
   # Separate SAGA persistence datasource (State machine tables)
   saga-datasource:
-    url: ${SAGA_DATASOURCE_URL:jdbc:mysql://localhost:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-    jdbc-url: ${SAGA_DATASOURCE_JDBC_URL:${SAGA_DATASOURCE_URL:jdbc:mysql://localhost:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}}
+    url: ${SAGA_DATASOURCE_URL:jdbc:mysql://${EC_DEMO_SERVER:localhost}:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    jdbc-url: ${SAGA_DATASOURCE_JDBC_URL:${SAGA_DATASOURCE_URL:jdbc:mysql://${EC_DEMO_SERVER:localhost}:3307/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}}
     username: ${SAGA_DATASOURCE_USERNAME:root}
     password: ${SAGA_DATASOURCE_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -31,7 +31,7 @@ seata:
       saga_tx_group: ${SEATA_VGROUP_MAPPING_SAGA_TX_GROUP:default}
       default_tx_group: ${SEATA_VGROUP_MAPPING_DEFAULT_TX_GROUP:default}
     grouplist:
-      default: ${SEATA_GROUPLIST_DEFAULT:127.0.0.1:8091}
+      default: ${SEATA_GROUPLIST_DEFAULT:${EC_DEMO_SERVER:127.0.0.1}:8091}
   registry:
     type: ${SEATA_REGISTRY_TYPE:file}
   config:
@@ -41,6 +41,6 @@ seata:
 
 svc:
   payment:
-    baseUrl: ${SVC_PAYMENT_BASE_URL:http://localhost:8090}
+    baseUrl: ${SVC_PAYMENT_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8090}
   storage:
-    baseUrl: ${SVC_STORAGE_BASE_URL:http://localhost:8082}
+    baseUrl: ${SVC_STORAGE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8082}
