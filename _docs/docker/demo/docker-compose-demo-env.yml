@@ -39,7 +39,7 @@ services:
     container_name: ec-demo-seata-server-2.0
     ports:
       - "7092:7091"   # console
-      - "8092:8091"   # seata server
+      - "8091:8091"   # seata server
     environment:
       - TZ=${TZ:-Asia/Shanghai}
       - STORE_MODE=db
