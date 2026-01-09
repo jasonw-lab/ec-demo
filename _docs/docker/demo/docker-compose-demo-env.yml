@@ -78,7 +78,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CREATE_TOPICS: "ec-demo.orders.events.v1:1:1"
     volumes:
-      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/kafka/data:/var/lib/kafka/data
+      - ec-demo-kafka-data:/var/lib/kafka/data
     restart: unless-stopped
     networks:
       - ec-demo-net
@@ -202,3 +202,4 @@ services:
 
 volumes:
   ec-demo-elasticsearch-data:
+  ec-demo-kafka-data:
