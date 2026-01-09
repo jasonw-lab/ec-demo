@@ -25,9 +25,9 @@ logging:
     path: ${log.home:${user.home}/logs/seata}
   extend:
     logstash-appender:
-      destination: 127.0.0.1:4560
+      destination: ${EC_DEMO_SERVER:127.0.0.1}:4560
     kafka-appender:
-      bootstrap-servers: 127.0.0.1:9092
+      bootstrap-servers: ${EC_DEMO_SERVER:127.0.0.1}:9092
       topic: logback_to_logstash
 
 console:
@@ -49,7 +49,7 @@ seata:
       datasource: druid
       db-type: mysql
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://ec-demo-mysql-8:3306/seata?rewriteBatchedStatements=true&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://${EC_DEMO_SERVER:localhost}:3306/seata?rewriteBatchedStatements=true&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
       user: root
       password: 123456
       min-conn: 10

@@ -50,14 +50,18 @@
   - WebSocket 实时推送
   - PayPay 集成（Webhook 接收/校验 → 转发给 order-service）
   - Redis 会话（校验 Firebase ID Token → 下发 `sid`）
-- **order-service**（8081）
+- **order-service**（8082）
   - 订单状态机（`PENDING → WAITING_PAYMENT → PAID/FAILED`）
   - Saga 编排（库存确认/补偿）
   - Webhook/轮询共用的支付状态更新逻辑
-- **storage-service**（8082）
+- **storage-service**（8083）
   - 库存预留/确认/补偿
-- **account-service**（8083）
+- **account-service**（8081）
   - 账户/余额管理
+- **payment-service**（8084）
+  - 支付处理（PayPay 集成）
+- **alert-service**（8085）
+  - Kafka Streams 不一致检测与告警输出
 
 ## 技术栈（保留在 README）
 

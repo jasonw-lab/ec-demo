@@ -50,14 +50,18 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
   - WebSocketによるリアルタイム通知
   - PayPay決済API統合（Webhook受信/署名検証/注文サービスへの伝搬）
   - Redisセッション（Firebase ID Token検証 → `sid`発行）
-- **order-service**（port 8081）
+- **order-service**（port 8082）
   - 注文作成・状態管理（`PENDING → WAITING_PAYMENT → PAID/FAILED`）
   - Sagaオーケストレーション（在庫確定/補償）
   - 決済ステータス更新（Webhook/ポーリングの共通ロジック）
-- **storage-service**（port 8082）
+- **storage-service**（port 8083）
   - 在庫の確保・確定・補償処理
-- **account-service**（port 8083）
+- **account-service**（port 8081）
   - アカウント/残高管理
+- **payment-service**（port 8084）
+  - 決済処理（PayPay連携）
+- **alert-service**（port 8085）
+  - Kafka Streamsによる不整合検知とアラート出力
 
 ## 技術スタック
 
