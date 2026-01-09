@@ -8,14 +8,13 @@ COPY account-service/pom.xml ./account-service/
 COPY bff/pom.xml ./bff/
 COPY payment-service/pom.xml ./payment-service/
 # Try to download dependencies offline, but don't fail if network issues occur
-RUN mvn dependency:go-offline -pl storage-service -B || true
+RUN mvn dependency:go-offline -pl payment-service -B || true
 
-COPY storage-service ./storage-service
-RUN mvn clean package -pl storage-service -DskipTests -B
+COPY payment-service ./payment-service
+RUN mvn clean package -pl payment-service -DskipTests -B
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/storage-service/target/*.jar app.jar
-EXPOSE 8082
+COPY --from=build /app/payment-service/target/*.jar app.jar
+EXPOSE 8090
 ENTRYPOINT ["java", "-jar", "app.jar"]
-

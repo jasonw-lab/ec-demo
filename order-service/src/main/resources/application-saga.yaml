@@ -40,7 +40,7 @@ seata:
   data-source-proxy-mode: ${SEATA_DATA_SOURCE_PROXY_MODE:AT}
 
 svc:
-  backend:
-    baseUrl: ${SVC_BACKEND_BASE_URL:http://localhost:8080}
+  payment:
+    baseUrl: ${SVC_PAYMENT_BASE_URL:http://localhost:8090}
   storage:
     baseUrl: ${SVC_STORAGE_BASE_URL:http://localhost:8082}

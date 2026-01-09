@@ -1,9 +1,7 @@
 package com.demo.ec.controller;
 
 import com.demo.ec.client.OrderServiceClient;
-import com.demo.ec.client.dto.OrderSummary;
 import com.demo.ec.client.dto.PaymentStatusUpdateRequest;
-import com.demo.ec.ws.OrderStatusBroadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +16,7 @@ import java.util.Optional;
 
 /**
  * PayPay Webhook受信コントローラー
- * 
+ *
  * <p>PayPayから送信されるWebhookイベントを受信し、order-serviceに転送します。
  * Webhookはポーリングよりも優先され、リアルタイムに支払い完了を検知できます。
  * 
@@ -32,7 +30,6 @@ import java.util.Optional;
  * <ol>
  *   <li>Webhookペイロードを受信</li>
  *   <li>order-serviceに支払いステータス更新を通知</li>
- *   <li>WebSocketでフロントエンドに通知</li>
  * </ol>
  */
 @RestController
@@ -41,11 +38,9 @@ public class PayPayWebhookController {
     private static final Logger log = LoggerFactory.getLogger(PayPayWebhookController.class);
 
     private final OrderServiceClient orderServiceClient;
-    private final OrderStatusBroadcaster broadcaster;
 
-    public PayPayWebhookController(OrderServiceClient orderServiceClient, OrderStatusBroadcaster broadcaster) {
+    public PayPayWebhookController(OrderServiceClient orderServiceClient) {
         this.orderServiceClient = orderServiceClient;
-        this.broadcaster = broadcaster;
     }
 
     /**
@@ -115,10 +110,10 @@ public class PayPayWebhookController {
 
             // order-serviceに支払いステータス更新を通知
             PaymentStatusUpdateRequest request = buildPaymentStatusRequest(message);
-            Optional<OrderSummary> updated = orderServiceClient.notifyPaymentStatus(message.orderId(), request);
-            
+            Optional<java.util.Map> updated = orderServiceClient.notifyPaymentStatus(message.orderId(), request);
+
             if (updated.isPresent()) {
-                return handleSuccessfulUpdate(message, updated.get());
+                return handleSuccessfulUpdate(message);
             } else {
                 // 注文が見つからない、または更新に失敗した場合
                 // ■ Webhookの再送を防ぐために200を返す
@@ -186,24 +181,9 @@ public class PayPayWebhookController {
      * @param summary 更新された注文サマリー（非null保証済み）
      * @return HTTPレスポンス（200 OK）
      */
-    private ResponseEntity<?> handleSuccessfulUpdate(WebhookMessage message, OrderSummary summary) {
-        log.info("[PayPayWebhook] Order updated successfully orderId={}, newStatus={}, eventId={}", 
-                message.orderId(), summary.getStatus(), message.eventId());
-        
-        // WebSocketでフロントエンドに通知
-        // ■ ブロッキング処理だがWebhook処理の一部として実行する
-        // ユーザーに即座に通知する必要がある
-        try {
-            broadcaster.broadcast(summary);
-            log.info("[PayPayWebhook] WebSocket broadcast sent orderId={}, eventId={}", 
-                    message.orderId(), message.eventId());
-        } catch (Exception e) {
-            // WebSocket通知の失敗はログに記録するがWebhook処理は成功扱いとする
-            // ■ WebSocket通知は補助的な機能であり、注文更新は完了している
-            log.warn("[PayPayWebhook] WebSocket broadcast failed orderId={}, error={}", 
-                    message.orderId(), e.getMessage(), e);
-        }
-        
+    private ResponseEntity<?> handleSuccessfulUpdate(WebhookMessage message) {
+        log.info("[PayPayWebhook] Order updated successfully orderId={}, eventId={}",
+                message.orderId(), message.eventId());
         return ResponseEntity.ok(Map.of("success", true, "orderId", message.orderId()));
     }
 

@@ -76,7 +76,7 @@ class PaypayCreateQRCodeIntegrationTest {
     private static Map<String, String> readDotenv() throws Exception {
         Path path = Path.of(".env");
         if (!Files.isRegularFile(path)) {
-            path = Path.of("bff", ".env");
+            path = Path.of("payment-service", ".env");
         }
         Assumptions.assumeTrue(Files.isRegularFile(path), "Missing .env file (expected at repo root)");
         List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
@@ -107,4 +107,3 @@ class PaypayCreateQRCodeIntegrationTest {
         return result;
     }
 }
-

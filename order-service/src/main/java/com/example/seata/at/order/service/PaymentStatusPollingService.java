@@ -19,8 +19,8 @@ import java.util.Set;
 
 /**
  * PayPay支払いステータスのポーリングサービス
- * 
- * <p>Webhookが来ない場合のフォールバックとして、定期的にPayPay APIを呼び出して
+ *
+ * <p>Webhookが来ない場合のフォールバックとして、定期的にPayment Service経由で
  * 支払いステータスをチェックし、完了を検知したら自動的に注文ステータスを更新します。
  * 
  * <p>Webhookが優先されるため、このポーリングは補完的な役割を果たします。
@@ -305,4 +305,3 @@ public class PaymentStatusPollingService {
         return request;
     }
 }
-
