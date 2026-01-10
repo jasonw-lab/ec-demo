@@ -92,7 +92,7 @@ public class OrderStatusBroadcaster {
         String status = summary.getStatus() == null ? "" : summary.getStatus().toUpperCase();
         return switch (status) {
             case "PAID" -> "SUCCESS";
-            case "FAILED" -> "FAILED";
+            case "CANCELLED" -> "FAILED";
             default -> {
                 String paymentStatus = summary.getPaymentStatus() == null ? "" : summary.getPaymentStatus().toUpperCase();
                 if (paymentStatus.equals("TIMED_OUT") || paymentStatus.equals("EXPIRED")) {

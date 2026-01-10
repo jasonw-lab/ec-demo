@@ -65,7 +65,7 @@ public class PaymentStatusPollingService {
      * - トランザクションは各注文ごとに分離（一つの失敗が他に影響しない）
      * 
      * <p>処理対象：
-     * - ステータスが WAITING_PAYMENT の注文
+     * - ステータスが PAYMENT_PENDING の注文
      * - 支払い有効期限がまだ切れていない注文
      * 
      * <p>一度に処理する注文数は制限されています（MAX_ORDERS_PER_BATCH）。
@@ -76,7 +76,7 @@ public class PaymentStatusPollingService {
     public int checkAndUpdatePaymentStatus() {
         LocalDateTime now = LocalDateTime.now();
         
-        // 有効期限内のWAITING_PAYMENT状態の注文を取得
+        // 有効期限内のPAYMENT_PENDING状態の注文を取得
         // ■ LIMIT句でバッチサイズを制限し、APIとDBの負荷を抑える
         List<Order> waitingOrders = findWaitingPaymentOrders(now);
 
@@ -127,7 +127,7 @@ public class PaymentStatusPollingService {
      */
     private List<Order> findWaitingPaymentOrders(LocalDateTime now) {
         return orderMapper.selectList(new LambdaQueryWrapper<Order>()
-                .eq(Order::getStatus, OrderStatus.WAITING_PAYMENT.name())
+                .eq(Order::getStatus, OrderStatus.PAYMENT_PENDING.name())
                 .ge(Order::getPaymentExpiresAt, now)
                 .last("LIMIT " + MAX_ORDERS_PER_BATCH));
     }
@@ -201,7 +201,7 @@ public class PaymentStatusPollingService {
             return handleSuccessStatus(orderNo, successStatus, result);
         } else if (isPaymentFailure) {
             // 失敗時はステータスを正規化して処理
-            String failureStatus = FAILURE_STATUSES.contains(normalized) || TIMEOUT_STATUSES.contains(normalized) 
+            String failureStatus = FAILURE_STATUSES.contains(normalized) || TIMEOUT_STATUSES.contains(normalized)
                     ? normalized : "FAILED";
             return handleFailureStatus(orderNo, failureStatus, result);
         } else {
@@ -280,7 +280,7 @@ public class PaymentStatusPollingService {
         // 注文ステータスを更新（トランザクション内で実行）
         orderPaymentService.handlePaymentStatus(orderNo, request);
         
-        log.info("[PaymentPolling] Order status updated to FAILED via polling orderNo={}, status={}", 
+        log.info("[PaymentPolling] Order status updated to CANCELLED via polling orderNo={}, status={}",
                 orderNo, normalized);
         return true;
     }

@@ -52,7 +52,7 @@ public class OrderATServiceImpl implements OrderATService {
         order.setProductId(req.getProductId());
         order.setCount(req.getCount());
         order.setAmount(req.getAmount());
-        order.setStatus(OrderStatus.PENDING.name());
+        order.setStatus(OrderStatus.CREATED.name());
         try {
             log.info("1) 注文レコード作成: inserting new order. orderNo={}, userId={}, productId={}, count={}, amount={}",
                     req.getOrderNo(), req.getUserId(), req.getProductId(), req.getCount(), req.getAmount());
