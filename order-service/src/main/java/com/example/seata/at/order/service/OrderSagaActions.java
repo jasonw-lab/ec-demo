@@ -65,7 +65,7 @@ public class OrderSagaActions {
         order.setProductId(productId);
         order.setCount(count);
         order.setAmount(amount);
-        order.setStatus(OrderStatus.PENDING.name());
+        order.setStatus(OrderStatus.CREATED.name());
         order.setPaymentStatus(null);
         order.setPaymentUrl(null);
         order.setPaymentRequestedAt(null);
@@ -81,25 +81,25 @@ public class OrderSagaActions {
         if (inserted == 1) {
             // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
             log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={}",
-                    orderNo, null, OrderStatus.PENDING.name());
-            eventPublisher.publishStatusChanged(order, null, OrderStatus.PENDING.name(), null, null, null);
+                    orderNo, null, OrderStatus.CREATED.name());
+            eventPublisher.publishStatusChanged(order, null, OrderStatus.CREATED.name(), null, null, null);
         }
         return inserted == 1;
     }
 
-    public boolean storageDeduct(String orderNo, Long productId, Integer count) {
-        log.info("[SAGA] storageDeduct orderNo={} productId={} count={}", orderNo, productId, count);
-        return storageClient.deduct(orderNo, productId, count);
+    public boolean reserveStock(String orderNo, Long productId, Integer count) {
+        log.info("[SAGA] reserveStock orderNo={} productId={} count={}", orderNo, productId, count);
+        return storageClient.reserveStock(orderNo, productId, count);
     }
 
-    public boolean storageCompensate(String orderNo, Long productId, Integer count) {
-        log.info("[SAGA] storageCompensate orderNo={} productId={} count={}", orderNo, productId, count);
-        return storageClient.compensate(orderNo, productId, count);
+    public boolean releaseStock(String orderNo, Long productId, Integer count) {
+        log.info("[SAGA] releaseStock orderNo={} productId={} count={}", orderNo, productId, count);
+        return storageClient.releaseStock(orderNo, productId, count);
     }
 
-    public boolean storageConfirm(String orderNo, Long productId, Integer count) {
-        log.info("[SAGA] storageConfirm orderNo={} productId={} count={}", orderNo, productId, count);
-        return storageClient.confirm(orderNo, productId, count);
+    public boolean commitStock(String orderNo, Long productId, Integer count) {
+        log.info("[SAGA] commitStock orderNo={} productId={} count={}", orderNo, productId, count);
+        return storageClient.commitStock(orderNo, productId, count);
     }
 
     @Transactional
@@ -119,12 +119,12 @@ public class OrderSagaActions {
             log.info("[SAGA] requestPayment order already paid orderNo={}", orderNo);
             return true;
         }
-        if (OrderStatus.FAILED.equals(status)) {
-            log.warn("[SAGA] requestPayment order already failed orderNo={}", orderNo);
+        if (OrderStatus.CANCELLED.equals(status)) {
+            log.warn("[SAGA] requestPayment order already cancelled orderNo={}", orderNo);
             return false;
         }
-        if (OrderStatus.WAITING_PAYMENT.equals(status)) {
-            log.info("[SAGA] requestPayment already waiting orderNo={}", orderNo);
+        if (OrderStatus.PAYMENT_PENDING.equals(status)) {
+            log.info("[SAGA] requestPayment already pending orderNo={}", orderNo);
             return true;
         }
 
@@ -133,7 +133,7 @@ public class OrderSagaActions {
             String code = result == null ? "NO_RESULT" : firstNonBlank(result.getCode(), "PAYPAY_ERROR");
             String message = result == null ? "No response from payment backend" : firstNonBlank(result.getMessage(), "PayPay payment request failed");
             log.warn("[SAGA] requestPayment failed orderNo={} code={} message={}", orderNo, code, message);
-            markFailed(orderNo, code, message);
+            markCancelled(orderNo, code, message);
             return false;
         }
 
@@ -144,8 +144,8 @@ public class OrderSagaActions {
         String channelToken = ensureChannelToken(order, now);
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
         uw.eq(Order::getOrderNo, orderNo)
-                .in(Order::getStatus, OrderStatus.PENDING.name(), OrderStatus.WAITING_PAYMENT.name())
-                .set(Order::getStatus, OrderStatus.WAITING_PAYMENT.name())
+                .in(Order::getStatus, OrderStatus.CREATED.name(), OrderStatus.PAYMENT_PENDING.name())
+                .set(Order::getStatus, OrderStatus.PAYMENT_PENDING.name())
                 .set(Order::getPaymentStatus, resolvedPaymentStatus)
                 .set(Order::getPaymentUrl, preferredUrl(result))
                 .set(Order::getPaymentRequestedAt, now)
@@ -159,8 +159,8 @@ public class OrderSagaActions {
         if (updated > 0) {
             // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
             log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={} paymentStatus={}",
-                    orderNo, order.getStatus(), OrderStatus.WAITING_PAYMENT.name(), resolvedPaymentStatus);
-            eventPublisher.publishStatusChanged(order, order.getStatus(), OrderStatus.WAITING_PAYMENT.name(), resolvedPaymentStatus, null, null);
+                    orderNo, order.getStatus(), OrderStatus.PAYMENT_PENDING.name(), resolvedPaymentStatus);
+            eventPublisher.publishStatusChanged(order, order.getStatus(), OrderStatus.PAYMENT_PENDING.name(), resolvedPaymentStatus, null, null);
         }
         return updated > 0;
     }
@@ -173,7 +173,7 @@ public class OrderSagaActions {
         LocalDateTime now = LocalDateTime.now();
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
         uw.eq(Order::getOrderNo, orderNo)
-                .in(Order::getStatus, OrderStatus.PENDING.name(), OrderStatus.WAITING_PAYMENT.name(), OrderStatus.PAID.name())
+                .in(Order::getStatus, OrderStatus.CREATED.name(), OrderStatus.PAYMENT_PENDING.name(), OrderStatus.PAID.name())
                 .set(Order::getStatus, OrderStatus.PAID.name())
                 .set(Order::getPaymentStatus, "COMPLETED")
                 .set(Order::getPaymentCompletedAt, now)
@@ -196,21 +196,21 @@ public class OrderSagaActions {
     }
 
     @Transactional
-    public boolean markFailed(String orderNo, String failCode, String failMessage) {
+    public boolean markCancelled(String orderNo, String failCode, String failMessage) {
         // Truncate failMessage to DB column limit to avoid DataTruncation exceptions
         if (failMessage != null && failMessage.length() > 255) {
             int originalLen = failMessage.length();
-            log.warn("[SAGA] markFailed failMessage too long ({} chars), truncating to 255 for orderNo={}", originalLen, orderNo);
+            log.warn("[SAGA] markCancelled failMessage too long ({} chars), truncating to 255 for orderNo={}", originalLen, orderNo);
             failMessage = failMessage.substring(0, 255);
         }
-        log.info("[SAGA] markFailed orderNo={} code={} message={}", orderNo, failCode, failMessage);
+        log.info("[SAGA] markCancelled orderNo={} code={} message={}", orderNo, failCode, failMessage);
         Order before = orderMapper.selectOne(new LambdaQueryWrapper<Order>()
                 .eq(Order::getOrderNo, orderNo));
         LocalDateTime now = LocalDateTime.now();
         LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
         uw.eq(Order::getOrderNo, orderNo)
-                .in(Order::getStatus, OrderStatus.PENDING.name(), OrderStatus.WAITING_PAYMENT.name(), OrderStatus.FAILED.name())
-                .set(Order::getStatus, OrderStatus.FAILED.name())
+                .in(Order::getStatus, OrderStatus.CREATED.name(), OrderStatus.PAYMENT_PENDING.name(), OrderStatus.CANCELLED.name())
+                .set(Order::getStatus, OrderStatus.CANCELLED.name())
                 .set(Order::getFailCode, failCode)
                 .set(Order::getFailMessage, failMessage)
                 .set(Order::getPaymentUrl, null)
@@ -222,12 +222,12 @@ public class OrderSagaActions {
                 .set(Order::getPaymentChannelExpiresAt, null)
                 .set(Order::getUpdateTime, now);
         int updated = orderMapper.update(null, uw);
-        log.info("[SAGA] markFailed updated={} orderNo={}", updated, orderNo);
+        log.info("[SAGA] markCancelled updated={} orderNo={}", updated, orderNo);
         if (updated > 0 && before != null) {
             // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
             log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={} paymentStatus={} reason={}",
-                    orderNo, before.getStatus(), OrderStatus.FAILED.name(), "FAILED", failMessage);
-            eventPublisher.publishStatusChanged(before, before.getStatus(), OrderStatus.FAILED.name(), "FAILED", failMessage, null);
+                    orderNo, before.getStatus(), OrderStatus.CANCELLED.name(), "FAILED", failMessage);
+            eventPublisher.publishStatusChanged(before, before.getStatus(), OrderStatus.CANCELLED.name(), "FAILED", failMessage, null);
         }
         return updated > 0;
     }

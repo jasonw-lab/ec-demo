@@ -24,7 +24,7 @@ public class OrderSagaServiceImpl implements OrderSagaService {
     }
 
     @Override
-    @GlobalTransactional(name = "order-create-saga-tx", rollbackFor = Exception.class)
+    @GlobalTransactional(name = "order-initialization-saga-tx", rollbackFor = Exception.class)
     public Order createOrderSaga(OrderDTO req) {
         return startOrderCreateSaga(req);
     }
@@ -40,18 +40,18 @@ public class OrderSagaServiceImpl implements OrderSagaService {
         params.put("productId", req.getProductId());
         params.put("count", req.getCount());
         params.put("amount", req.getAmount());
-        StateMachineInstance inst = stateMachineEngine.startWithBusinessKey("order_create_saga", null, req.getOrderNo(), params);
+        StateMachineInstance inst = stateMachineEngine.startWithBusinessKey("order_initialization_saga", null, req.getOrderNo(), params);
         Order order = orderMapper.selectOne(new LambdaQueryWrapper<Order>()
                 .eq(Order::getOrderNo, req.getOrderNo()));
         if (order == null) {
-            log.warn("order_create_saga finished but order not found orderNo={} status={}", req.getOrderNo(), inst.getStatus());
-            throw new RuntimeException("order_create_saga failed: order not created");
+            log.warn("order_initialization_saga finished but order not found orderNo={} status={}", req.getOrderNo(), inst.getStatus());
+            throw new RuntimeException("order_initialization_saga failed: order not created");
         }
         if (!ExecutionStatus.SU.equals(inst.getStatus())) {
-            log.warn("order_create_saga failed orderNo={} sagaStatus={} orderStatus={}", req.getOrderNo(), inst.getStatus(), order.getStatus());
+            log.warn("order_initialization_saga failed orderNo={} sagaStatus={} orderStatus={}", req.getOrderNo(), inst.getStatus(), order.getStatus());
             return order;
         }
-        log.info("order_create_saga success orderNo={} status={}", req.getOrderNo(), order.getStatus());
+        log.info("order_initialization_saga success orderNo={} status={}", req.getOrderNo(), order.getStatus());
         return order;
     }
 

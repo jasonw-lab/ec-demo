@@ -169,7 +169,7 @@ public class CheckoutController {
      * <ul>
      *   <li>フロントエンド: {@code PaymentDetailView.vue} の {@code startPolling()} 関数から定期的に呼び出される</li>
      *   <li>ポーリング間隔: 3秒ごと（{@code pollIntervalMs = 3000}）</li>
-     *   <li>目的: 支払いステータス（PAID/FAILED）を検知して画面遷移をトリガー</li>
+     *   <li>目的: 支払いステータス（PAID/CANCELLED）を検知して画面遷移をトリガー</li>
      * </ul>
      * 
      * <p>注意: 支払い完了後（PAIDステータス）は、フロントエンド側で {@code hasFinalized} フラグにより
@@ -227,7 +227,7 @@ public class CheckoutController {
         String currentStatus = orderSummary.getStatus();
         
         // 注文が既に終了状態（失敗または完了）の場合は早期リターン
-        if (currentStatus != null && (currentStatus.equalsIgnoreCase("FAILED") 
+        if (currentStatus != null && (currentStatus.equalsIgnoreCase("CANCELLED")
                 || currentStatus.equalsIgnoreCase("PAYMENT_FAILED") 
                 || currentStatus.equalsIgnoreCase("PAID"))) {
             log.warn("CheckoutController.getQRCode order already in terminal state orderId={} status={}", id, currentStatus);
@@ -342,7 +342,7 @@ public class CheckoutController {
         }
         return switch (rawStatus.toUpperCase()) {
             case "PAID" -> "PAID";
-            case "FAILED" -> "PAYMENT_FAILED";
+            case "CANCELLED" -> "PAYMENT_FAILED";
             case "PAYMENT_FAILED" -> "PAYMENT_FAILED";
             case "AUTHORIZED" -> "AUTHORIZED";
             default -> "PENDING_PAYMENT";

@@ -65,10 +65,10 @@ public class OrderPaymentTimeoutScheduler {
     }
 
     /**
-     * タイムアウトした支払いを検出して失敗としてマーク
-     * 
-     * <p>支払い有効期限を過ぎた注文を検出し、自動的に失敗としてマークします。
-     * 在庫も自動的に補償されます。
+     * タイムアウトした支払いを検出してキャンセルとしてマーク
+     *
+     * <p>支払い有効期限を過ぎた注文を検出し、自動的にキャンセルとしてマークします。
+     * 在庫も自動的に解放されます。
      * 
      * <p>デフォルトでは60秒ごとに実行されます。
      * 設定: order.payment.timeout-check-interval-ms (デフォルト: 60000ms)
@@ -78,7 +78,7 @@ public class OrderPaymentTimeoutScheduler {
     public void enforcePaymentTimeouts() {
         LocalDateTime now = LocalDateTime.now();
         List<Order> expired = orderMapper.selectList(new LambdaQueryWrapper<Order>()
-                .eq(Order::getStatus, OrderStatus.WAITING_PAYMENT.name())
+                .eq(Order::getStatus, OrderStatus.PAYMENT_PENDING.name())
                 .lt(Order::getPaymentExpiresAt, now));
 
         if (expired.isEmpty()) {
@@ -95,13 +95,13 @@ public class OrderPaymentTimeoutScheduler {
             try {
                 log.info("[PaymentTimeout] Processing expired payment orderNo={}, expiresAt={}", 
                         orderNo, order.getPaymentExpiresAt());
-                boolean updated = orderSagaActions.markFailed(orderNo, "PAYPAY_TIMEOUT", "PayPay payment timed out");
+                boolean updated = orderSagaActions.markCancelled(orderNo, "PAYPAY_TIMEOUT", "PayPay payment timed out");
                 if (updated) {
-                    orderSagaActions.storageCompensate(orderNo, order.getProductId(), order.getCount());
+                    orderSagaActions.releaseStock(orderNo, order.getProductId(), order.getCount());
                     updatedCount++;
-                    log.info("[PaymentTimeout] Order marked as FAILED and stock compensated orderNo={}", orderNo);
+                    log.info("[PaymentTimeout] Order marked as CANCELLED and stock released orderNo={}", orderNo);
                 } else {
-                    log.warn("[PaymentTimeout] Failed to mark order as FAILED orderNo={}", orderNo);
+                    log.warn("[PaymentTimeout] Failed to mark order as CANCELLED orderNo={}", orderNo);
                 }
             } catch (Exception e) {
                 errorCount++;

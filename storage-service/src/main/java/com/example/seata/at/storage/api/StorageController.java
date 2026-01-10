@@ -70,6 +70,24 @@ public class StorageController {
         }
     }
 
+    @PostMapping("/reserve/saga")
+    public CommonResponse<String> reserveSaga(@Valid @RequestBody DeductRequest req) {
+        String orderNo = req.getOrderNo();
+        if (orderNo == null || orderNo.isBlank()) {
+            return CommonResponse.fail("orderNo is required for saga operations");
+        }
+        String xid = null;
+        try { xid = io.seata.core.context.RootContext.getXID(); } catch (Throwable ignore) {}
+        log.info("Received ReserveRequest SAGA: orderNo={}, productId={}, count={}, xid={}", orderNo, req.getProductId(), req.getCount(), xid);
+        try {
+            boolean ok = storageSagaService.deduct(req.getProductId(), req.getCount(), orderNo);
+            return ok ? CommonResponse.ok("saga-reserved") : CommonResponse.fail("reserve failed");
+        } catch (StorageATServiceImpl.InsufficientStockException | IllegalArgumentException ex) {
+            log.warn("Saga reserve failed orderNo={} reason={}", orderNo, ex.getMessage());
+            return CommonResponse.fail(ex.getMessage());
+        }
+    }
+
     @PostMapping("/compensate/saga")
     public CommonResponse<String> compensateSaga(@Valid @RequestBody DeductRequest req) {
         String orderNo = req.getOrderNo();
@@ -88,6 +106,24 @@ public class StorageController {
         }
     }
 
+    @PostMapping("/release/saga")
+    public CommonResponse<String> releaseSaga(@Valid @RequestBody DeductRequest req) {
+        String orderNo = req.getOrderNo();
+        if (orderNo == null || orderNo.isBlank()) {
+            return CommonResponse.fail("orderNo is required for saga operations");
+        }
+        String xid = null;
+        try { xid = io.seata.core.context.RootContext.getXID(); } catch (Throwable ignore) {}
+        log.info("Received ReleaseRequest SAGA: orderNo={}, productId={}, count={}, xid={}", orderNo, req.getProductId(), req.getCount(), xid);
+        try {
+            boolean ok = storageSagaService.compensate(req.getProductId(), req.getCount(), orderNo);
+            return ok ? CommonResponse.ok("saga-released") : CommonResponse.fail("release failed");
+        } catch (IllegalArgumentException ex) {
+            log.warn("Saga release failed orderNo={} reason={}", orderNo, ex.getMessage());
+            return CommonResponse.fail(ex.getMessage());
+        }
+    }
+
     @PostMapping("/confirm/saga")
     public CommonResponse<String> confirmSaga(@Valid @RequestBody DeductRequest req) {
         String orderNo = req.getOrderNo();
@@ -102,6 +138,24 @@ public class StorageController {
             return ok ? CommonResponse.ok("saga-confirmed") : CommonResponse.fail("confirm failed");
         } catch (IllegalArgumentException ex) {
             log.warn("Saga confirm failed orderNo={} reason={}", orderNo, ex.getMessage());
+            return CommonResponse.fail(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/commit/saga")
+    public CommonResponse<String> commitSaga(@Valid @RequestBody DeductRequest req) {
+        String orderNo = req.getOrderNo();
+        if (orderNo == null || orderNo.isBlank()) {
+            return CommonResponse.fail("orderNo is required for saga operations");
+        }
+        String xid = null;
+        try { xid = io.seata.core.context.RootContext.getXID(); } catch (Throwable ignore) {}
+        log.info("Received CommitRequest SAGA: orderNo={}, productId={}, count={}, xid={}", orderNo, req.getProductId(), req.getCount(), xid);
+        try {
+            boolean ok = storageSagaService.confirm(req.getProductId(), req.getCount(), orderNo);
+            return ok ? CommonResponse.ok("saga-committed") : CommonResponse.fail("commit failed");
+        } catch (IllegalArgumentException ex) {
+            log.warn("Saga commit failed orderNo={} reason={}", orderNo, ex.getMessage());
             return CommonResponse.fail(ex.getMessage());
         }
     }

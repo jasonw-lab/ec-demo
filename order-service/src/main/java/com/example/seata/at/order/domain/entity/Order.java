@@ -23,7 +23,7 @@ public class Order {
     private Integer count;
     private BigDecimal amount;
     /**
-     * Order status: PENDING / WAITING_PAYMENT / PAID / FAILED.
+     * Order status: CREATED / PAYMENT_PENDING / PAID / CANCELLED.
      */
     private String status;
     @TableField("payment_status")
