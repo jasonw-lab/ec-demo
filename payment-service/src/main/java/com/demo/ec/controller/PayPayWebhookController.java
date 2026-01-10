@@ -2,6 +2,7 @@ package com.demo.ec.controller;
 
 import com.demo.ec.client.OrderServiceClient;
 import com.demo.ec.client.dto.PaymentStatusUpdateRequest;
+import com.demo.ec.kafka.PaymentEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import java.util.Optional;
  * <ol>
  *   <li>Webhookペイロードを受信</li>
  *   <li>order-serviceに支払いステータス更新を通知</li>
+ *   <li>Kafka に PaymentSucceeded イベントを publish</li>
  * </ol>
  */
 @RestController
@@ -38,9 +40,13 @@ public class PayPayWebhookController {
     private static final Logger log = LoggerFactory.getLogger(PayPayWebhookController.class);
 
     private final OrderServiceClient orderServiceClient;
+    private final PaymentEventPublisher paymentEventPublisher;
 
-    public PayPayWebhookController(OrderServiceClient orderServiceClient) {
+    public PayPayWebhookController(
+            OrderServiceClient orderServiceClient,
+            PaymentEventPublisher paymentEventPublisher) {
         this.orderServiceClient = orderServiceClient;
+        this.paymentEventPublisher = paymentEventPublisher;
     }
 
     /**
@@ -113,6 +119,10 @@ public class PayPayWebhookController {
             Optional<java.util.Map> updated = orderServiceClient.notifyPaymentStatus(message.orderId(), request);
 
             if (updated.isPresent()) {
+                // ✅ 決済成功時: Kafka に PaymentSucceeded イベントを publish
+                if ("COMPLETED".equalsIgnoreCase(message.status()) || "SUCCESS".equalsIgnoreCase(message.status())) {
+                    publishPaymentSucceededEvent(message);
+                }
                 return handleSuccessfulUpdate(message);
             } else {
                 // 注文が見つからない、または更新に失敗した場合
@@ -178,13 +188,34 @@ public class PayPayWebhookController {
      * 注文更新成功時の処理を行います。
      * 
      * @param message Webhookメッセージ（非null保証済み）
-     * @param summary 更新された注文サマリー（非null保証済み）
      * @return HTTPレスポンス（200 OK）
      */
     private ResponseEntity<?> handleSuccessfulUpdate(WebhookMessage message) {
         log.info("[PayPayWebhook] Order updated successfully orderId={}, eventId={}",
                 message.orderId(), message.eventId());
         return ResponseEntity.ok(Map.of("success", true, "orderId", message.orderId()));
+    }
+
+    /**
+     * PaymentSucceeded イベントを Kafka へ publish します。
+     * 
+     * @param message Webhookメッセージ
+     */
+    private void publishPaymentSucceededEvent(WebhookMessage message) {
+        try {
+            paymentEventPublisher.publishPaymentSucceeded(
+                    message.orderId(),
+                    message.eventId(),  // paymentId として eventId を使用
+                    "PayPay",
+                    null,  // 金額情報が Webhook に含まれていない場合は null
+                    "JPY"
+            );
+            log.info("[PayPayWebhook] Published PaymentSucceeded to Kafka orderId={}", message.orderId());
+        } catch (Exception e) {
+            // Kafka publish 失敗は警告ログのみ（Webhook 処理自体は成功とする）
+            log.warn("[PayPayWebhook] Failed to publish PaymentSucceeded to Kafka orderId={}, error={}",
+                    message.orderId(), e.getMessage());
+        }
     }
 
     /**
