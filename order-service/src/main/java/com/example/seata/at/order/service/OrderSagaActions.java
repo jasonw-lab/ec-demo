@@ -24,6 +24,22 @@ import java.time.format.DateTimeParseException;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Order Saga Actions: Actions called by Seata Saga state machine (order_initialization_saga).
+ * 
+ * This service contains ONLY methods invoked during the Saga execution phase:
+ * - initOrderPending: Create order in CREATED state
+ * - reserveStock: Reserve inventory
+ * - requestPayment: Request payment from PayPay
+ * - releaseStock: Compensation for reserveStock
+ * - markCancelled: Compensation for order creation
+ * 
+ * Methods NOT in this class (moved to OrderStateManager):
+ * - markPaid: Called from Webhook (outside Saga)
+ * - commitStock: Called from Webhook (outside Saga)
+ * 
+ * Design principle: Clear separation between Saga-managed actions and post-Saga async processing.
+ */
 @Service("orderSagaActions")
 public class OrderSagaActions {
     private static final Logger log = LoggerFactory.getLogger(OrderSagaActions.class);
@@ -33,12 +49,15 @@ public class OrderSagaActions {
     private final StorageClient storageClient;
     private final PaymentClient paymentClient;
     private final OrderEventPublisher eventPublisher;
+    private final OrderStateManager stateManager;
 
-    public OrderSagaActions(OrderMapper orderMapper, StorageClient storageClient, PaymentClient paymentClient, OrderEventPublisher eventPublisher) {
+    public OrderSagaActions(OrderMapper orderMapper, StorageClient storageClient, PaymentClient paymentClient, 
+                           OrderEventPublisher eventPublisher, OrderStateManager stateManager) {
         this.orderMapper = orderMapper;
         this.storageClient = storageClient;
         this.paymentClient = paymentClient;
         this.eventPublisher = eventPublisher;
+        this.stateManager = stateManager;
     }
 
     @Transactional
@@ -87,19 +106,20 @@ public class OrderSagaActions {
         return inserted == 1;
     }
 
+    /**
+     * Reserve stock (Saga action: called during order_initialization_saga).
+     */
     public boolean reserveStock(String orderNo, Long productId, Integer count) {
         log.info("[SAGA] reserveStock orderNo={} productId={} count={}", orderNo, productId, count);
         return storageClient.reserveStock(orderNo, productId, count);
     }
 
+    /**
+     * Release stock (Saga compensation: called if Saga fails after reserveStock).
+     */
     public boolean releaseStock(String orderNo, Long productId, Integer count) {
         log.info("[SAGA] releaseStock orderNo={} productId={} count={}", orderNo, productId, count);
-        return storageClient.releaseStock(orderNo, productId, count);
-    }
-
-    public boolean commitStock(String orderNo, Long productId, Integer count) {
-        log.info("[SAGA] commitStock orderNo={} productId={} count={}", orderNo, productId, count);
-        return storageClient.commitStock(orderNo, productId, count);
+        return stateManager.releaseStock(orderNo, productId, count);
     }
 
     @Transactional
@@ -165,71 +185,13 @@ public class OrderSagaActions {
         return updated > 0;
     }
 
-    @Transactional
-    public boolean markPaid(String orderNo) {
-        log.info("[SAGA] markPaid orderNo={}", orderNo);
-        Order before = orderMapper.selectOne(new LambdaQueryWrapper<Order>()
-                .eq(Order::getOrderNo, orderNo));
-        LocalDateTime now = LocalDateTime.now();
-        LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
-        uw.eq(Order::getOrderNo, orderNo)
-                .in(Order::getStatus, OrderStatus.CREATED.name(), OrderStatus.PAYMENT_PENDING.name(), OrderStatus.PAID.name())
-                .set(Order::getStatus, OrderStatus.PAID.name())
-                .set(Order::getPaymentStatus, "COMPLETED")
-                .set(Order::getPaymentCompletedAt, now)
-                .set(Order::getPaidAt, now)
-                .set(Order::getFailedAt, null)
-                .set(Order::getFailCode, null)
-                .set(Order::getFailMessage, null)
-                .set(Order::getPaymentChannelToken, null)
-                .set(Order::getPaymentChannelExpiresAt, null)
-                .set(Order::getUpdateTime, now);
-        int updated = orderMapper.update(null, uw);
-        log.info("[SAGA] markPaid updated={} orderNo={}", updated, orderNo);
-        if (updated > 0 && before != null) {
-            // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
-            log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={} paymentStatus={}",
-                    orderNo, before.getStatus(), OrderStatus.PAID.name(), "COMPLETED");
-            eventPublisher.publishStatusChanged(before, before.getStatus(), OrderStatus.PAID.name(), "COMPLETED", null, null);
-        }
-        return updated > 0;
-    }
-
-    @Transactional
+    /**
+     * Mark order as cancelled (Saga compensation: called when Saga fails).
+     * Delegates to OrderStateManager for actual state transition.
+     */
     public boolean markCancelled(String orderNo, String failCode, String failMessage) {
-        // Truncate failMessage to DB column limit to avoid DataTruncation exceptions
-        if (failMessage != null && failMessage.length() > 255) {
-            int originalLen = failMessage.length();
-            log.warn("[SAGA] markCancelled failMessage too long ({} chars), truncating to 255 for orderNo={}", originalLen, orderNo);
-            failMessage = failMessage.substring(0, 255);
-        }
-        log.info("[SAGA] markCancelled orderNo={} code={} message={}", orderNo, failCode, failMessage);
-        Order before = orderMapper.selectOne(new LambdaQueryWrapper<Order>()
-                .eq(Order::getOrderNo, orderNo));
-        LocalDateTime now = LocalDateTime.now();
-        LambdaUpdateWrapper<Order> uw = new LambdaUpdateWrapper<>();
-        uw.eq(Order::getOrderNo, orderNo)
-                .in(Order::getStatus, OrderStatus.CREATED.name(), OrderStatus.PAYMENT_PENDING.name(), OrderStatus.CANCELLED.name())
-                .set(Order::getStatus, OrderStatus.CANCELLED.name())
-                .set(Order::getFailCode, failCode)
-                .set(Order::getFailMessage, failMessage)
-                .set(Order::getPaymentUrl, null)
-                .set(Order::getPaidAt, null)
-                .set(Order::getFailedAt, now)
-                .set(Order::getPaymentStatus, "FAILED")
-                .set(Order::getPaymentCompletedAt, null)
-                .set(Order::getPaymentChannelToken, null)
-                .set(Order::getPaymentChannelExpiresAt, null)
-                .set(Order::getUpdateTime, now);
-        int updated = orderMapper.update(null, uw);
-        log.info("[SAGA] markCancelled updated={} orderNo={}", updated, orderNo);
-        if (updated > 0 && before != null) {
-            // Order Service → Kafka: publish status change event for downstream notifications (BFF WS).
-            log.info("[SAGA][Kafka] publish OrderStatusChanged orderNo={} oldStatus={} newStatus={} paymentStatus={} reason={}",
-                    orderNo, before.getStatus(), OrderStatus.CANCELLED.name(), "FAILED", failMessage);
-            eventPublisher.publishStatusChanged(before, before.getStatus(), OrderStatus.CANCELLED.name(), "FAILED", failMessage, null);
-        }
-        return updated > 0;
+        log.info("[SAGA] markCancelled (delegating to StateManager) orderNo={} code={} message={}", orderNo, failCode, failMessage);
+        return stateManager.transitionToCancelled(orderNo, failCode, failMessage);
     }
 
     private String ensureChannelToken(Order order, LocalDateTime now) {
