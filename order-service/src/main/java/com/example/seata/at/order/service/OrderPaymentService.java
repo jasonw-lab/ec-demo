@@ -46,11 +46,11 @@ public class OrderPaymentService {
     private static final Set<String> TIMEOUT_STATUSES = Set.of("TIMED_OUT", "EXPIRED");
 
     private final OrderMapper orderMapper;
-    private final OrderSagaActions orderSagaActions;
+    private final OrderStateManager orderStateManager;
 
-    public OrderPaymentService(OrderMapper orderMapper, OrderSagaActions orderSagaActions) {
+    public OrderPaymentService(OrderMapper orderMapper, OrderStateManager orderStateManager) {
         this.orderMapper = orderMapper;
-        this.orderSagaActions = orderSagaActions;
+        this.orderStateManager = orderStateManager;
     }
 
     /**
@@ -177,10 +177,10 @@ public class OrderPaymentService {
         
         // 在庫確定処理（補償トランザクションの逆操作）
         // ■ 在庫確定→注文更新の順で実行する
-        orderSagaActions.commitStock(orderNo, order.getProductId(), order.getCount());
+        orderStateManager.commitStock(orderNo, order.getProductId(), order.getCount());
         
         // 注文ステータスをPAIDに更新
-        orderSagaActions.markPaid(orderNo);
+        orderStateManager.transitionToPaid(orderNo);
         
         log.info("[PaymentService] Order marked as PAID orderNo={}, productId={}, count={}", 
                 orderNo, order.getProductId(), order.getCount());
@@ -237,11 +237,11 @@ public class OrderPaymentService {
         Order order = findOrderSafely(orderNo);
         
         // 注文ステータスをCANCELLEDに更新
-        orderSagaActions.markCancelled(orderNo, failCode, failMessage);
+        orderStateManager.transitionToCancelled(orderNo, failCode, failMessage);
         
         // 在庫補償処理（予約していた在庫を解放）
         // ■ 注文更新→在庫補償の順で実行する（Sagaパターンの補償フロー）
-        orderSagaActions.releaseStock(orderNo, order.getProductId(), order.getCount());
+        orderStateManager.releaseStock(orderNo, order.getProductId(), order.getCount());
         
         log.info("[PaymentService] Order marked as CANCELLED and stock compensated orderNo={}, productId={}, count={}",
                 orderNo, order.getProductId(), order.getCount());

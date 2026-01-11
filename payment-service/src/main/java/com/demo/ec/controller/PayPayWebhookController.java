@@ -2,6 +2,7 @@ package com.demo.ec.controller;
 
 import com.demo.ec.client.OrderServiceClient;
 import com.demo.ec.client.dto.PaymentStatusUpdateRequest;
+import com.demo.ec.kafka.PaymentEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import java.util.Optional;
  * <ol>
  *   <li>Webhookペイロードを受信</li>
  *   <li>order-serviceに支払いステータス更新を通知</li>
+ *   <li>Kafka に PaymentSucceeded イベントを publish</li>
  * </ol>
  */
 @RestController
@@ -38,9 +40,13 @@ public class PayPayWebhookController {
     private static final Logger log = LoggerFactory.getLogger(PayPayWebhookController.class);
 
     private final OrderServiceClient orderServiceClient;
+    private final PaymentEventPublisher paymentEventPublisher;
 
-    public PayPayWebhookController(OrderServiceClient orderServiceClient) {
+    public PayPayWebhookController(
+            OrderServiceClient orderServiceClient,
+            PaymentEventPublisher paymentEventPublisher) {
         this.orderServiceClient = orderServiceClient;
+        this.paymentEventPublisher = paymentEventPublisher;
     }
 
     /**
@@ -107,6 +113,12 @@ public class PayPayWebhookController {
 
             log.info("[PayPayWebhook] Processing payment status update orderId={}, status={}, eventId={}", 
                     message.orderId(), message.status(), message.eventId());
+
+            // ✅ 決済成功時: Kafka に PaymentSucceeded イベントを publish（order-service 通知の成否に関わらず）
+            boolean isPaymentSuccess = "COMPLETED".equalsIgnoreCase(message.status()) || "SUCCESS".equalsIgnoreCase(message.status());
+            if (isPaymentSuccess) {
+                publishPaymentSucceededEvent(message);
+            }
 
             // order-serviceに支払いステータス更新を通知
             PaymentStatusUpdateRequest request = buildPaymentStatusRequest(message);
@@ -178,13 +190,40 @@ public class PayPayWebhookController {
      * 注文更新成功時の処理を行います。
      * 
      * @param message Webhookメッセージ（非null保証済み）
-     * @param summary 更新された注文サマリー（非null保証済み）
      * @return HTTPレスポンス（200 OK）
      */
     private ResponseEntity<?> handleSuccessfulUpdate(WebhookMessage message) {
         log.info("[PayPayWebhook] Order updated successfully orderId={}, eventId={}",
                 message.orderId(), message.eventId());
         return ResponseEntity.ok(Map.of("success", true, "orderId", message.orderId()));
+    }
+
+    /**
+     * PaymentSucceeded イベントを Kafka へ publish します。
+     * 
+     * @param message Webhookメッセージ
+     */
+    private void publishPaymentSucceededEvent(WebhookMessage message) {
+        try {
+            // paymentId は merchantPaymentId を使用、なければ eventId を使用
+            String paymentId = StringUtils.hasText(message.merchantPaymentId()) 
+                    ? message.merchantPaymentId() 
+                    : message.eventId();
+            
+            paymentEventPublisher.publishPaymentSucceeded(
+                    message.orderId(),
+                    paymentId,
+                    "PayPay",
+                    message.amount(),
+                    message.currency()
+            );
+            log.info("[PayPayWebhook] Published PaymentSucceeded to Kafka orderId={} paymentId={}", 
+                    message.orderId(), paymentId);
+        } catch (Exception e) {
+            // Kafka publish 失敗は警告ログのみ（Webhook 処理自体は成功とする）
+            log.warn("[PayPayWebhook] Failed to publish PaymentSucceeded to Kafka orderId={}, error={}",
+                    message.orderId(), e.getMessage());
+        }
     }
 
     /**
@@ -203,14 +242,41 @@ public class PayPayWebhookController {
         }
     }
 
-    private record WebhookMessage(String orderId, String status, String code, String message, String eventId, String eventTime) {
+    private record WebhookMessage(String orderId, String merchantPaymentId, String status, String code, String message, String eventId, String eventTime, Double amount, String currency) {
         static WebhookMessage fromPayload(Map<String, Object> payload) {
-            String orderId = stringValue(payload.get("merchantPaymentId"));
+            // metadata.orderId を優先的に使用（テスト環境で orderId を渡すため）
+            String orderId = null;
+            Object metadataNode = payload.get("metadata");
+            if (metadataNode instanceof Map<?, ?> metadata) {
+                orderId = stringValue(metadata.get("orderId"));
+            }
+            
+            String merchantPaymentId = stringValue(payload.get("merchantPaymentId"));
+            // metadata.orderId がない場合は merchantPaymentId を orderId として使用
+            if (!StringUtils.hasText(orderId)) {
+                orderId = merchantPaymentId;
+            }
+            
             String status = stringValue(payload.get("status"));
             String code = stringValue(payload.get("code"));
             String message = stringValue(payload.get("message"));
             String eventId = stringValue(payload.get("eventId"));
             String eventTime = stringValue(payload.get("eventTime"));
+            
+            // 金額情報を取得
+            Double amount = null;
+            String currency = "JPY";
+            Object amountNode = payload.get("amount");
+            if (amountNode instanceof Map<?, ?> amountMap) {
+                Object amountValue = amountMap.get("amount");
+                if (amountValue instanceof Number) {
+                    amount = ((Number) amountValue).doubleValue();
+                }
+                Object currencyValue = amountMap.get("currency");
+                if (currencyValue != null) {
+                    currency = stringValue(currencyValue);
+                }
+            }
 
             Object dataNode = payload.get("data");
             if (dataNode instanceof Map<?, ?> data) {
@@ -237,7 +303,7 @@ public class PayPayWebhookController {
                 eventTime = Instant.ofEpochMilli(number.longValue()).toString();
             }
 
-            return new WebhookMessage(orderId, normalize(status), code, message, eventId, eventTime);
+            return new WebhookMessage(orderId, merchantPaymentId, normalize(status), code, message, eventId, eventTime, amount, currency);
         }
 
         private static String normalize(String status) {

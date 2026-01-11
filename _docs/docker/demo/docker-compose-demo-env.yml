@@ -196,8 +196,17 @@ services:
       - "27017:27017"
     environment:
       - TZ=Asia/Tokyo
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-admin123}
+      - MONGO_INITDB_DATABASE=ec_demo
     volumes:
+      - ./sql/mongodb-init:/docker-entrypoint-initdb.d:ro
       - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mongodb/data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
     networks:
       - ec-demo-net

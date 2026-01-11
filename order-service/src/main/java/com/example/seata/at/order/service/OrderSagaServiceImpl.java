@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.seata.saga.engine.StateMachineEngine;
 import io.seata.saga.statelang.domain.ExecutionStatus;
 import io.seata.saga.statelang.domain.StateMachineInstance;
-import io.seata.spring.annotation.GlobalTransactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,8 @@ public class OrderSagaServiceImpl implements OrderSagaService {
     }
 
     @Override
-    @GlobalTransactional(name = "order-initialization-saga-tx", rollbackFor = Exception.class)
+    // @GlobalTransactional removed: conflicts with StateMachineEngine's Saga compensation mechanism.
+    // Saga manages distributed transactions through its own state machine and compensation logic.
     public Order createOrderSaga(OrderDTO req) {
         return startOrderCreateSaga(req);
     }

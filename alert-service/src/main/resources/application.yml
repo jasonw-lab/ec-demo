@@ -7,7 +7,7 @@ spring:
   profiles:
     active: local
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${EC_DEMO_SERVER:localhost}:29092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${EC_DEMO_SERVER:192.168.1.199}:29092}
     streams:
       application-id: alert-service
       state-dir: "${java.io.tmpdir}/kafka-streams/${spring.application.name}-${spring.profiles.active:default}"
