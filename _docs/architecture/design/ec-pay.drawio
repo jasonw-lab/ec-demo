@@ -1,5 +1,5 @@
 <mxfile host="65bd71144e" pages="6">
-    <diagram id="95kUeXghdXoC41XRyrMD" name="websocket-all">
+    <diagram id="95kUeXghdXoC41XRyrMD" name="ec-pay">
         <mxGraphModel dx="1103" dy="743" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
@@ -537,7 +537,7 @@
                         <mxPoint x="105.5" y="-7" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="kafka-websocket-all-pub-timeout" value="publish OrderStatusChanged(CANCELLED: TIMEOUT) → ec-demo.orders.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" edge="1">
+                <mxCell id="kafka-websocket-all-pub-timeout" value="publish OrderStatusChanged(CANCELLED, reason: TIMEOUT) → ec-demo.orders.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="1760" y="1700"/>
@@ -597,6 +597,128 @@
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-75" value="OrderPaymentTimeoutScheduler (payment_expires_at 監視)" style="fillColor=#ffff88;strokeColor=#9E916F;" parent="1" vertex="1">
                     <mxGeometry x="573" y="1473" width="323" height="49" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="audit-sequence" name="audit">
+        <mxGraphModel dx="1103" dy="743" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="note-impl" value="実装時: OrderService内に OrderAuditConsumer として統合&#xa;(Javaクラスは分離)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="400" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="order-service" value="OrderService (Saga)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="80" width="150" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="kafka" value="Kafka" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="80" width="150" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="audit-service" value="OrderAuditService (Logical)&#xa;OrderAuditConsumer (Kafka)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="80" width="180" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="mongodb" value="MongoDB (order_audit)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
+                    <mxGeometry x="750" y="80" width="180" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow-created-label" value="Order CREATED" style="fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="180" width="890" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="pub-created" value="publish OrderStatusChanged(CREATED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="order-service" target="kafka" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="250" y="220"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="consume-created" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="kafka" target="audit-service" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="440" y="240"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="write-created" value="order_audit 追記 (CREATED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="audit-service" target="mongodb" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="720" y="260"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow-paid-label" value="Order PAID" style="fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="320" width="890" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="pub-paid" value="publish OrderStatusChanged(PAID)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="order-service" target="kafka" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="250" y="360"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="consume-paid" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="kafka" target="audit-service" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="440" y="380"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="write-paid" value="order_audit 追記 (PAID)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="audit-service" target="mongodb" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="720" y="400"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow-cancelled-label" value="Order CANCELLED" style="fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="460" width="890" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="pub-cancelled" value="publish OrderStatusChanged(CANCELLED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="order-service" target="kafka" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="250" y="500"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="consume-cancelled" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="kafka" target="audit-service" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="440" y="520"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="write-cancelled" value="order_audit 追記 (CANCELLED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="audit-service" target="mongodb" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="720" y="540"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow-timeout-label" value="Order TIMEOUT" style="fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="600" width="890" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="pub-timeout" value="publish OrderStatusChanged(CANCELLED, reason: TIMEOUT)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="order-service" target="kafka" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="250" y="640"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="consume-timeout" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="kafka" target="audit-service" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="440" y="660"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="write-timeout" value="order_audit 追記 (CANCELLED, reason: TIMEOUT)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="audit-service" target="mongodb" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="720" y="680"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="note-bottom" value="【データフロー】&#xa;1. OrderService が状態変更時に Kafka へ OrderStatusChanged イベントを発行&#xa;2. OrderAuditService (Kafka Consumer) がイベントを受信&#xa;3. MongoDB order_audit コレクションにログ追記（append-only）&#xa;&#xa;【冪等性】eventId による重複チェック実装" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="760" width="890" height="120" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
@@ -1521,128 +1643,6 @@
                 </mxCell>
                 <mxCell id="XOjVTDTdblew7OIYFJIG-73" parent="1" style="fillColor=#d5e8d4;strokeColor=#82b366;" value="【Phase 4】ログアウト処理 (Redisセッション削除 + トークンブラックリスト)" vertex="1">
                     <mxGeometry height="49" width="1343" x="70" y="1655" as="geometry"/>
-                </mxCell>
-            </root>
-        </mxGraphModel>
-    </diagram>
-    <diagram id="audit-sequence" name="audit">
-        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
-            <root>
-                <mxCell id="0"/>
-                <mxCell id="1" parent="0"/>
-                <mxCell id="note-impl" value="実装時: OrderService内に OrderAuditConsumer として統合&#xa;(Javaクラスは分離)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="20" width="400" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="order-service" value="OrderService (Saga)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="60" y="80" width="150" height="900" as="geometry"/>
-                </mxCell>
-                <mxCell id="kafka" value="Kafka" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="280" y="80" width="150" height="900" as="geometry"/>
-                </mxCell>
-                <mxCell id="audit-service" value="OrderAuditService (Logical)&#xa;OrderAuditConsumer (Kafka)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="500" y="80" width="180" height="900" as="geometry"/>
-                </mxCell>
-                <mxCell id="mongodb" value="MongoDB (order_audit)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="750" y="80" width="180" height="900" as="geometry"/>
-                </mxCell>
-                <mxCell id="flow-created-label" value="Order CREATED" style="fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="180" width="890" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="pub-created" value="publish OrderStatusChanged(CREATED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="order-service" target="kafka" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="250" y="220"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="consume-created" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="kafka" target="audit-service" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="440" y="240"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="write-created" value="order_audit 追記 (CREATED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="audit-service" target="mongodb" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="720" y="260"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="flow-paid-label" value="Order PAID" style="fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="320" width="890" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="pub-paid" value="publish OrderStatusChanged(PAID)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="order-service" target="kafka" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="250" y="360"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="consume-paid" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="kafka" target="audit-service" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="440" y="380"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="write-paid" value="order_audit 追記 (PAID)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="audit-service" target="mongodb" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="720" y="400"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="flow-cancelled-label" value="Order CANCELLED" style="fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="460" width="890" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="pub-cancelled" value="publish OrderStatusChanged(CANCELLED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="order-service" target="kafka" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="250" y="500"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="consume-cancelled" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="kafka" target="audit-service" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="440" y="520"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="write-cancelled" value="order_audit 追記 (CANCELLED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="audit-service" target="mongodb" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="720" y="540"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="flow-timeout-label" value="Order TIMEOUT" style="fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="600" width="890" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="pub-timeout" value="publish OrderStatusChanged(CANCELLED, reason: TIMEOUT)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="order-service" target="kafka" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="250" y="640"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="consume-timeout" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="kafka" target="audit-service" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="440" y="660"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="write-timeout" value="order_audit 追記 (CANCELLED, reason: TIMEOUT)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="audit-service" target="mongodb" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="720" y="680"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="note-bottom" value="【データフロー】&#xa;1. OrderService が状態変更時に Kafka へ OrderStatusChanged イベントを発行&#xa;2. OrderAuditService (Kafka Consumer) がイベントを受信&#xa;3. MongoDB order_audit コレクションにログ追記（append-only）&#xa;&#xa;【冪等性】eventId による重複チェック実装" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;verticalAlign=top;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="760" width="890" height="120" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

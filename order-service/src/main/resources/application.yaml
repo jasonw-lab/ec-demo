@@ -21,6 +21,21 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: ${EC_DEMO_ORDER_AUDIT_GROUP:order-audit-consumer-group}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+    listener:
+      ack-mode: record
+  data:
+    mongodb:
+      # MONGODB_URL: 完全なURL指定（最優先）
+      # EC_DEMO_SERVER: リモートサーバー指定時に使用（.envで設定）
+      # デフォルト: localhost（ローカル開発用）
+      # Docker環境: MONGODB_URL=mongodb://admin:admin123@ec-demo-mongodb:27017/ec_demo?authSource=admin
+      uri: ${MONGODB_URL:mongodb://${MONGO_USER:admin}:${MONGO_PASSWORD:admin123}@${EC_DEMO_SERVER:localhost}:27017/ec_demo?authSource=admin}
 
 ec-demo:
   kafka:
