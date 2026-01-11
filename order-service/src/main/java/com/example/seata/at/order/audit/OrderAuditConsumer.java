@@ -97,12 +97,13 @@ public class OrderAuditConsumer {
                 .and("processedEventIds").ne(eventId));
 
         Update update = new Update()
+                .set("orderId", orderId)  // 常にorderIdを設定（MongoDB validation対応）
                 .addToSet("processedEventIds", eventId)
                 .push("history", historyEntry)
                 .set("currentStatus", status)
                 .set("updatedAt", Instant.now())
-                .setOnInsert("createdAt", Instant.now())
-                .setOnInsert("_id", orderId);
+                .setOnInsert("createdAt", Instant.now());
+                // _idはクエリ条件で指定されているため、upsert時に自動的に使用される
 
         try {
             UpdateResult result = mongoTemplate.upsert(query, update, OrderAuditDocument.class);

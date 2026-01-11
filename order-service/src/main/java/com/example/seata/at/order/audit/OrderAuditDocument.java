@@ -2,6 +2,7 @@ package com.example.seata.at.order.audit;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -10,6 +11,8 @@ import java.util.List;
 @Document(collection = "order_audit")
 public class OrderAuditDocument {
     @Id
+    private String id;
+    @Field("orderId")
     private String orderId;
     private String currentStatus;
     private List<String> processedEventIds = new ArrayList<>();
@@ -18,6 +21,14 @@ public class OrderAuditDocument {
     private Instant updatedAt;
 
     public OrderAuditDocument() {
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getOrderId() {
