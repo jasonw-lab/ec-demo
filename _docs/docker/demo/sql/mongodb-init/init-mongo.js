@@ -29,7 +29,7 @@ try {
                     },
                     currentStatus: {
                         bsonType: "string",
-                        enum: ["CREATED", "PENDING", "PROCESSING", "PAID", "CANCELLED", "COMPLETED"],
+                        enum: ["CREATED", "PENDING", "PAYMENT_PENDING", "PROCESSING", "PAID", "CANCELLED", "COMPLETED"],
                         description: "現在のステータス"
                     },
                     processedEventIds: {
