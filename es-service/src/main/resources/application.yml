@@ -26,7 +26,7 @@ es-service:
   elasticsearch:
     endpoint: ${ELASTICSEARCH_ENDPOINT:http://localhost:9200}
   index:
-    name: ${ES_INDEX_NAME:products}
+    name: ${ES_INDEX_NAME:products_v1}
     alias: ${ES_INDEX_ALIAS:products}
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}

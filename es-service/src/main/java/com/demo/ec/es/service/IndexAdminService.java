@@ -8,6 +8,7 @@ import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import com.demo.ec.es.config.EsServiceProperties;
+import com.demo.ec.es.exception.ElasticsearchOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Service for managing Elasticsearch index lifecycle.
+ * Handles index creation, alias management, and reindexing operations.
+ */
 @Service
 public class IndexAdminService {
     private static final Logger log = LoggerFactory.getLogger(IndexAdminService.class);
@@ -28,16 +33,29 @@ public class IndexAdminService {
         this.properties = properties;
     }
 
-    public void initIndexIfMissing() throws IOException {
+    /**
+     * Initializes the product index if it doesn't exist.
+     * Creates index with proper mappings and sets up alias.
+     */
+    public void initIndexIfMissing() {
         String indexName = properties.getIndex().getName();
-        boolean exists = client.indices().exists(b -> b.index(indexName)).value();
-        if (exists) {
-            return;
+        
+        try {
+            boolean exists = client.indices().exists(b -> b.index(indexName)).value();
+            if (exists) {
+                log.debug("Index already exists: {}", indexName);
+                return;
+            }
+
+            log.info("Creating index: {}", indexName);
+            createIndex(indexName);
+            ensureAlias(indexName, properties.getIndex().getAlias());
+            log.info("Index created successfully: {}", indexName);
+            
+        } catch (IOException ex) {
+            log.error("Failed to initialize index: {}", indexName, ex);
+            throw new ElasticsearchOperationException("Failed to initialize index: " + indexName, ex);
         }
-
-        createIndex(indexName);
-
-        ensureAlias(indexName, properties.getIndex().getAlias());
     }
 
     public void ensureAlias(String indexName, String alias) throws IOException {

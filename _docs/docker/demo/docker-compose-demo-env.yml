@@ -188,6 +188,37 @@ services:
     networks:
       - ec-demo-net
 
+  # =========================
+  # es-service (Elasticsearch API)
+  # =========================
+  ec-demo-es-service:
+    build:
+      context: ../../..
+      dockerfile: es-service/Dockerfile
+    platform: ${EC_DEMO_PLATFORM:-linux/amd64}
+    container_name: ec-demo-es-service
+    restart: unless-stopped
+    depends_on:
+      ec-demo-elasticsearch:
+        condition: service_healthy
+      ec-demo-minio:
+        condition: service_started
+    environment:
+      - ELASTICSEARCH_ENDPOINT=http://ec-demo-elasticsearch:9200
+      - ES_INDEX_NAME=${ES_INDEX_NAME:-products_v1}
+      - ES_INDEX_ALIAS=${ES_INDEX_ALIAS:-products}
+      - MINIO_ENDPOINT=http://ec-demo-minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin123}
+      - MINIO_BUCKET=${MINIO_BUCKET:-ec-demo}
+      - MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL:-http://localhost:9000}
+    ports:
+      - "8084:8084"
+    volumes:
+      - ${EC_DEMO_IMPORT_DIR:-/tmp/ec-demo-import}:/data/import:ro
+    networks:
+      - ec-demo-net
+
   # MongoDB 6.0 LTS for ec-demo
   ec-demo-mongodb:
     image: mongo:6.0
