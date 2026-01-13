@@ -28,7 +28,4 @@ Accepted
 - セッションとID Tokenの有効期限管理が重要になる。
 
 ## References
-- bff/src/main/java/com/demo/ec/controller/AuthController.java
-- bff/src/main/java/com/demo/ec/config/FirebaseConfig.java
-- bff/src/main/java/com/demo/ec/auth/SessionService.java
-- _docs/docker/demo/sql/mysql-init/10-business-ddl.sql
+

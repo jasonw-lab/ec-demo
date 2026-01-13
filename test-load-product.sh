@@ -8,19 +8,19 @@ set -e
 # デフォルト値
 CSV_PATH="${1:-/data/import/sample-products.csv}"
 IMAGES_DIR="${2:-/data/import/images}"
-ES_SERVICE_URL="${ES_SERVICE_URL:-http://localhost:8084}"
+ES_SERVICE_URL="${ES_SERVICE_URL:-http://localhost:8086}"
 
 echo "=========================================="
 echo "es-service Import API 実行"
 echo "=========================================="
 echo "CSV Path: ${CSV_PATH}"
 echo "Images Dir: ${IMAGES_DIR}"
-echo "API URL: ${ES_SERVICE_URL}/api/internal/products/import"
+echo "API URL: ${ES_SERVICE_URL}/internal/products/import"
 echo ""
 
 # Import API呼び出し
 echo "🚀 Import APIを呼び出しています..."
-RESPONSE=$(curl -s -X POST "${ES_SERVICE_URL}/api/internal/products/import" \
+RESPONSE=$(curl -s -X POST "${ES_SERVICE_URL}/internal/products/import" \
   -H "Content-Type: application/json" \
   -d "{\"csvPath\":\"${CSV_PATH}\",\"imagesDir\":\"${IMAGES_DIR}\"}" \
   -w "\n%{http_code}")
