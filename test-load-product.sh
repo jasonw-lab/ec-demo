@@ -6,8 +6,8 @@
 set -e
 
 # デフォルト値
-CSV_PATH="${1:-/data/import/sample-products.csv}"
-IMAGES_DIR="${2:-/data/import/images}"
+CSV_PATH="${1:-_docs/docker/demo/elasticsearch/data/product/sample-products.csv}"
+IMAGES_DIR="${2:-_docs/docker/demo/elasticsearch/data/product/images}"
 ES_SERVICE_URL="${ES_SERVICE_URL:-http://localhost:8086}"
 
 echo "=========================================="

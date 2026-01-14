@@ -94,9 +94,9 @@ public class SearchService {
                         case price_desc -> s.sort(so -> so.field(f -> f.field("price").order(SortOrder.Desc)));
                         default -> {
                         }
+                    }
                 }
-            }
-            return s;
+                return s;
         }, ProductDocument.class);
 
             List<ProductCard> items = new ArrayList<>();
