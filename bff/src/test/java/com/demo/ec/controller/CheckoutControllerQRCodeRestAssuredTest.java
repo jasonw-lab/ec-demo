@@ -1,7 +1,7 @@
 package com.demo.ec.controller;
 
-import com.demo.ec.pay.PaymentService;
-import com.demo.ec.repo.DemoData;
+import com.demo.ec.client.OrderServiceClient;
+import com.demo.ec.client.dto.OrderSummary;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,12 +12,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -27,7 +25,7 @@ class CheckoutControllerQRCodeRestAssuredTest {
     int port;
 
     @MockBean
-    private PaymentService payPayService;
+    private OrderServiceClient orderServiceClient;
 
     private static final String TEST_ORDER_ID = "ra-order-1";
 
@@ -36,20 +34,19 @@ class CheckoutControllerQRCodeRestAssuredTest {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
 
-        // Prepare a demo order in in-memory store
-        Map<String, Object> order = new HashMap<>();
-        order.put("id", TEST_ORDER_ID);
-        order.put("amount", new BigDecimal("1234"));
-        order.put("currency", "JPY");
-        order.put("status", "PENDING_PAYMENT");
-        DemoData.orders.put(TEST_ORDER_ID, order);
+        // no-op
     }
 
     @Test
     void returnsBase64PngQRCode_whenOrderExists_withRestAssured() {
         String paymentUrl = "https://qr-stg.sandbox.paypay.ne.jp/28180104gfrAmutBEcMIn6Rj";
-        Mockito.when(payPayService.createPaymentUrl(eq(TEST_ORDER_ID), eq(new BigDecimal("1234")), any(Map.class)))
-                .thenReturn(paymentUrl);
+        OrderSummary summary = new OrderSummary();
+        summary.setOrderNo(TEST_ORDER_ID);
+        summary.setAmount(new BigDecimal("1234"));
+        summary.setStatus("PAYMENT_PENDING");
+        summary.setPaymentUrl(paymentUrl);
+        Mockito.when(orderServiceClient.getOrder(eq(TEST_ORDER_ID)))
+                .thenReturn(Optional.of(summary));
 
         given()
                 .accept(ContentType.JSON)
@@ -64,6 +61,8 @@ class CheckoutControllerQRCodeRestAssuredTest {
 
     @Test
     void returns404_whenOrderMissing_withRestAssured() {
+        Mockito.when(orderServiceClient.getOrder(eq("unknown-id"))).thenReturn(Optional.empty());
+
         given()
         .when()
                 .get("/api/payments/unknown-id/qrcode")

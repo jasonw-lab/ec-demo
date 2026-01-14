@@ -29,7 +29,7 @@ public class OrderPaymentController {
     /**
      * Webhookから呼び出される支払いイベント処理エンドポイント
      * 
-     * <p>BFFのPayPayWebhookControllerから呼び出され、注文ステータスを更新します。
+     * <p>Payment Service の PayPayWebhookController から呼び出され、注文ステータスを更新します。
      * 
      * @param orderNo 注文番号
      * @param request 支払いステータス更新リクエスト

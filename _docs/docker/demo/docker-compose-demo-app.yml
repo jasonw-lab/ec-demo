@@ -84,7 +84,7 @@ services:
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=order-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
-      - SVC_BACKEND_BASE_URL=http://ec-demo-bff:8080
+      - SVC_PAYMENT_BASE_URL=http://ec-demo-payment-service:8090
       - SVC_STORAGE_BASE_URL=http://ec-demo-storage-service:8082
     volumes:
       - /mydata/ec-demo/app/order-service/logs:/var/logs
@@ -96,6 +96,24 @@ services:
       - ec-demo-seata-server-2.0:ec-demo-seata-server
     depends_on:
       - ec-demo-storage-service
+      - ec-demo-payment-service
+
+  # Payment Service
+  ec-demo-payment-service:
+    build:
+      context: ../..
+      dockerfile: _docs/docker/demo/Dockerfile.payment-service
+    container_name: ec-demo-payment-service
+    restart: unless-stopped
+    ports:
+      - "18090:8090"
+    env_file:
+      - /mydata/ec-demo/env/ec-demo-payment-service.env
+    volumes:
+      - /mydata/ec-demo/app/payment-service/logs:/var/logs
+      - /etc/localtime:/etc/localtime
+    networks:
+      - youlai-boot
 
   # BFF
   ec-demo-bff:
@@ -132,5 +150,4 @@ services:
       - /mydata/ec-demo/front/dist:/usr/share/nginx/html/ec-demo:ro
     networks:
       - youlai-boot
-
 

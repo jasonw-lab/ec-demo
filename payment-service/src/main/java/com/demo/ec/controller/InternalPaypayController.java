@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,9 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Internal-only controller that exposes a lightweight payment API for the Saga orchestrator.
@@ -34,6 +38,8 @@ public class InternalPaypayController {
 
     private final PaymentService paymentService;
     private final PayProperties payProperties;
+    private final Map<String, Instant> paymentExpiryMap = new ConcurrentHashMap<>();
+    private final Set<String> timedOutPayments = ConcurrentHashMap.newKeySet();
 
     public InternalPaypayController(PaymentService paymentService, PayProperties payProperties) {
         this.paymentService = paymentService;
@@ -77,6 +83,7 @@ public class InternalPaypayController {
 
         try {
             PaymentSession session = paymentService.createPaymentSession(orderNo, amount, metadata);
+            recordPaymentExpiry(session);
             return ResponseEntity.ok(buildResponse(true, "PENDING", "CREATED", null, orderNo, session));
         } catch (IllegalStateException e) {
             log.warn("PayPay session creation rejected orderNo={} reqId={} err={}", orderNo, requestId, e.getMessage());
@@ -96,6 +103,10 @@ public class InternalPaypayController {
         Map<String, Object> base = new HashMap<>();
         base.put("orderNo", merchantPaymentId);
         base.put("merchantPaymentId", merchantPaymentId);
+
+        if (isTimedOut(merchantPaymentId, base)) {
+            return ResponseEntity.ok(base);
+        }
 
         if (!payProperties.isEnabled()) {
             base.put("success", false);
@@ -133,6 +144,9 @@ public class InternalPaypayController {
                     || status.equalsIgnoreCase("DECLINED") || status.equalsIgnoreCase("EXPIRED"));
             base.put("success", success);
             base.put("code", success ? "OK" : (failure ? status : "PENDING"));
+            if (success || failure) {
+                clearPaymentTracking(merchantPaymentId);
+            }
             return ResponseEntity.ok(base);
         } catch (Exception e) {
             log.error("PayPay status inquiry failed merchantPaymentId={} err={}", merchantPaymentId, e.getMessage(), e);
@@ -141,6 +155,31 @@ public class InternalPaypayController {
             base.put("status", "FAILED");
             base.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(base);
+        }
+    }
+
+    /**
+     * Detect expired payment sessions and mark them as timed out.
+     *
+     * <p>Default interval: 60000ms (paypay.timeout-check-interval-ms)
+     */
+    @Scheduled(fixedDelayString = "${paypay.timeout-check-interval-ms:60000}")
+    public void enforcePaymentTimeouts() {
+        if (paymentExpiryMap.isEmpty()) {
+            log.debug("PayPay timeout check skipped (no tracked payments)");
+            return;
+        }
+        Instant now = Instant.now();
+        int timedOut = 0;
+        for (Map.Entry<String, Instant> entry : paymentExpiryMap.entrySet()) {
+            Instant expiresAt = entry.getValue();
+            if (expiresAt != null && now.isAfter(expiresAt)) {
+                markTimedOut(entry.getKey(), expiresAt);
+                timedOut++;
+            }
+        }
+        if (timedOut > 0) {
+            log.info("PayPay timeout check completed: timedOut={}", timedOut);
         }
     }
 
@@ -192,6 +231,49 @@ public class InternalPaypayController {
 
     private static String toStringSafe(Object value) {
         return value == null ? null : Objects.toString(value);
+    }
+
+    private void recordPaymentExpiry(PaymentSession session) {
+        if (session == null) {
+            return;
+        }
+        Instant expiresAt = session.getExpiresAt();
+        if (expiresAt != null) {
+            paymentExpiryMap.put(session.getMerchantPaymentId(), expiresAt);
+            timedOutPayments.remove(session.getMerchantPaymentId());
+        }
+    }
+
+    private boolean isTimedOut(String merchantPaymentId, Map<String, Object> base) {
+        if (timedOutPayments.contains(merchantPaymentId)) {
+            applyTimeoutResponse(base);
+            return true;
+        }
+        Instant expiresAt = paymentExpiryMap.get(merchantPaymentId);
+        if (expiresAt != null && Instant.now().isAfter(expiresAt)) {
+            markTimedOut(merchantPaymentId, expiresAt);
+            applyTimeoutResponse(base);
+            return true;
+        }
+        return false;
+    }
+
+    private void markTimedOut(String merchantPaymentId, Instant expiresAt) {
+        timedOutPayments.add(merchantPaymentId);
+        paymentExpiryMap.remove(merchantPaymentId, expiresAt);
+        log.info("PayPay payment timed out merchantPaymentId={} expiresAt={}", merchantPaymentId, expiresAt);
+    }
+
+    private static void applyTimeoutResponse(Map<String, Object> base) {
+        base.put("success", false);
+        base.put("code", "PAYPAY_TIMEOUT");
+        base.put("status", "EXPIRED");
+        base.put("message", "PayPay payment timed out");
+    }
+
+    private void clearPaymentTracking(String merchantPaymentId) {
+        paymentExpiryMap.remove(merchantPaymentId);
+        timedOutPayments.remove(merchantPaymentId);
     }
 
     @SuppressWarnings("unchecked")

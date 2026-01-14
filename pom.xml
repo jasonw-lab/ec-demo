@@ -30,6 +30,8 @@
         <module>storage-service</module>
         <module>account-service</module>
         <module>bff</module>
+        <module>payment-service</module>
+        <module>alert-service</module>
     </modules>
 
     <dependencyManagement>

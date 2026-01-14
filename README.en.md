@@ -50,14 +50,18 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
   - WebSocket realtime updates
   - PayPay integration (webhook ingestion/verification → propagate to order-service)
   - Redis session (Firebase ID Token verification → issue `sid`)
-- **order-service** (port 8081)
+- **order-service** (port 8082)
   - Order state machine (`PENDING → WAITING_PAYMENT → PAID/FAILED`)
   - Saga orchestration (stock confirm/compensate)
   - Unified payment status handling for both webhook and polling
-- **storage-service** (port 8082)
+- **storage-service** (port 8083)
   - Stock reserve/confirm/compensate
-- **account-service** (port 8083)
+- **account-service** (port 8081)
   - Account/balance management
+- **payment-service** (port 8084)
+  - Payment processing (PayPay integration)
+- **alert-service** (port 8085)
+  - Kafka Streams inconsistency detection and alert emission
 
 ## Tech stack (kept in README)
 

@@ -1,10 +1,10 @@
 package com.example.seata.at.order.domain.entity;
 
 public enum OrderStatus {
-    PENDING,
-    WAITING_PAYMENT,
+    CREATED,
+    PAYMENT_PENDING,
     PAID,
-    FAILED;
+    CANCELLED;
 
     public static OrderStatus fromValue(String value) {
         if (value == null) {

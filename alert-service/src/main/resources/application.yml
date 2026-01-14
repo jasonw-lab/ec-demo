@@ -1,0 +1,42 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: alert-service
+  profiles:
+    active: local
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${EC_DEMO_SERVER:192.168.1.199}:29092}
+    streams:
+      application-id: alert-service
+      state-dir: "${java.io.tmpdir}/kafka-streams/${spring.application.name}-${spring.profiles.active:default}"
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+    consumer:
+      group-id: alert-service-consumer
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  datasource:
+    url: ${ALERT_DB_URL:jdbc:mysql://${EC_DEMO_SERVER:localhost}:3307/ec_system?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${ALERT_DB_USER:root}
+    password: ${ALERT_DB_PASSWORD:123456}
+
+ec-demo:
+  kafka:
+    topics:
+      orders-events: ec-demo.orders.events.v1
+      payments-events: ec-demo.payments.events.v1
+      alerts-order-payment-inconsistency: ec-demo.alerts.order_payment_inconsistency.v1
+
+alert:
+  t_confirm_seconds: 30
+  t_pay_seconds: 30
+  punctuate_interval_seconds: 10
+
+logging:
+  level:
+    com.demo.ec.alert: INFO
+    org.springframework.kafka: INFO

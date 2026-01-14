@@ -1,6 +1,6 @@
 {
-  "Name": "order_create_saga",
-  "Comment": "Init order -> reserve stock -> do payment via backend -> mark paid; on failure compensate stock & mark failed.",
+  "Name": "order_initialization_saga",
+  "Comment": "Init order -> reserve stock -> request payment -> mark paid; on failure release stock & cancel order.",
   "Version": "1.0.0",
   "StartState": "InitOrder",
   "States": {
@@ -26,7 +26,7 @@
     "ReserveStock": {
       "Type": "ServiceTask",
       "ServiceName": "orderSagaActions",
-      "ServiceMethod": "storageDeduct",
+      "ServiceMethod": "reserveStock",
       "Input": [
         "$.[orderNo]",
         "$.[productId]",
@@ -66,7 +66,7 @@
     "ReleaseStock": {
       "Type": "ServiceTask",
       "ServiceName": "orderSagaActions",
-      "ServiceMethod": "storageCompensate",
+      "ServiceMethod": "releaseStock",
       "Input": [
         "$.[orderNo]",
         "$.[productId]",
@@ -76,7 +76,7 @@
     "CancelOrderFailed": {
       "Type": "ServiceTask",
       "ServiceName": "orderSagaActions",
-      "ServiceMethod": "markFailed",
+      "ServiceMethod": "markCancelled",
       "Input": [
         "$.[orderNo]",
         "'PAYPAY_FAILED'",

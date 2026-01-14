@@ -18,11 +18,17 @@
 set -e
 
 # 設定値
-PAYMENT_SERVICE_URL="http://localhost:8082"
+PAYMENT_SERVICE_URL="http://localhost:8084"
 ORDER_SERVICE_URL="http://localhost:8081"
 T_CONFIRM=30  # 30秒 (Rule A 用)
 T_PAY=30      # 30秒 (Rule B 用)
 PUNCTUATE_INTERVAL=10  # 10秒 (punctuator間隔)
+
+# PayPay Webhook 署名用(テスト環境では検証スキップ想定)
+PAYPAY_WEBHOOK_SIGNATURE="test-signature"
+
+# タイムスタンプ生成 (hhmmss形式) - 毎回異なるテストIDを生成
+TIMESTAMP=$(date +%H%M%S)
 
 # パラメータ解析
 RUN_RULE_A=false
@@ -103,20 +109,47 @@ echo "設定値:"
 echo "  T_confirm: ${T_CONFIRM}秒 (Rule A)"
 echo "  T_pay: ${T_PAY}秒 (Rule B)"
 echo "  Punctuate interval: ${PUNCTUATE_INTERVAL}秒"
+echo "  Timestamp: ${TIMESTAMP} (テストID接尾辞)"
 echo ""
 
 # ユーティリティ関数
 send_payment_succeeded() {
     local order_id=$1
     local payment_id=$2
-    local provider=${3:-"PayPay"}
-    local amount=${4:-1200}
-    local currency=${5:-"JPY"}
+    local amount=${3:-1200}
+    local currency=${4:-"JPY"}
 
-    echo "📤 PaymentSucceeded送信: orderId=${order_id}, paymentId=${payment_id}"
-    curl -s -X POST "${PAYMENT_SERVICE_URL}/api/payments/sim/payment/succeeded" \
+    echo "📤 PayPay Webhook送信 (COMPLETED): orderId=${order_id}, paymentId=${payment_id}"
+    
+    # PayPay Webhook ペイロード形式
+    local payload=$(cat <<EOF
+{
+  "merchantPaymentId": "${payment_id}",
+  "userAuthorizationId": "test-user-auth-id",
+  "amount": {
+    "amount": ${amount},
+    "currency": "${currency}"
+  },
+  "requestedAt": $(date +%s),
+  "expiresAt": $(($(date +%s) + 300)),
+  "storeId": "test-store",
+  "terminalId": "test-terminal",
+  "orderReceiptNumber": "receipt-${payment_id}",
+  "orderDescription": "Test Order",
+  "orderItems": [],
+  "metadata": {
+    "orderId": "${order_id}"
+  },
+  "status": "COMPLETED",
+  "userActionCompletedAt": $(date +%s)
+}
+EOF
+)
+    
+    curl -s -X POST "${PAYMENT_SERVICE_URL}/api/paypay/webhook" \
          -H 'Content-Type: application/json' \
-         -d "{\"orderId\":\"${order_id}\",\"paymentId\":\"${payment_id}\",\"provider\":\"${provider}\",\"amount\":${amount},\"currency\":\"${currency}\"}" \
+         -H "X-PAYPAY-SIGNATURE: ${PAYPAY_WEBHOOK_SIGNATURE}" \
+         -d "${payload}" \
          > /dev/null
     echo "   ✅ 送信完了"
 }
@@ -125,9 +158,12 @@ send_order_confirmed() {
     local order_id=$1
 
     echo "📤 OrderConfirmed送信: orderId=${order_id}"
-    curl -s -X POST "${ORDER_SERVICE_URL}/api/orders/sim/order/confirmed" \
+    curl -s -X POST "${ORDER_SERVICE_URL}/api/orders/${order_id}/confirm" \
          -H 'Content-Type: application/json' \
-         -d "{\"orderId\":\"${order_id}\"}" \
+         > /dev/null || \
+    curl -s -X PATCH "${ORDER_SERVICE_URL}/api/orders/${order_id}/status" \
+         -H 'Content-Type: application/json' \
+         -d "{\"status\":\"CONFIRMED\"}" \
          > /dev/null
     echo "   ✅ 送信完了"
 }
@@ -154,12 +190,13 @@ if [ "$RUN_RULE_C" = true ]; then
     echo "期待結果: 2回目のPaymentSucceededで即座にAlertRaised(rule=C, severity=P1)が発生"
     echo ""
 
-    send_payment_succeeded "O-C-002" "P-C-002"
+    send_payment_succeeded "O-C-002-${TIMESTAMP}" "P-C-002-1-${TIMESTAMP}" 1200 "JPY"
     wait_seconds 2 "イベント処理待機"
 
-    send_payment_succeeded "O-C-002" "P-C-002"
+    send_payment_succeeded "O-C-002-${TIMESTAMP}" "P-C-002-2-${TIMESTAMP}" 1200 "JPY"
     echo ""
     echo "🎯 Rule C テスト完了 - alerts.order_payment_inconsistency.v1 を確認してください"
+    echo "💡 同一orderId (O-C-002-${TIMESTAMP}) で異なるpaymentId (P-C-002-1-${TIMESTAMP}, P-C-002-2-${TIMESTAMP}) による重複決済を検知"
 fi
 
 if [ "$RUN_RULE_A" = true ]; then
@@ -168,7 +205,7 @@ if [ "$RUN_RULE_A" = true ]; then
     echo "期待結果: PaymentSucceeded送信後 ${T_CONFIRM}秒 + ${PUNCTUATE_INTERVAL}秒後にAlertRaised(rule=A, severity=P2)が発生"
     echo ""
 
-    send_payment_succeeded "O-A-001" "P-A-001"
+    send_payment_succeeded "O-A-001-${TIMESTAMP}" "P-A-001-${TIMESTAMP}"
     echo ""
     echo "💡 約${T_CONFIRM}秒 + ${PUNCTUATE_INTERVAL}秒後にアラートが発生するまで待機..."
     wait_seconds $((T_CONFIRM + PUNCTUATE_INTERVAL + 5)) "Rule A アラート待機"
@@ -181,7 +218,7 @@ if [ "$RUN_RULE_B" = true ]; then
     echo "期待結果: OrderConfirmed送信後 ${T_PAY}秒 + ${PUNCTUATE_INTERVAL}秒後にAlertRaised(rule=B, severity=P2)が発生"
     echo ""
 
-    send_order_confirmed "O-B-001"
+    send_order_confirmed "O-B-001-${TIMESTAMP}"
     echo ""
     echo "💡 約${T_PAY}秒 + ${PUNCTUATE_INTERVAL}秒後にアラートが発生するまで待機..."
     wait_seconds $((T_PAY + PUNCTUATE_INTERVAL + 5)) "Rule B アラート待機"
@@ -194,9 +231,9 @@ if [ "$RUN_NORMAL" = true ]; then
     echo "期待結果: 決済成功後に注文確認が来るため、アラートは発生しない"
     echo ""
 
-    send_payment_succeeded "O-OK-001" "P-OK-001"
+    send_payment_succeeded "O-OK-001-${TIMESTAMP}" "P-OK-001-${TIMESTAMP}" 1200 "JPY"
     wait_seconds 2 "イベント処理待機"
-    send_order_confirmed "O-OK-001"
+    send_order_confirmed "O-OK-001-${TIMESTAMP}"
     echo ""
     echo "💡 約${T_CONFIRM}秒待機してアラートが発生しないことを確認..."
     wait_seconds $((T_CONFIRM + PUNCTUATE_INTERVAL + 5)) "正常ケース確認"
@@ -227,9 +264,16 @@ fi
 
 echo ""
 echo "📋 確認事項:"
-echo "  1. kafka-console-consumer で alerts.order_payment_inconsistency.v1 を監視"
+echo "  1. kafka-console-consumer で ec-demo.alerts.order_payment_inconsistency.v1 を監視"
+echo "     docker exec -it kafka kafka-console-consumer.sh \\"
+echo "       --bootstrap-server localhost:9092 \\"
+echo "       --topic ec-demo.alerts.order_payment_inconsistency.v1 \\"
+echo "       --from-beginning"
+echo "  2. MySQL で sys_pay_alert テーブルを確認"
+echo "     mysql -h 192.168.1.199 -P 3307 -u root -p ec_system \\"
+echo "       -e 'SELECT * FROM sys_pay_alert ORDER BY detected_at DESC LIMIT 10;'"
 
-count=2
+count=3
 if [ "$RUN_RULE_C" = true ]; then
     echo "  $count. Rule C: 即時アラートが発生していること"
     ((count++))
@@ -250,13 +294,13 @@ echo ""
 if [ $test_count -gt 0 ]; then
     echo "📊 期待されるAlertRaisedイベント:"
     if [ "$RUN_RULE_C" = true ]; then
-        echo "  - Rule C: {\"eventType\":\"AlertRaised\",\"rule\":\"C\",\"severity\":\"P1\",\"orderId\":\"O-C-002\",...}"
+        echo "  - Rule C: {\"eventType\":\"AlertRaised\",\"rule\":\"C\",\"severity\":\"P1\",\"orderId\":\"O-C-002-${TIMESTAMP}\",...}"
     fi
     if [ "$RUN_RULE_A" = true ]; then
-        echo "  - Rule A: {\"eventType\":\"AlertRaised\",\"rule\":\"A\",\"severity\":\"P2\",\"orderId\":\"O-A-001\",...}"
+        echo "  - Rule A: {\"eventType\":\"AlertRaised\",\"rule\":\"A\",\"severity\":\"P2\",\"orderId\":\"O-A-001-${TIMESTAMP}\",...}"
     fi
     if [ "$RUN_RULE_B" = true ]; then
-        echo "  - Rule B: {\"eventType\":\"AlertRaised\",\"rule\":\"B\",\"severity\":\"P2\",\"orderId\":\"O-B-001\",...}"
+        echo "  - Rule B: {\"eventType\":\"AlertRaised\",\"rule\":\"B\",\"severity\":\"P2\",\"orderId\":\"O-B-001-${TIMESTAMP}\",...}"
     fi
     echo ""
 fi

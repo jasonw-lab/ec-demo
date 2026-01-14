@@ -27,16 +27,16 @@ public class StorageClient {
         this.storageBaseUrl = storageBaseUrl;
     }
 
-    public boolean deduct(String orderNo, Long productId, Integer count) {
-        return post(orderNo, productId, count, "/api/storage/deduct/saga");
+    public boolean reserveStock(String orderNo, Long productId, Integer count) {
+        return post(orderNo, productId, count, "/api/storage/reserve/saga");
     }
 
-    public boolean compensate(String orderNo, Long productId, Integer count) {
-        return post(orderNo, productId, count, "/api/storage/compensate/saga");
+    public boolean releaseStock(String orderNo, Long productId, Integer count) {
+        return post(orderNo, productId, count, "/api/storage/release/saga");
     }
 
-    public boolean confirm(String orderNo, Long productId, Integer count) {
-        return post(orderNo, productId, count, "/api/storage/confirm/saga");
+    public boolean commitStock(String orderNo, Long productId, Integer count) {
+        return post(orderNo, productId, count, "/api/storage/commit/saga");
     }
 
     @SuppressWarnings("unchecked")

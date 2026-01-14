@@ -21,15 +21,17 @@ public class PaymentClient {
     private static final Logger log = LoggerFactory.getLogger(PaymentClient.class);
 
     private final RestTemplate restTemplate;
-    private final String backendBaseUrl;
+    private final String paymentBaseUrl;
 
     public PaymentClient(RestTemplate restTemplate,
-                         @Value("${svc.backend.baseUrl:http://localhost:8080}") String backendBaseUrl) {
+                         @Value("${svc.payment.baseUrl:http://localhost:8090}") String paymentBaseUrl) {
        this.restTemplate = restTemplate;
-       this.backendBaseUrl = backendBaseUrl;
+       this.paymentBaseUrl = paymentBaseUrl;
     }
 
     public PaymentResult requestPayment(String orderNo, BigDecimal amount) {
+        log.info("PaymentClient.requestPayment orderNo={}, amount={}", orderNo, amount);
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Order-No", orderNo);
         Map<String, Object> body = new HashMap<>();
@@ -37,8 +39,9 @@ public class PaymentClient {
         body.put("amount", amount);
 
         try {
+
             ResponseEntity<PaymentResult> response = restTemplate.postForEntity(
-                    backendBaseUrl + "/internal/payment/paypay/pay",
+                    paymentBaseUrl + "/internal/payment/paypay/pay",
                     new HttpEntity<>(body, headers),
                     PaymentResult.class
             );
@@ -52,7 +55,7 @@ public class PaymentClient {
     public PaymentResult getStatus(String merchantPaymentId) {
         try {
             ResponseEntity<PaymentResult> response = restTemplate.getForEntity(
-                    backendBaseUrl + "/internal/payment/paypay/status/{merchantPaymentId}",
+                    paymentBaseUrl + "/internal/payment/paypay/status/{merchantPaymentId}",
                     PaymentResult.class,
                     merchantPaymentId
             );

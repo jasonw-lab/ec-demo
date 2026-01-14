@@ -18,7 +18,7 @@ import org.springframework.util.StringUtils;
  * 
  * <p>処理内容：
  * - Webhookペイロードから注文情報を抽出
- * - 注文ステータスを更新（PAID/FAILED）
+ * - 注文ステータスを更新（PAID/CANCELLED）
  * - 重複イベントの検知と防止
  */
 @Service
@@ -252,4 +252,3 @@ public class PaymentWebhookHandler {
         return null;
     }
 }
-
