@@ -4,7 +4,6 @@ import com.example.seata.at.order.api.dto.CommonResponse;
 import com.example.seata.at.order.api.dto.OrderDTO;
 import com.example.seata.at.order.domain.entity.Order;
 import com.example.seata.at.order.domain.entity.TccOrder;
-import com.example.seata.at.order.domain.entity.OrderStatus;
 import com.example.seata.at.order.service.OrderATService;
 import com.example.seata.at.order.service.OrderTccService;
 import com.example.seata.at.order.service.OrderSagaService;
@@ -50,7 +49,7 @@ public class OrderController {
     }
 
     @PostMapping("/tcc")
-    @GlobalTransactional
+    @GlobalTransactional  // Required for TCC mode: coordinates Try-Confirm-Cancel across services
     public CommonResponse<TccOrder> createOrderTcc(@Valid @RequestBody OrderDTO orderDTO) {
         if (orderDTO.getOrderNo() == null || orderDTO.getOrderNo().trim().isEmpty()) {
             orderDTO.setOrderNo(java.util.UUID.randomUUID().toString());
@@ -64,7 +63,7 @@ public class OrderController {
     }
 
     @PostMapping("/saga")
-    @GlobalTransactional
+    // @GlobalTransactional removed: StateMachineEngine manages Saga transactions internally
     public CommonResponse<Order> createOrderSaga(@Valid @RequestBody OrderDTO orderDTO) {
         if (orderDTO.getOrderNo() == null || orderDTO.getOrderNo().trim().isEmpty()) {
             orderDTO.setOrderNo(java.util.UUID.randomUUID().toString());
@@ -83,7 +82,7 @@ public class OrderController {
     }
 
     @PostMapping("/saga/sample")
-    @GlobalTransactional
+    // @GlobalTransactional removed: StateMachineEngine manages Saga transactions internally
     public CommonResponse<Void> runSagaSample(@Valid @RequestBody OrderDTO orderDTO) {
         if (orderDTO.getOrderNo() == null || orderDTO.getOrderNo().trim().isEmpty()) {
             orderDTO.setOrderNo(java.util.UUID.randomUUID().toString());

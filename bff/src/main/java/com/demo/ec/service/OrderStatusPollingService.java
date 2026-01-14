@@ -28,7 +28,7 @@ public class OrderStatusPollingService {
     private static final Logger log = LoggerFactory.getLogger(OrderStatusPollingService.class);
     
     /** 監視対象のステータス（これらのステータスに変更があったら通知） */
-    private static final Set<String> NOTIFY_STATUSES = Set.of("PAID", "FAILED");
+    private static final Set<String> NOTIFY_STATUSES = Set.of("PAID", "CANCELLED");
 
     private final OrderServiceClient orderServiceClient;
     private final OrderChannelSessionManager sessionManager;
@@ -51,7 +51,7 @@ public class OrderStatusPollingService {
      * <p>重要な設計判断：
      * - スケジューラーで定期的に実行されるため、例外処理が重要
      * - 一つの注文でエラーが発生しても、他の注文の処理は継続
-     * - 完了した注文（PAID/FAILED）はメモリから削除してリソースを節約
+     * - 完了した注文（PAID/CANCELLED）はメモリから削除してリソースを節約
      * 
      * <p>デフォルトでは5秒ごとに実行されます。
      * 設定: bff.order.status-check-interval-ms (デフォルト: 5000ms)
@@ -76,7 +76,7 @@ public class OrderStatusPollingService {
                 if (notified) {
                     notifiedCount++;
                     
-                    // メモリ管理: 完了した注文（PAID/FAILED）は監視対象から除外
+                    // メモリ管理: 完了した注文（PAID/CANCELLED）は監視対象から除外
                     // ■ 無限にメモリが増加するのを防ぐ
                     String currentStatus = lastStatusMap.get(orderId);
                     if (currentStatus != null && NOTIFY_STATUSES.contains(currentStatus)) {
@@ -108,7 +108,7 @@ public class OrderStatusPollingService {
      * <p>設計判断：
      * - null安全性を確保（currentStatusがnullの場合の処理）
      * - 初回チェックと変更検知を明確に分離
-     * - 重要なステータス（PAID/FAILED）は初回でも通知
+     * - 重要なステータス（PAID/CANCELLED）は初回でも通知
      * 
      * @param orderId 注文ID（非null保証済み）
      * @return 通知が送信された場合true
@@ -151,7 +151,7 @@ public class OrderStatusPollingService {
      * ステータス変更時に通知すべきかどうかを判定します。
      * 
      * <p>通知条件：
-     * 1. 初回チェックで重要なステータス（PAID/FAILED）に到達
+     * 1. 初回チェックで重要なステータス（PAID/CANCELLED）に到達
      * 2. ステータスが変更された（任意のステータス）
      * 
      * @param lastStatus 前回のステータス（null可、初回チェック時）
@@ -161,7 +161,7 @@ public class OrderStatusPollingService {
      */
     private boolean shouldNotifyStatusChange(String lastStatus, String currentStatus, String orderId) {
         if (lastStatus == null) {
-            // 初回チェック: 重要なステータス（PAID/FAILED）の場合のみ通知
+            // 初回チェック: 重要なステータス（PAID/CANCELLED）の場合のみ通知
             // ■ 接続時に既に完了している注文も通知する必要がある
             if (NOTIFY_STATUSES.contains(currentStatus)) {
                 log.info("[OrderStatusPolling] Initial check found important status orderId={}, status={}", 
@@ -186,7 +186,7 @@ public class OrderStatusPollingService {
      * 注文の監視を停止し、メモリから削除します。
      * 
      * <p>使用例：
-     * - 注文が完了（PAID/FAILED）した場合
+     * - 注文が完了（PAID/CANCELLED）した場合
      * - WebSocket接続が切断された場合
      * 
      * <p>設計判断：
@@ -203,4 +203,3 @@ public class OrderStatusPollingService {
         }
     }
 }
-

@@ -1,7 +1,6 @@
 package com.demo.ec;
 
 import com.demo.ec.config.AuthSessionProperties;
-import com.demo.ec.pay.PayProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,7 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-@EnableConfigurationProperties({PayProperties.class, AuthSessionProperties.class})
+@EnableConfigurationProperties({AuthSessionProperties.class})
 @EnableScheduling
 public class EcBackendApplication {
 

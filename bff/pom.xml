@@ -68,18 +68,6 @@
       <artifactId>javase</artifactId>
       <version>3.5.1</version>
     </dependency>
-    <!-- PayPay Official Java SDK via JitPack -->
-    <dependency>
-      <groupId>com.github.paypay</groupId>
-      <artifactId>paypayopa-sdk-java</artifactId>
-      <version>1.0.5</version>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <!-- Firebase Admin SDK (includes com.google.auth.oauth2.GoogleCredentials) -->
     <dependency>
       <groupId>com.google.firebase</groupId>
@@ -110,13 +98,6 @@
     </dependency>
 
   </dependencies>
-
-  <repositories>
-    <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
-  </repositories>
 
   <build>
     <plugins>

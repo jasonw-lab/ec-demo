@@ -26,7 +26,7 @@ import java.util.Set;
  * <p>処理内容：
  * <ul>
  *   <li>支払い成功時の注文ステータス更新（PAID）</li>
- *   <li>支払い失敗時の注文ステータス更新（FAILED）</li>
+ *   <li>支払い失敗時の注文ステータス更新（CANCELLED）</li>
  *   <li>重複イベントの検知と防止</li>
  *   <li>在庫の確定または補償処理</li>
  * </ul>
@@ -46,11 +46,11 @@ public class OrderPaymentService {
     private static final Set<String> TIMEOUT_STATUSES = Set.of("TIMED_OUT", "EXPIRED");
 
     private final OrderMapper orderMapper;
-    private final OrderSagaActions orderSagaActions;
+    private final OrderStateManager orderStateManager;
 
-    public OrderPaymentService(OrderMapper orderMapper, OrderSagaActions orderSagaActions) {
+    public OrderPaymentService(OrderMapper orderMapper, OrderStateManager orderStateManager) {
         this.orderMapper = orderMapper;
-        this.orderSagaActions = orderSagaActions;
+        this.orderStateManager = orderStateManager;
     }
 
     /**
@@ -162,6 +162,11 @@ public class OrderPaymentService {
             updatePaymentMeta(orderNo, normalized, request.getEventId(), eventTime, true, null, null);
             return;
         }
+        if (OrderStatus.CANCELLED.equals(currentStatus)) {
+            log.warn("[PaymentService] Success received after CANCELLED, ignoring state mutation orderNo={}", orderNo);
+            updatePaymentMeta(orderNo, normalized, request.getEventId(), eventTime, true, null, null);
+            return;
+        }
 
         log.info("[PaymentService] Confirming payment success orderNo={}, status={}, currentStatus={}", 
                 orderNo, normalized, currentStatus);
@@ -172,10 +177,10 @@ public class OrderPaymentService {
         
         // 在庫確定処理（補償トランザクションの逆操作）
         // ■ 在庫確定→注文更新の順で実行する
-        orderSagaActions.storageConfirm(orderNo, order.getProductId(), order.getCount());
+        orderStateManager.commitStock(orderNo, order.getProductId(), order.getCount());
         
         // 注文ステータスをPAIDに更新
-        orderSagaActions.markPaid(orderNo);
+        orderStateManager.transitionToPaid(orderNo);
         
         log.info("[PaymentService] Order marked as PAID orderNo={}, productId={}, count={}", 
                 orderNo, order.getProductId(), order.getCount());
@@ -217,28 +222,28 @@ public class OrderPaymentService {
         String failCode = firstNonBlank(request.getCode(), normalized);
         String failMessage = firstNonBlank(request.getMessage(), "PayPay status " + normalized);
         
-        // 冪等性チェック: 既にFAILED状態の場合は処理をスキップ
-        if (OrderStatus.FAILED.equals(currentStatus)) {
-            log.info("[PaymentService] Order already FAILED, skipping state mutation orderNo={}", orderNo);
+        // 冪等性チェック: 既にCANCELLED状態の場合は処理をスキップ
+        if (OrderStatus.CANCELLED.equals(currentStatus)) {
+            log.info("[PaymentService] Order already CANCELLED, skipping state mutation orderNo={}", orderNo);
             // メタデータのみ更新（最新の失敗情報を記録）
             updatePaymentMeta(orderNo, normalized, request.getEventId(), eventTime, false, failMessage, failCode);
             return;
         }
         
-        log.info("[PaymentService] Marking order as FAILED orderNo={}, status={}, code={}, message={}", 
+        log.info("[PaymentService] Marking order as CANCELLED orderNo={}, status={}, code={}, message={}",
                 orderNo, normalized, failCode, failMessage);
         
         // 注文情報を再取得（トランザクション内で最新状態を保証）
         Order order = findOrderSafely(orderNo);
         
-        // 注文ステータスをFAILEDに更新
-        orderSagaActions.markFailed(orderNo, failCode, failMessage);
+        // 注文ステータスをCANCELLEDに更新
+        orderStateManager.transitionToCancelled(orderNo, failCode, failMessage);
         
         // 在庫補償処理（予約していた在庫を解放）
         // ■ 注文更新→在庫補償の順で実行する（Sagaパターンの補償フロー）
-        orderSagaActions.storageCompensate(orderNo, order.getProductId(), order.getCount());
+        orderStateManager.releaseStock(orderNo, order.getProductId(), order.getCount());
         
-        log.info("[PaymentService] Order marked as FAILED and stock compensated orderNo={}, productId={}, count={}", 
+        log.info("[PaymentService] Order marked as CANCELLED and stock compensated orderNo={}, productId={}, count={}",
                 orderNo, order.getProductId(), order.getCount());
         
         // 支払いメタデータを更新（失敗情報、イベントID、完了時刻など）
