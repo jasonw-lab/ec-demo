@@ -116,12 +116,27 @@ public class MinioStorageService {
      */
     public String buildPublicUrl(String objectPath) {
         String base = properties.getMinio().getPublicBaseUrl();
-        if (base.endsWith("/")) {
-            base = base.substring(0, base.length() - 1);
+        String bucket = properties.getMinio().getBucket();
+        if (base == null || base.isBlank()) {
+            throw new StorageException("MinIO public base URL is not configured");
         }
-        if (!objectPath.startsWith("/")) {
-            objectPath = "/" + objectPath;
+        String normalizedBase = base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
+        String normalizedObjectPath = objectPath.startsWith("/") ? objectPath : "/" + objectPath;
+
+        try {
+            java.net.URI uri = java.net.URI.create(normalizedBase);
+            String host = uri.getHost();
+            String path = uri.getPath() == null ? "" : uri.getPath();
+            boolean hostHasBucket = bucket != null && host != null && host.startsWith(bucket + ".");
+            boolean pathHasBucket = bucket != null
+                    && (path.equals("/" + bucket) || path.startsWith("/" + bucket + "/"));
+            if (!hostHasBucket && !pathHasBucket && bucket != null && !bucket.isBlank()) {
+                normalizedBase = normalizedBase + "/" + bucket;
+            }
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid MinIO public base URL: {}", normalizedBase);
         }
-        return base + objectPath;
+
+        return normalizedBase + normalizedObjectPath;
     }
 }

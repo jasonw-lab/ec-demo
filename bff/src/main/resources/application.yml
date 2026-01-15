@@ -30,7 +30,7 @@ services:
   account:
     base-url: ${ACCOUNT_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8083}
 es-service:
-  base-url: ${ES_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8084}
+  base-url: ${ES_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8086}
 auth:
   session:
     prefix: "auth:session:"

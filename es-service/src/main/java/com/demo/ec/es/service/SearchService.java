@@ -103,7 +103,8 @@ public class SearchService {
             response.hits().hits().forEach(hit -> {
                 ProductDocument doc = hit.source();
                 if (doc != null) {
-                    items.add(new ProductCard(doc.productId(), doc.title(), doc.price(), doc.thumbnailUrl(), doc.createdAt()));
+                    String thumbnailUrl = normalizeThumbnailUrl(doc.thumbnailUrl());
+                    items.add(new ProductCard(doc.productId(), doc.title(), doc.price(), thumbnailUrl, doc.createdAt()));
                 }
             });
 
@@ -115,6 +116,42 @@ public class SearchService {
         } catch (IOException ex) {
             log.error("Search failed", ex);
             throw new ElasticsearchOperationException("Search operation failed", ex);
+        }
+    }
+
+    private String normalizeThumbnailUrl(String thumbnailUrl) {
+        if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
+            return thumbnailUrl;
+        }
+        String bucket = properties.getMinio().getBucket();
+        if (bucket == null || bucket.isBlank()) {
+            return thumbnailUrl;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(thumbnailUrl);
+            String host = uri.getHost();
+            String path = uri.getPath() == null ? "" : uri.getPath();
+            if (host == null) {
+                return thumbnailUrl;
+            }
+            boolean hostHasBucket = host.startsWith(bucket + ".");
+            boolean pathHasBucket = path.equals("/" + bucket) || path.startsWith("/" + bucket + "/");
+            if (hostHasBucket || pathHasBucket) {
+                return thumbnailUrl;
+            }
+            String normalizedPath = "/" + bucket + (path.startsWith("/") ? path : "/" + path);
+            return new java.net.URI(
+                    uri.getScheme(),
+                    uri.getUserInfo(),
+                    uri.getHost(),
+                    uri.getPort(),
+                    normalizedPath,
+                    uri.getQuery(),
+                    uri.getFragment()
+            ).toString();
+        } catch (Exception ex) {
+            log.warn("Failed to normalize thumbnailUrl: {}", thumbnailUrl);
+            return thumbnailUrl;
         }
     }
 }

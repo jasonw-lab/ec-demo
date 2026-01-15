@@ -84,8 +84,8 @@ services:
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=order-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
-      - SVC_PAYMENT_BASE_URL=http://ec-demo-payment-service:8090
-      - SVC_STORAGE_BASE_URL=http://ec-demo-storage-service:8082
+      - PAYMENT_SERVICE_BASE_URL=http://ec-demo-payment-service:8090
+      - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8082
     volumes:
       - /mydata/ec-demo/app/order-service/logs:/var/logs
       - /etc/localtime:/etc/localtime
