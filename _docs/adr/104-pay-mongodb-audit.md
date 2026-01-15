@@ -26,3 +26,45 @@ Accepted
 
 ## References
 
+### MongoDBの柔軟性に関する補足資料
+
+#### スキーマレス設計のメリット
+- ドキュメントごとに異なるフィールド構造を持てる
+- 新しいフィールド追加時にマイグレーション不要
+- 将来的な拡張に対応しやすい
+
+#### 配列フィールドの柔軟性
+- `history`配列に異なる種類のイベントを格納可能
+- 配列要素に対してインデックスやクエリが可能
+- 後から新しいフィールドを追加してもスキーマ変更不要
+
+#### RDBとの違い
+- **RDB**: 新カラム追加時にALTER TABLEが必要、既存データへの影響大
+- **MongoDB**: ドキュメント単位で自由に構造を拡張可能
+
+#### 実装例
+```javascript
+// 初期の監査ログ
+{
+  orderId: "ORD-001",
+  history: [
+    { eventId: "evt1", status: "CREATED", timestamp: ISODate(...) }
+  ]
+}
+
+// 後で新しいフィールドを追加しても問題なし
+{
+  orderId: "ORD-002",
+  history: [
+    {
+      eventId: "evt2",
+      status: "PAID",
+      timestamp: ISODate(...),
+      paymentMethod: "CREDIT_CARD",  // 新フィールド
+      userId: "user123"               // 新フィールド
+    }
+  ]
+}
+```
+
+この柔軟性により、長期的な監査ログ管理において拡張性とメンテナンス性が向上します。

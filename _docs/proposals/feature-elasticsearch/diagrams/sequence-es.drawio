@@ -1,0 +1,184 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram id="sequence-es" name="es-service sequences">
+    <mxGraphModel dx="1704" dy="1357" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="seq1-title" value="CSV + 画像ロード（Operator → es-service）" style="text;align=left;verticalAlign=top;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="35" y="-31" width="600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seq1-loader" value="Operator" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlActor;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="140" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq1-bff" value="Import API" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="240" y="40" width="120" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq1-es" value="ImportService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="420" y="40" width="140" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq1-minio" value="MinIO" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="620" y="40" width="120" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq1-es9" value="Elasticsearch 9" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="800" y="40" width="160" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq1-1" value="POST /internal/products/import" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.2;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.2;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq1-loader" target="seq1-bff" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="205" y="116" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq1-2" value="importCsv" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.28;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.28;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq1-bff" target="seq1-es" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="395" y="146" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq1-3" value="upload orig + thumb" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.36;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.36;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq1-es" target="seq1-minio" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="585" y="177" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq1-4" value="Bulk upsert" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.44;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.44;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq1-es" target="seq1-es9" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="685" y="207" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq1-4b" value="bulk result" style="edgeStyle=elbowEdgeStyle;elbow=vertical;dashed=1;endArrow=block;rounded=0;fontSize=12;exitY=0.52;exitX=0;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.52;entryX=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq1-es9" target="seq1-es" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="685" y="238" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq1-5" value="200 OK" style="edgeStyle=elbowEdgeStyle;elbow=vertical;dashed=1;endArrow=block;rounded=0;fontSize=12;exitY=0.64;exitX=0;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.64;entryX=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq1-es" target="seq1-bff" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="395" y="283" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq1-6" value="200 OK" style="edgeStyle=elbowEdgeStyle;elbow=vertical;dashed=1;endArrow=block;rounded=0;fontSize=12;exitY=0.72;exitX=0;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.72;entryX=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq1-bff" target="seq1-loader" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="205" y="314" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq2-title" value="画像アップロード → サムネ更新" style="text;align=left;verticalAlign=top;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="28" y="440" width="600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seq2-admin" value="Admin" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlActor;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="40" y="500" width="120" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq2-es" value="es-service" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="240" y="500" width="140" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq2-minio" value="MinIO" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="460" y="500" width="120" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq2-es9" value="Elasticsearch 9" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="640" y="500" width="160" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq2-1" value="POST /api/internal/products/{id}/image" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.2;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.2;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq2-admin" target="seq2-es" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="205" y="576" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq2-2" value="upload orig + thumb" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.32;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.32;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq2-es" target="seq2-minio" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="415" y="622" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq2-3" value="update thumbnailUrl" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.44;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.44;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq2-es" target="seq2-es9" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="515" y="667" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq2-3b" value="update result" style="edgeStyle=elbowEdgeStyle;elbow=vertical;dashed=1;endArrow=block;rounded=0;fontSize=12;exitY=0.56;exitX=0;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.56;entryX=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq2-es9" target="seq2-es" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="515" y="713" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq2-4" value="200 OK" style="edgeStyle=elbowEdgeStyle;elbow=vertical;dashed=1;endArrow=block;rounded=0;fontSize=12;exitY=0.72;exitX=0;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.72;entryX=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq2-es" target="seq2-admin" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="205" y="774" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq3-title" value="検索（UI → BFF → es-service → ES）" style="text;align=left;verticalAlign=top;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="32" y="920" width="700" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seq3-ui" value="UI" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlActor;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="40" y="980" width="120" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq3-bff" value="BFF" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="240" y="980" width="120" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq3-es" value="es-service" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="420" y="980" width="140" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq3-es9" value="Elasticsearch 9" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;participant=umlObject;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=50;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="620" y="980" width="160" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="seq3-1" value="GET /api/products/search" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.2;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.2;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq3-ui" target="seq3-bff" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="1056" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq3-2" value="GET /api/search/products" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.28;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.28;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq3-bff" target="seq3-es" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="395" y="1086" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq3-3" value="search (multi_match + filter)" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=block;rounded=0;fontSize=12;exitY=0.36;exitX=1;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.36;entryX=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq3-es" target="seq3-es9" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="595" y="1117" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq3-3b" value="search results" style="edgeStyle=elbowEdgeStyle;elbow=vertical;dashed=1;endArrow=block;rounded=0;fontSize=12;exitY=0.48;exitX=0;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.48;entryX=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq3-es9" target="seq3-es" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="595" y="1163" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq3-4" value="200 OK (cards)" style="edgeStyle=elbowEdgeStyle;elbow=vertical;dashed=1;endArrow=block;rounded=0;fontSize=12;exitY=0.64;exitX=0;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.64;entryX=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq3-es" target="seq3-bff" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="395" y="1223" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seq3-5" value="200 OK (cards)" style="edgeStyle=elbowEdgeStyle;elbow=vertical;dashed=1;endArrow=block;rounded=0;fontSize=12;exitY=0.72;exitX=0;exitDx=0;exitDy=0;exitPerimeter=0;entryY=0.72;entryX=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="seq3-bff" target="seq3-ui" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="1254" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
