@@ -3,6 +3,7 @@ package com.demo.ec.controller;
 import com.demo.ec.auth.AuthSessionFilter;
 import com.demo.ec.auth.SessionData;
 import com.demo.ec.client.OrderServiceClient;
+import com.demo.ec.client.StorageServiceClient;
 import com.demo.ec.client.dto.OrderServiceRequest;
 import com.demo.ec.client.dto.OrderSummary;
 import com.demo.ec.model.CartItem;
@@ -44,9 +45,12 @@ public class CheckoutController {
     private static final Duration PAYMENT_URL_WAIT = Duration.ofSeconds(5);
 
     private final OrderServiceClient orderServiceClient;
+    private final StorageServiceClient storageServiceClient;
 
-    public CheckoutController(OrderServiceClient orderServiceClient) {
+    public CheckoutController(OrderServiceClient orderServiceClient,
+                              StorageServiceClient storageServiceClient) {
         this.orderServiceClient = orderServiceClient;
+        this.storageServiceClient = storageServiceClient;
     }
 
     @PostMapping("/checkout")
@@ -61,8 +65,7 @@ public class CheckoutController {
         // calculate total
         BigDecimal total = BigDecimal.ZERO;
         for (CartItem item : request.items()) {
-            Product p = DemoData.products.stream().filter(pr -> pr.id().equals(item.productId())).findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + item.productId()));
+            Product p = findProduct(item.productId());
             total = total.add(p.price().multiply(BigDecimal.valueOf(item.quantity())));
         }
 
@@ -350,9 +353,14 @@ public class CheckoutController {
     }
 
     private Product findProduct(Long productId) {
-        return DemoData.products.stream()
-                .filter(p -> p.id().equals(productId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("商品が存在しません: " + productId));
+        StorageServiceClient.StockLookupResult stockResult = storageServiceClient.getStock(productId);
+        if (stockResult.reachable() && stockResult.stock().isEmpty()) {
+            throw new IllegalArgumentException("商品が存在しません: " + productId);
+        }
+        return storageServiceClient.getProduct(productId)
+                .orElseGet(() -> DemoData.products.stream()
+                        .filter(p -> p.id().equals(productId))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("商品が存在しません: " + productId)));
     }
 }

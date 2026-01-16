@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collections;
+
 @Component
 public class ProductSearchClient {
     private final RestTemplate restTemplate;
@@ -39,7 +41,11 @@ public class ProductSearchClient {
                 new ParameterizedTypeReference<>() {}
         );
 
-        return response.getBody();
+        SearchResponse body = response.getBody();
+        if (body == null) {
+            return new SearchResponse(Collections.emptyList(), 0L, page, size, null);
+        }
+        return body;
     }
 
     public SuggestResponse suggest(String q, int size) {
@@ -55,6 +61,10 @@ public class ProductSearchClient {
                 new ParameterizedTypeReference<>() {}
         );
 
-        return response.getBody();
+        SuggestResponse body = response.getBody();
+        if (body == null) {
+            return new SuggestResponse(Collections.emptyList());
+        }
+        return body;
     }
 }

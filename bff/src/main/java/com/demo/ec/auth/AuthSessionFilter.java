@@ -23,6 +23,8 @@ public class AuthSessionFilter extends OncePerRequestFilter {
     private static final Set<String> EXCLUDED_PATHS = Set.of(
             "/auth/session",
             "/auth/logout",
+            "/products/search",
+            "/products/suggest",
             "/health",
             "/actuator/health",
             "/swagger-ui",
@@ -110,5 +112,4 @@ public class AuthSessionFilter extends OncePerRequestFilter {
         response.getWriter().write("{\"code\":\"REDIS_UNAVAILABLE\"}");
     }
 }
-
 
