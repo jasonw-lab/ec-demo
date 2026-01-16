@@ -11,6 +11,13 @@ spring:
     hikari:
       initialization-fail-timeout: -1
       minimum-idle: 0
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:123456}
+      ssl:
+        enabled: ${REDIS_SSL:false}
   jackson:
     property-naming-strategy: SNAKE_CASE
 mybatis-plus:
@@ -29,9 +36,20 @@ management:
   health:
     db:
       enabled: false
+    redis:
+      enabled: false
 logging:
   level:
     root: INFO
+
+app:
+  product-cache:
+    ttl-seconds: ${PRODUCT_CACHE_TTL_SECONDS:1800}
+
+# Elasticsearch service configuration
+es:
+  service:
+    url: ${ES_SERVICE_URL:http://localhost:8084}
 
 # Register initializer to load .env, .env-<profile>, or ENV_FILE
 context:

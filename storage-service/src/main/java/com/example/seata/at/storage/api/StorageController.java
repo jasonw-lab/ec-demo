@@ -2,17 +2,24 @@ package com.example.seata.at.storage.api;
 
 import com.example.seata.at.storage.api.dto.CommonResponse;
 import com.example.seata.at.storage.api.dto.DeductRequest;
+import com.example.seata.at.storage.api.dto.ProductResponse;
+import com.example.seata.at.storage.api.dto.StockResponse;
 import com.example.seata.at.storage.service.StorageATService;
 import com.example.seata.at.storage.service.StorageATServiceImpl;
 import com.example.seata.at.storage.service.StorageTccService;
 import com.example.seata.at.storage.service.StorageSagaService;
+import com.example.seata.at.storage.service.ProductCatalogService;
+import com.example.seata.at.storage.service.StorageQueryService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,11 +31,17 @@ public class StorageController {
     private final StorageATService storageATService;
     private final StorageTccService storageTccService;
     private final StorageSagaService storageSagaService;
+    private final ProductCatalogService productCatalogService;
+    private final StorageQueryService storageQueryService;
 
-    public StorageController(StorageATService storageATService, StorageTccService storageTccService, StorageSagaService storageSagaService) {
+    public StorageController(StorageATService storageATService, StorageTccService storageTccService,
+                             StorageSagaService storageSagaService, ProductCatalogService productCatalogService,
+                             StorageQueryService storageQueryService) {
         this.storageATService = storageATService;
         this.storageTccService = storageTccService;
         this.storageSagaService = storageSagaService;
+        this.productCatalogService = productCatalogService;
+        this.storageQueryService = storageQueryService;
     }
 
     @PostMapping("/deduct")
@@ -158,6 +171,24 @@ public class StorageController {
             log.warn("Saga commit failed orderNo={} reason={}", orderNo, ex.getMessage());
             return CommonResponse.fail(ex.getMessage());
         }
+    }
+
+    @GetMapping("/products/{productId}")
+    public ResponseEntity<CommonResponse<ProductResponse>> getProduct(@PathVariable("productId") Long productId) {
+        return productCatalogService.findById(productId)
+                .map(product -> ResponseEntity.ok(CommonResponse.ok(product)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(CommonResponse.fail("Product not found: " + productId)));
+    }
+
+    @GetMapping("/stocks/{productId}")
+    public ResponseEntity<CommonResponse<StockResponse>> getStock(@PathVariable("productId") Long productId) {
+        return storageQueryService.findByProductId(productId)
+                .map(storage -> ResponseEntity.ok(CommonResponse.ok(
+                        new StockResponse(storage.getProductId(), storage.getTotal(),
+                                storage.getUsed(), storage.getResidue(), storage.getFrozen()))))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(CommonResponse.fail("Stock not found for productId: " + productId)));
     }
 
     @ExceptionHandler(StorageATServiceImpl.InsufficientStockException.class)

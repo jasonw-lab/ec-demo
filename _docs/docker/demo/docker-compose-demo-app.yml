@@ -49,6 +49,7 @@ services:
       - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
+      - REDIS_HOST=ec-demo-redis
       - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=storage-service-saga
@@ -61,6 +62,7 @@ services:
     external_links:
       - ec-demo-mysql-8:ec-demo-mysql
       - ec-demo-seata-server-2.0:ec-demo-seata-server
+      - ec-demo-redis:ec-demo-redis
 
   # Order Service
   ec-demo-order-service:
@@ -150,4 +152,3 @@ services:
       - /mydata/ec-demo/front/dist:/usr/share/nginx/html/ec-demo:ro
     networks:
       - youlai-boot
-

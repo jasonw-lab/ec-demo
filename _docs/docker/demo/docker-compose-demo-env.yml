@@ -99,6 +99,18 @@ services:
     networks:
       - ec-demo-net
 
+#  ec-demo-redis:
+#    image: redis:7.2-alpine
+#    container_name: ec-demo-redis
+#    ports:
+#      - "6379:6379"
+#    command: ["redis-server", "--appendonly", "yes"]
+#    volumes:
+#      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/redis/data:/data
+#    restart: unless-stopped
+#    networks:
+#      - ec-demo-net
+
   ec-demo-elasticsearch:
     # kuromoji / icu / ingest-attachment を組み込んだカスタムES
     build:
