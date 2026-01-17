@@ -15,7 +15,7 @@
 
     <properties>
         <elasticsearch-java.version>9.0.0</elasticsearch-java.version>
-        <minio.version>8.5.7</minio.version>
+        <minio.version>8.6.0</minio.version>
         <thumbnailator.version>0.4.20</thumbnailator.version>
         <commons-csv.version>1.10.0</commons-csv.version>
         <dotenv.version>3.0.0</dotenv.version>
