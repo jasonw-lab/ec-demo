@@ -49,11 +49,15 @@ if [ "$action" = "push" ]; then
   for rel in "${FILES[@]}"; do
     src="$REPO_ROOT/$rel"
     dest_dir="$DEST_BASE/$APP_NAME/$(dirname "$rel")"
+    dest_path="$dest_dir/$(basename "$rel")"
     if [ ! -e "$src" ]; then
       echo "Warning: source not found: $src" >&2
       continue
     fi
     mkdir -p "$dest_dir"
+    if [ -e "$dest_path" ]; then
+      rm -rf "$dest_path"
+    fi
     cp -rp "$src" "$dest_dir/"
     echo "Copied: $src -> $dest_dir/"
   done
@@ -63,26 +67,23 @@ elif [ "$action" = "pull" ]; then
   for rel in "${FILES[@]}"; do
     src="$DEST_BASE/$APP_NAME/$rel"
     dest_dir="$REPO_ROOT/$(dirname "$rel")"
-    dest_file="$dest_dir/$(basename "$rel")"
+    dest_path="$dest_dir/$(basename "$rel")"
     if [ ! -e "$src" ]; then
       echo "Warning: source not found in DEST_BASE: $src" >&2
       continue
     fi
-    if [ -e "$dest_file" ]; then
-      echo "File/directory exists: $dest_file"
+    if [ -e "$dest_path" ]; then
+      echo "File/directory exists: $dest_path"
       read -r -p "Overwrite? Type 'yes' to overwrite: " answer
       if [ "$answer" != "yes" ]; then
-        echo "Skip (user chose not to overwrite): $dest_file"
+        echo "Skip (user chose not to overwrite): $dest_path"
         continue
       fi
+      rm -rf "$dest_path"
     fi
     mkdir -p "$dest_dir"
     cp -rp "$src" "$dest_dir/"
-    if [ -e "$dest_file" ]; then
-      echo "Pulled (overwritten): $src -> $dest_dir/"
-    else
-      echo "Pulled: $src -> $dest_dir/"
-    fi
+    echo "Pulled: $src -> $dest_dir/"
   done
   echo "Pull done."
 else
