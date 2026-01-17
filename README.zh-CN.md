@@ -69,6 +69,8 @@
   - 支付处理（PayPay 集成）
 - **alert-service**（8085）
   - Kafka Streams 不一致检测与告警输出
+- **es-service**（8086）
+  - Elasticsearch 集成（商品检索与自动完成）
 
 ## 技术栈（保留在 README）
 

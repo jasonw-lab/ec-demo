@@ -1,0 +1,22 @@
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml .
+# Copy all module pom.xml files so Maven can validate parent POM structure
+COPY apps/services/order-service/pom.xml ./apps/services/order-service/
+COPY apps/services/storage-service/pom.xml ./apps/services/storage-service/
+COPY apps/services/account-service/pom.xml ./apps/services/account-service/
+COPY apps/services/alert-service/pom.xml ./apps/services/alert-service/
+COPY apps/services/es-service/pom.xml ./apps/services/es-service/
+COPY apps/services/payment-service/pom.xml ./apps/services/payment-service/
+COPY apps/bff/pom.xml ./apps/bff/
+# Try to download dependencies offline, but don't fail if network issues occur
+RUN mvn dependency:go-offline -pl apps/services/storage-service -B || true
+
+COPY apps/services/storage-service ./apps/services/storage-service
+RUN mvn clean package -pl apps/services/storage-service -DskipTests -B
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=build /app/apps/services/storage-service/target/*.jar app.jar
+EXPOSE 8083
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: account-service-at
+  profiles:
+    active: saga
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:mysql://${EC_DEMO_SERVER:localhost}:3307/seata_account?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}
+    username: ${DATASOURCE_USERNAME:root}
+    password: ${DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      initialization-fail-timeout: -1
+      minimum-idle: 0
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      insert-strategy: ignored
+server:
+  port: 8081
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: false
+logging:
+  level:
+    root: INFO
+
+# Register initializer to load .env, .env-<profile>, or ENV_FILE
+context:
+  initializer:
+    classes: com.demo.ec.common.config.DotenvInitializer

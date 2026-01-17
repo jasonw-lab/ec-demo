@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: order-service-at
+  profiles:
+    active: saga
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:mysql://${EC_DEMO_SERVER:localhost}:3307/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DATASOURCE_USERNAME:root}
+    password: ${DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      initialization-fail-timeout: -1
+      minimum-idle: 0
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${EC_DEMO_SERVER:localhost}:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: ${EC_DEMO_ORDER_AUDIT_GROUP:order-audit-consumer-group}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+    listener:
+      ack-mode: record
+  data:
+    mongodb:
+      # MONGODB_URL: 完全なURL指定（最優先）
+      # EC_DEMO_SERVER: リモートサーバー指定時に使用（.envで設定）
+      # デフォルト: localhost（ローカル開発用）
+      # Docker環境: MONGODB_URL=mongodb://admin:admin123@ec-demo-mongodb:27017/ec_demo?authSource=admin
+      uri: ${MONGODB_URL:mongodb://${MONGO_USER:admin}:${MONGO_PASSWORD:admin123}@${EC_DEMO_SERVER:localhost}:27017/ec_demo?authSource=admin}
+
+ec-demo:
+  kafka:
+    topics:
+      orders-events: ${EC_DEMO_ORDERS_EVENTS_TOPIC:ec-demo.orders.events.v1}
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+server:
+  port: 8082
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: false
+logging:
+  level:
+    root: INFO
+
+# Register initializer to load .env, .env-<profile>, or ENV_FILE
+context:
+  initializer:
+    classes: com.demo.ec.common.config.DotenvInitializer

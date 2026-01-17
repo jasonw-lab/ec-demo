@@ -69,6 +69,8 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
   - 決済処理（PayPay連携）
 - **alert-service**（port 8085）
   - Kafka Streamsによる不整合検知とアラート出力
+- **es-service**（port 8086）
+  - Elasticsearch連携（商品検索とオートコンプリート）
 
 ## 技術スタック
 

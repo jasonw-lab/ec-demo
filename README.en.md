@@ -69,6 +69,8 @@ This project adopts an advanced development process based on **AI Thought Partne
   - Payment processing (PayPay integration)
 - **alert-service** (port 8085)
   - Kafka Streams inconsistency detection and alert emission
+- **es-service** (port 8086)
+  - Elasticsearch integration (product search and autocomplete)
 
 ## Tech stack (kept in README)
 
