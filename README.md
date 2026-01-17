@@ -4,6 +4,13 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
 
 > English: `README.en.md` / 中文: `README.zh-CN.md`
 
+## 🤖 AI-Assisted Development & Design Policy
+
+本プロジェクトは **AI Thought Partner (AI共創)** を前提とした高度な開発プロセスを採用しています。
+
+- **AI Context Integration**: ルートディレクトリの `.ai-instructions.md` に独自の設計ガイドラインを定義し、Cursor や GitHub Copilot などの AI ツールが一貫性のあるアーキテクチャ（Hybrid Hexagonal）に基づいたコード生成・レビューを行えるよう制御しています。
+- **Pragmatic Design Decisions**: AIとの議論（Prompt Engineering）を通じて、理論上の理想形（Over-DDD）と実務上のメンテナンス性のトレードオフを検討し、本リポジトリに最適な「ハイブリッド構成」を選択しています。その意思決定プロセスは [ADR (Architecture Decision Records)](./docs/adr/) に記録されています。
+
 ## リーダー視点の設計ポイント（要約）
 
 - **BFF + WebSocket**: UI最適化とリアルタイム通知をBFFに集約し、変更耐性とUXを両立
