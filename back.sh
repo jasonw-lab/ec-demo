@@ -60,7 +60,7 @@ fi
 
 echo "Services to rebuild: ${services[*]}"
 
-cd "$SCRIPT_DIR/_docker"
+cd "$SCRIPT_DIR/platform/docker"
 COMPOSE_FILE="demo/docker-compose-demo-app.yml"
 
 docker compose -f "$COMPOSE_FILE" up -d --build "${services[@]}"

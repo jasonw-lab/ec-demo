@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: storage-service-at
+  profiles:
+    active: saga
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:mysql://${EC_DEMO_SERVER:localhost}:3307/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC}
+    username: ${DATASOURCE_USERNAME:root}
+    password: ${DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      initialization-fail-timeout: -1
+      minimum-idle: 0
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:123456}
+      ssl:
+        enabled: ${REDIS_SSL:false}
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+server:
+  port: 8083
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: false
+    redis:
+      enabled: false
+logging:
+  level:
+    root: INFO
+
+app:
+  product-cache:
+    ttl-seconds: ${PRODUCT_CACHE_TTL_SECONDS:1800}
+
+# Elasticsearch service configuration
+es:
+  service:
+    url: ${ES_SERVICE_URL:http://localhost:8086}
+
+# Register initializer to load .env, .env-<profile>, or ENV_FILE
+context:
+  initializer:
+    classes: com.demo.ec.common.config.DotenvInitializer

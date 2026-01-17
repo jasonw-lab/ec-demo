@@ -1,0 +1,9 @@
+package com.demo.ec.storage.gateway;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.demo.ec.storage.domain.Storage;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface StorageMapper extends BaseMapper<Storage> {
+}

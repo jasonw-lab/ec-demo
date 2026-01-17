@@ -26,9 +26,9 @@ DEST_BASE="/Users/wangjw/Dev/_Env/app-key"
 APP_NAME="ec-demo"
 
 FILES=(
-  "bff/src/main/resources/serviceAccountKey.json"
-  "front/.env"
-  "front/.env.development"
+  "apps/bff/src/main/resources/serviceAccountKey.json"
+  "apps/web/.env"
+  "apps/web/.env.development"
   ".env"
   ".idea/runConfigurations"
 )

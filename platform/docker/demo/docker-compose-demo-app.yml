@@ -1,0 +1,154 @@
+version: '3.8'
+
+networks:
+  youlai-boot:
+    external: true
+    name: docker_youlai-boot
+
+services:
+  # Account Service
+  ec-demo-account-service:
+    build:
+      context: ../..
+      dockerfile: platform/docker/demo/Dockerfile.account-service
+    container_name: ec-demo-account-service
+    restart: unless-stopped
+    ports:
+      - "18083:8083"
+    environment:
+      - TZ=Asia/Tokyo
+      - SPRING_PROFILES_ACTIVE=saga
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_account?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - DATASOURCE_USERNAME=root
+      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
+      - SEATA_ENABLED=true
+      - SEATA_APPLICATION_ID=account-service-saga
+      - SEATA_TX_SERVICE_GROUP=saga_tx_group
+    volumes:
+      - /mydata/ec-demo/app/account-service/logs:/var/logs
+      - /etc/localtime:/etc/localtime
+    networks:
+      - youlai-boot
+    external_links:
+      - ec-demo-mysql-8:ec-demo-mysql
+      - ec-demo-seata-server-2.0:ec-demo-seata-server
+
+  # Storage Service
+  ec-demo-storage-service:
+    build:
+      context: ../..
+      dockerfile: platform/docker/demo/Dockerfile.storage-service
+    container_name: ec-demo-storage-service
+    restart: unless-stopped
+    ports:
+      - "18082:8082"
+    environment:
+      - TZ=Asia/Tokyo
+      - SPRING_PROFILES_ACTIVE=saga
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - DATASOURCE_USERNAME=root
+      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
+      - REDIS_HOST=ec-demo-redis
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
+      - SEATA_ENABLED=true
+      - SEATA_APPLICATION_ID=storage-service-saga
+      - SEATA_TX_SERVICE_GROUP=saga_tx_group
+    volumes:
+      - /mydata/ec-demo/app/storage-service/logs:/var/logs
+      - /etc/localtime:/etc/localtime
+    networks:
+      - youlai-boot
+    external_links:
+      - ec-demo-mysql-8:ec-demo-mysql
+      - ec-demo-seata-server-2.0:ec-demo-seata-server
+      - ec-demo-redis:ec-demo-redis
+
+  # Order Service
+  ec-demo-order-service:
+    build:
+      context: ../..
+      dockerfile: platform/docker/demo/Dockerfile.order-service
+    container_name: ec-demo-order-service
+    restart: unless-stopped
+    ports:
+      - "18081:8081"
+    environment:
+      - TZ=Asia/Tokyo
+      - SPRING_PROFILES_ACTIVE=saga
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - DATASOURCE_USERNAME=root
+      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
+      - SAGA_DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SAGA_DATASOURCE_USERNAME=root
+      - SAGA_DATASOURCE_PASSWORD=${SAGA_DATASOURCE_PASSWORD}
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
+      - SEATA_ENABLED=true
+      - SEATA_APPLICATION_ID=order-service-saga
+      - SEATA_TX_SERVICE_GROUP=saga_tx_group
+      - PAYMENT_SERVICE_BASE_URL=http://ec-demo-payment-service:8090
+      - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8082
+    volumes:
+      - /mydata/ec-demo/app/order-service/logs:/var/logs
+      - /etc/localtime:/etc/localtime
+    networks:
+      - youlai-boot
+    external_links:
+      - ec-demo-mysql-8:ec-demo-mysql
+      - ec-demo-seata-server-2.0:ec-demo-seata-server
+    depends_on:
+      - ec-demo-storage-service
+      - ec-demo-payment-service
+
+  # Payment Service
+  ec-demo-payment-service:
+    build:
+      context: ../..
+      dockerfile: platform/docker/demo/Dockerfile.payment-service
+    container_name: ec-demo-payment-service
+    restart: unless-stopped
+    ports:
+      - "18090:8090"
+    env_file:
+      - /mydata/ec-demo/env/ec-demo-payment-service.env
+    volumes:
+      - /mydata/ec-demo/app/payment-service/logs:/var/logs
+      - /etc/localtime:/etc/localtime
+    networks:
+      - youlai-boot
+
+  # BFF
+  ec-demo-bff:
+    build:
+      context: ../..
+      dockerfile: platform/docker/demo/Dockerfile.bff
+    container_name: ec-demo-bff
+    restart: unless-stopped
+    ports:
+      - "18080:8080"
+    env_file:
+      - /mydata/ec-demo/env/ec-demo-bff.env
+    environment:
+      - TZ=Asia/Tokyo
+      - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8081
+      - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
+    volumes:
+      - /mydata/ec-demo/app/bff/logs:/var/logs
+      - /etc/localtime:/etc/localtime
+    networks:
+      - youlai-boot
+    depends_on:
+      - ec-demo-order-service
+
+  # Frontend (nginx static files) - デバッグ用のみ
+  # 本番は既存nginx (youlai-nginx) から直接 /mydata/nginx/html/ec-demo/ を配信
+  ec-demo-front:
+    image: nginx:stable-alpine
+    container_name: ec-demo-front
+    restart: unless-stopped
+    ports:
+      - "18000:80"
+    volumes:
+      - /mydata/ec-demo/front/dist:/usr/share/nginx/html/ec-demo:ro
+    networks:
+      - youlai-boot

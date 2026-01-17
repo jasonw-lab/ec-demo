@@ -4,6 +4,13 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 
 > 日本語: `README.md` / 中文: `README.zh-CN.md`
 
+## 🤖 AI-Assisted Development & Design Policy
+
+This project adopts an advanced development process based on **AI Thought Partner (AI co-creation)**.
+
+- **AI Context Integration**: We define design guidelines in `.ai-instructions.md` so AI tools like Cursor and GitHub Copilot can generate/review code consistently with the Hybrid Hexagonal architecture.
+- **Pragmatic Design Decisions**: Through discussions with AI (prompt engineering), we weigh the trade-off between theoretical ideals (Over-DDD) and practical maintainability, choosing a hybrid approach for this repo. The decision process is recorded in [ADR (Architecture Decision Records)](./docs/adr/).
+
 ## Tech-lead design highlights
 
 - **BFF + WebSocket**: Concentrates UI-optimized APIs and realtime notifications in the BFF to maximize change resilience and UX
@@ -62,6 +69,8 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
   - Payment processing (PayPay integration)
 - **alert-service** (port 8085)
   - Kafka Streams inconsistency detection and alert emission
+- **es-service** (port 8086)
+  - Elasticsearch integration (product search and autocomplete)
 
 ## Tech stack (kept in README)
 

@@ -4,6 +4,13 @@
 
 > 日本語: `README.md` / English: `README.en.md`
 
+## 🤖 AI-Assisted Development & Design Policy
+
+本项目采用以 **AI Thought Partner（AI共创）** 为前提的高阶开发流程。
+
+- **AI Context Integration**：在根目录 `.ai-instructions.md` 定义设计指南，使 Cursor、GitHub Copilot 等 AI 工具基于 Hybrid Hexagonal 架构一致地生成与评审代码。
+- **Pragmatic Design Decisions**：通过与 AI 的讨论（Prompt Engineering）权衡理论理想（Over-DDD）与维护成本，选择适合本仓库的“混合架构”。决策过程记录在 [ADR (Architecture Decision Records)](./docs/adr/) 中。
+
 ## 设计要点
 
 - **BFF + WebSocket**：在 BFF 聚合 UI 友好的接口与实时通知，提高可演进性与用户体验
@@ -62,6 +69,8 @@
   - 支付处理（PayPay 集成）
 - **alert-service**（8085）
   - Kafka Streams 不一致检测与告警输出
+- **es-service**（8086）
+  - Elasticsearch 集成（商品检索与自动完成）
 
 ## 技术栈（保留在 README）
 

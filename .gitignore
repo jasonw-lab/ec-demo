@@ -80,6 +80,7 @@ dist/*/
 /git-change.sh
 
 rule*
+ai*
 update*.py
 update*.sh
 
