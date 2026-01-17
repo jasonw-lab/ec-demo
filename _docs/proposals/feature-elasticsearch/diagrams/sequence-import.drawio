@@ -1,0 +1,202 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0" version="20.3.0">
+  <diagram id="load-api-flow" name="Load API Flow">
+    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Load API Flow: CSV + Images to MinIO + Elasticsearch (Bulk 200)" style="text;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="20" width="800" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-admin" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="80" y="100" width="40" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-controller" value="ImportController" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="200" y="120" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-csvloader" value="CsvLoaderService" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="380" y="120" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-imageservice" value="ImageService" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="570" y="120" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-minio" value="MinIO" style="shape=cylinder3;whiteSpace=wrap;html=1;fontSize=11;fillColor=#f8cecc;strokeColor=#b85450;boundedLbl=1;backgroundOutline=1;size=15;" parent="1" vertex="1">
+          <mxGeometry x="740" y="110" width="70" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-bulkservice" value="ElasticsearchBulkService" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="870" y="120" width="170" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-es" value="Elasticsearch" style="shape=cylinder3;whiteSpace=wrap;html=1;fontSize=11;fillColor=#f8cecc;strokeColor=#b85450;boundedLbl=1;backgroundOutline=1;size=15;" parent="1" vertex="1">
+          <mxGeometry x="1100" y="110" width="90" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="start" value="POST /api/internal/products/import (csvPath, imagesDir)" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="140" y="220" width="240" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="call-csvloader" value="loadAndProcess(csvPath, imagesDir)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#f5f5f5;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="240" y="300" width="200" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="read-csv" value="CSV parse (Apache Commons CSV)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="370" y="360" width="150" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row-loop-start" value="Loop: Each row" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="340" y="430" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="parse-row" value="Parse row (productId, title, imageFile...)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="360" y="500" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="row-valid" value="Validation OK?" style="rhombus;whiteSpace=wrap;html=1;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="380" y="565" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="log-row-error" value="Log error (row, productId) Continue" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="600" y="575" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="call-imageservice" value="processImage(productId, imageFile)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#f5f5f5;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="350" y="680" width="180" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="image-processing" value="ImageService: 1.Load 2.Thumbnail(800px) 3.Upload MinIO 4.Return thumbnailUrl" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#d5e8d4;strokeColor=#82b366;align=left;" parent="1" vertex="1">
+          <mxGeometry x="540" y="660" width="240" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="minio-upload" value="PUT orig + thumb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;dashed=1;strokeColor=#b85450;" parent="1" source="image-processing" target="actor-minio" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="780" y="697" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="build-doc" value="Build ProductDocument (with thumbnailUrl)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="360" y="760" width="160" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="add-batch" value="Add to bulk batch (size: n)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="360" y="830" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="batch-check" value="batch == 200 or EOF?" style="rhombus;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="370" y="900" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="continue-loop" value="Next row" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="600" y="920" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="call-bulkservice" value="bulkUpsert(batch)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fillColor=#f5f5f5;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="360" y="1020" width="160" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="bulk-upsert-es" value="BulkService: Build BulkRequest (id=productId, idempotent) Call ES Bulk API" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;" parent="1" vertex="1">
+          <mxGeometry x="860" y="1000" width="180" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="es-bulk-call" value="POST /_bulk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;dashed=1;strokeColor=#b85450;" parent="1" source="bulk-upsert-es" target="actor-es" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+<mxCell id="bulk-result" value="Bulk result check (item errors)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="870" y="1100" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bulk-error-check" value="Error exists?" style="rhombus;whiteSpace=wrap;html=1;fontSize=10;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="890" y="1165" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="log-bulk-error" value="Log item error (productId, error) Continue" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="1080" y="1170" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="batch-clear" value="Clear batch, next row" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="390" y="1180" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="all-done" value="All rows processed" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="365" y="1260" width="150" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="end" value="Response: success=n, failure=m" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="150" y="1320" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="note-idempotent" value="Note: Idempotent (document id = productId, re-run overwrites)" style="shape=note;whiteSpace=wrap;html=1;fontSize=9;fillColor=#fff2cc;strokeColor=#d6b656;align=left;size=15;" parent="1" vertex="1">
+          <mxGeometry x="1100" y="1000" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="note-sync" value="Note: Sync processing (thumbnailUrl confirmed before ES upsert)" style="shape=note;whiteSpace=wrap;html=1;fontSize=9;fillColor=#d5e8d4;strokeColor=#82b366;align=left;size=15;" parent="1" vertex="1">
+          <mxGeometry x="810" y="660" width="130" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="note-error-handling" value="Note: Error handling - Row validation error: log and continue - Image upload error: log and continue - Bulk item error: log and continue - Allow partial failure, converge on re-run" style="shape=note;whiteSpace=wrap;html=1;fontSize=9;fillColor=#f8cecc;strokeColor=#b85450;align=left;size=15;" parent="1" vertex="1">
+          <mxGeometry x="30" y="1100" width="270" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="actor-admin" target="start" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="start" target="call-csvloader" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="call-csvloader" target="read-csv" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="read-csv" target="row-loop-start" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="row-loop-start" target="parse-row" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="parse-row" target="row-valid" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;strokeColor=#b85450;" parent="1" source="row-valid" target="log-row-error" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;strokeColor=#82b366;" parent="1" source="row-valid" target="call-imageservice" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="call-imageservice" target="image-processing" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="return thumbnailUrl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=9;dashed=1;" parent="1" source="image-processing" target="build-doc" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="build-doc" target="add-batch" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="add-batch" target="batch-check" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="batch-check" target="continue-loop" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=9;exitX=1;exitY=0.5;entryX=0;entryY=0.5;dashed=1;" parent="1" source="continue-loop" target="row-loop-start" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="937" />
+              <mxPoint x="720" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=9;exitX=1;exitY=0.5;entryX=1;entryY=0.5;dashed=1;" parent="1" source="log-row-error" target="row-loop-start" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="605" />
+              <mxPoint x="780" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;strokeColor=#d79b00;" parent="1" source="batch-check" target="call-bulkservice" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="call-bulkservice" target="bulk-upsert-es" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="bulk-upsert-es" target="bulk-result" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="bulk-result" target="bulk-error-check" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;strokeColor=#b85450;" parent="1" source="bulk-error-check" target="log-bulk-error" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="bulk-error-check" target="batch-clear" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=9;dashed=1;" parent="1" source="log-bulk-error" target="batch-clear" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=9;exitX=0.5;exitY=1;entryX=1;entryY=0.5;dashed=1;" parent="1" source="batch-clear" target="row-loop-start" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="1240" />
+              <mxPoint x="800" y="1240" />
+              <mxPoint x="800" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;fontSize=10;" parent="1" source="all-done" target="end" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

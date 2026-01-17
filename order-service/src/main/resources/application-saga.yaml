@@ -41,6 +41,6 @@ seata:
 
 svc:
   payment:
-    baseUrl: ${SVC_PAYMENT_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8090}
+    baseUrl: ${PAYMENT_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8090}
   storage:
-    baseUrl: ${SVC_STORAGE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8082}
+    baseUrl: ${STORAGE_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8082}

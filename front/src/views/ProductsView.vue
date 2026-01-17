@@ -55,18 +55,11 @@
       </div>
     </div>
     
-    <!-- ページネーション -->
-    <div v-if="totalPages > 1" style="display:flex;justify-content:center;gap:8px;margin-top:24px;">
-      <button :disabled="page===1" @click="go(page-1)" style="padding:8px 12px;border:1px solid #e5e7eb;background:#fff;border-radius:8px;cursor:pointer;transition:all 0.2s;hover:border-color:#ff6b6b;disabled:opacity:0.5;disabled:cursor:not-allowed;">
-        前へ
-      </button>
-      <button v-for="n in totalPages" :key="n" @click="go(n)" :style="buttonStyle(n)">
-        {{ n }}
-      </button>
-      <button :disabled="page===totalPages" @click="go(page+1)" style="padding:8px 12px;border:1px solid #e5e7eb;background:#fff;border-radius:8px;cursor:pointer;transition:all 0.2s;hover:border-color:#ff6b6b;disabled:opacity:0.5;disabled:cursor:not-allowed;">
-        次へ
-      </button>
-    </div>
+    <Pagination
+      :page="pageIndex"
+      :total-pages="totalPages"
+      @change="goToPageIndex"
+    />
   </div>
 </template>
 
@@ -74,6 +67,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { apiBase, useStore, type Product, type Category, getImageUrl } from '../store'
 import { useRoute, useRouter } from 'vue-router'
+import Pagination from '../components/Pagination.vue'
 
 const products = ref<Product[]>([])
 const store = useStore()
@@ -143,15 +137,11 @@ const paged = computed<Product[]>(() => {
   return result
 })
 
-function go(n: number) {
-  router.push({ query: { ...route.query, page: String(n) } })
-}
+const pageIndex = computed(() => page.value - 1)
 
-function buttonStyle(n: number) {
-  const base = 'padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;transition:all 0.2s;'
-  return n === page.value
-    ? base + 'background:#ff6b6b;color:#fff;border-color:#ff6b6b;'
-    : base + 'background:#fff;color:#111827;hover:border-color:#ff6b6b;'
+function goToPageIndex(index: number) {
+  const next = index + 1
+  router.push({ query: { ...route.query, page: String(next) } })
 }
 
 const topCategories = computed<Category[]>(() => categories.value.slice(0, 8))

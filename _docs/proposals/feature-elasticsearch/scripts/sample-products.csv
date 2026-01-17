@@ -1,0 +1,16 @@
+productId,title,description,price,status,createdAt,imageFile
+1001,iPhone 13 128GB ブルー,美品 目立った傷なし バッテリー最大容量85%,59800,ACTIVE,2026-01-01T10:00:00Z,1001.jpg
+1002,MacBook Air M2 13インチ,2023年モデル メモリ16GB SSD512GB 外箱あり,128000,ACTIVE,2026-01-02T11:30:00Z,1002.jpg
+1003,AirPods Pro 第2世代,MagSafe充電ケース付き 使用感あり,24800,ACTIVE,2026-01-03T09:15:00Z,1003.jpg
+1004,iPad Pro 11インチ 256GB,2022年モデル Apple Pencil対応,79800,ACTIVE,2026-01-04T14:20:00Z,1004.jpg
+1005,Apple Watch Series 8 45mm,GPSモデル 傷あり バンド付属,38000,ACTIVE,2026-01-05T16:45:00Z,1005.jpg
+1006,Sony WH-1000XM5 ブラック,ノイズキャンセリングヘッドホン ほぼ新品,39800,ACTIVE,2026-01-06T10:30:00Z,1006.jpg
+1007,Canon EOS R6 ボディ,ミラーレス一眼 シャッター回数5000回以下,248000,ACTIVE,2026-01-07T13:00:00Z,1007.jpg
+1008,Nintendo Switch 有機ELモデル,ホワイト 付属品完備 保護フィルム貼付済,32800,ACTIVE,2026-01-08T15:20:00Z,1008.jpg
+1009,Dyson V12 Detect Slim,コードレス掃除機 2023年製 使用期間6ヶ月,58000,ACTIVE,2026-01-09T11:10:00Z,1009.jpg
+1010,バルミューダ トースター ブラック,The Toaster K05A 2022年製 美品,22000,ACTIVE,2026-01-10T09:40:00Z,1010.jpg
+1011,Sony α7 IV ボディ,フルサイズミラーレス 保証残あり,268000,ACTIVE,2026-01-11T14:50:00Z,1011.jpg
+1012,iPad mini 第6世代 64GB スペースグレイ,Wi-Fiモデル Apple Pencil対応,54800,ACTIVE,2026-01-12T10:20:00Z,1012.jpg
+1013,Bose QuietComfort 45,ノイズキャンセリングヘッドホン ホワイト,28000,ACTIVE,2026-01-13T16:00:00Z,1013.jpg
+1014,iPhone 12 mini 128GB レッド,バッテリー容量82% 画面保護フィルム貼付,42000,ACTIVE,2026-01-14T11:30:00Z,1014.jpg
+1015,Dell XPS 13 9320,Core i7-1260P 16GB 512GB 2023年モデル,118000,ACTIVE,2026-01-15T13:45:00Z,1015.jpg
