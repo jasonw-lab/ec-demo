@@ -4,12 +4,9 @@
 
 > 日本語: `README.md` / English: `README.en.md`
 
-## 🤖 AI-Assisted Development & Design Policy
+## 🤖 AI-Assisted Development
 
-本项目采用以 **AI Thought Partner（AI共创）** 为前提的高阶开发流程。
-
-- **AI Context Integration**：在根目录 `.ai-instructions.md` 定义设计指南，使 Cursor、GitHub Copilot 等 AI 工具基于 Hybrid Hexagonal 架构一致地生成与评审代码。
-- **Pragmatic Design Decisions**：通过与 AI 的讨论（Prompt Engineering）权衡理论理想（Over-DDD）与维护成本，选择适合本仓库的“混合架构”。决策过程记录在 [ADR (Architecture Decision Records)](./docs/adr/) 中。
+本项目采用 **AI（Cursor、GitHub Copilot）** 辅助开发。设计决策记录在 [ADR](./docs/adr/) 中，保持 Hybrid Hexagonal 架构一致性。
 
 ## 设计要点
 
@@ -33,7 +30,7 @@
 - **Observability**: 全服务标准化 `actuator/health`，加速故障排查
 - **Resilience**: Webhook优先 + 轮询兜底、幂等性、补偿事务安全收敛
 - **Security**: Firebase ID Token验证 + Redis会话，Cookie前提 `HttpOnly` / `SameSite` / `Secure`
-- **Fail-safe**: Redis故障等重要依赖损坏时返回 503，向安全侧倒（详情见 `_docs/`）
+- **Fail-safe**: Redis故障等重要依赖损坏时返回 503，向安全侧倒（详情见 `docs/`）
 
 ## 风险与对策（摘录）
 
@@ -80,7 +77,7 @@
 - **Vite**
 
 ### 后端
-- **JDK 17**
+- **JDK 21**
 - **Spring Boot 3.x**
 - **微服务架构**
 - **分布式事务（Saga）** - Seata Saga 模式
@@ -90,19 +87,21 @@
 ### 基础设施 / 中间件
 - **Docker / Docker Compose**
 - **MySQL 8.0**
+- **MongoDB 6.0** - 审计日志（Audit Log）存储
 - **Seata 2.0**
 - **Redis**
+- **MinIO** - S3 兼容对象存储（商品图片管理）
 - **Firebase Authentication**
 - **Kafka / Kafka Streams**：检测 Rule A/B/C 并向 `alerts.order_payment_inconsistency.v1` 输出 `AlertRaised`
-- **Elasticsearch**
+- **Elasticsearch 8.x**
 - **MyBatis-Plus**
 
 ### 可观测性
 - **Spring Boot Actuator**
 
-## 架构图与文档（详细见 `_docs/`）
+## 架构图与文档（详细见 `docs/`）
 
 - Draw.io 架构图：`docs/ec-demo-architecture.drawio`（Overview / DataFlow）
-- 本地启动手册：`_docs/runbook/README_LOCAL_SETUP.md`
-- 架构深挖（Saga 范围、状态机、kafka-alert 契约、非功能）：`_docs/architecture/README_ARCHITECTURE.md`
-- 部署手册（偏 VPS）：`_docs/docker/demo/deploy.md`
+- 本地启动手册：`docs/runbook/README_LOCAL_SETUP.md`
+- 架构深挖（Saga 范围、状态机、kafka-alert 契约、非功能）：`docs/architecture/README_ARCHITECTURE.md`
+- 部署手册（偏 VPS）：`docs/docker/demo/deploy.md`
