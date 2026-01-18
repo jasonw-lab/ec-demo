@@ -4,12 +4,9 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 
 > 日本語: `README.md` / 中文: `README.zh-CN.md`
 
-## 🤖 AI-Assisted Development & Design Policy
+## 🤖 AI-Assisted Development
 
-This project adopts an advanced development process based on **AI Thought Partner (AI co-creation)**.
-
-- **AI Context Integration**: We define design guidelines in `.ai-instructions.md` so AI tools like Cursor and GitHub Copilot can generate/review code consistently with the Hybrid Hexagonal architecture.
-- **Pragmatic Design Decisions**: Through discussions with AI (prompt engineering), we weigh the trade-off between theoretical ideals (Over-DDD) and practical maintainability, choosing a hybrid approach for this repo. The decision process is recorded in [ADR (Architecture Decision Records)](./docs/adr/).
+This project uses **AI (Cursor, GitHub Copilot)** for development assistance. Design decisions are recorded in [ADR](./docs/adr/), maintaining Hybrid Hexagonal architecture consistency.
 
 ## Tech-lead design highlights
 
@@ -33,7 +30,7 @@ This project adopts an advanced development process based on **AI Thought Partne
 - **Observability**: Standardized `actuator/health` across all services to accelerate troubleshooting
 - **Resilience**: Webhook-first + polling fallback, idempotency, compensation transactions for safe convergence
 - **Security**: Firebase ID Token verification + Redis sessions, cookies assume `HttpOnly` / `SameSite` / `Secure`
-- **Fail-safe**: Return 503 for critical dependency failures like Redis, fail safely (details in `_docs/`)
+- **Fail-safe**: Return 503 for critical dependency failures like Redis, fail safely (details in `docs/`)
 
 ## Risks and countermeasures (excerpt)
 
@@ -80,7 +77,7 @@ This project adopts an advanced development process based on **AI Thought Partne
 - **Vite**
 
 ### Backend
-- **JDK 17**
+- **JDK 21**
 - **Spring Boot 3.x**
 - **Modern microservices**
 - **Distributed transaction (Saga)** - Seata Saga mode
@@ -90,19 +87,21 @@ This project adopts an advanced development process based on **AI Thought Partne
 ### Infra / Middleware
 - **Docker / Docker Compose**
 - **MySQL 8.0**
+- **MongoDB 6.0** - Audit log storage
 - **Seata 2.0**
 - **Redis**
+- **MinIO** - S3-compatible object storage (product image management)
 - **Firebase Authentication**
 - **Kafka / Kafka Streams** - Detect Rule A/B/C and emit `AlertRaised` to `alerts.order_payment_inconsistency.v1`
-- **Elasticsearch**
+- **Elasticsearch 8.x**
 - **MyBatis-Plus**
 
 ### Observability
 - **Spring Boot Actuator**
 
-## Diagrams & docs (see `_docs/` for details)
+## Diagrams & docs (see `docs/` for details)
 
 - Draw.io diagram: `docs/ec-demo-architecture.drawio` (pages: Overview / DataFlow)
-- Local startup guide: `_docs/runbook/README_LOCAL_SETUP.md`
-- Architecture deep dive (Saga scope, state machine, kafka-alert contract, non-functional): `_docs/architecture/README_ARCHITECTURE.md`
-- Deployment guide (VPS-oriented): `_docs/docker/demo/deploy.md`
+- Local startup guide: `docs/runbook/README_LOCAL_SETUP.md`
+- Architecture deep dive (Saga scope, state machine, kafka-alert contract, non-functional): `docs/architecture/README_ARCHITECTURE.md`
+- Deployment guide (VPS-oriented): `docs/docker/demo/deploy.md`
