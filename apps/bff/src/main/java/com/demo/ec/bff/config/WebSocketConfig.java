@@ -18,7 +18,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        // SECURITY: Restrict WebSocket origins to trusted domains only
+        // This prevents Cross-Site WebSocket Hijacking (CSWSH) attacks
+        // Match the same origins as HTTP CORS configuration
         registry.addHandler(orderStatusWebSocketHandler, "/ws/orders")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOriginPatterns(
+                        "http://localhost:5173",
+                        "http://127.0.0.1:5173"
+                );
     }
 }
