@@ -1,0 +1,41 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: ec-backend
+  data:
+    redis:
+      host: ${REDIS_HOST:${EC_DEMO_SERVER:localhost}}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:123456}
+      ssl:
+        enabled: ${REDIS_SSL:false}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${EC_DEMO_SERVER:localhost}:29092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:bff-order-events-consumer}
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      missing-topics-fatal: false
+
+ec-demo:
+  kafka:
+    topics:
+      orders-events: ${EC_DEMO_ORDERS_EVENTS_TOPIC:ec-demo.orders.events.v1}
+services:
+  order:
+    base-url: ${ORDER_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8081}
+  account:
+    base-url: ${ACCOUNT_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8083}
+  storage:
+    base-url: ${STORAGE_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8082}
+es-service:
+  base-url: ${ES_SERVICE_BASE_URL:http://${EC_DEMO_SERVER:localhost}:8086}
+auth:
+  session:
+    prefix: "auth:session:"
+    cookie-name: sid
+    secure: ${AUTH_COOKIE_SECURE:true}
+    same-site: Lax
