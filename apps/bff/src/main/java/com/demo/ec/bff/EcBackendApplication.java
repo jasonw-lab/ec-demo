@@ -20,6 +20,17 @@ public class EcBackendApplication {
         SpringApplication.run(EcBackendApplication.class, args);
     }
 
+    /**
+     * CORS configuration for development environment.
+     * 
+     * SECURITY NOTE: For production deployments, configure allowed origins
+     * via environment variables or application properties. Never use "*" 
+     * wildcard in production as it allows any origin to access the API.
+     * 
+     * Example production configuration:
+     * - allowedOrigins("https://yourdomain.com", "https://www.yourdomain.com")
+     * - Consider using environment-based configuration for flexibility
+     */
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
