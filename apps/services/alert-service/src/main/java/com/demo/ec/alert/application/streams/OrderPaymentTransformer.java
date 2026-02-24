@@ -33,10 +33,10 @@ public class OrderPaymentTransformer implements Transformer<String, String, KeyV
     private KeyValueStore<String, String> store;
 
     public OrderPaymentTransformer(
-        String storeName,
-        long tConfirmSeconds,
-        long tPaySeconds,
-        long punctuateIntervalSeconds) {
+            String storeName,
+            long tConfirmSeconds,
+            long tPaySeconds,
+            long punctuateIntervalSeconds) {
         this.storeName = storeName;
         this.tConfirmSeconds = tConfirmSeconds;
         this.tPaySeconds = tPaySeconds;
@@ -50,9 +50,9 @@ public class OrderPaymentTransformer implements Transformer<String, String, KeyV
         this.store = (KeyValueStore<String, String>) context.getStateStore(storeName);
 
         context.schedule(
-            Duration.ofSeconds(punctuateIntervalSeconds),
-            PunctuationType.WALL_CLOCK_TIME,
-            timestamp -> scanDeadlines());
+                Duration.ofSeconds(punctuateIntervalSeconds),
+                PunctuationType.WALL_CLOCK_TIME,
+                timestamp -> scanDeadlines());
     }
 
     private void scanDeadlines() {
@@ -63,17 +63,22 @@ public class OrderPaymentTransformer implements Transformer<String, String, KeyV
                 KeyValue<String, String> kv = iter.next();
                 String key = kv.key;
                 String v = kv.value;
-                OrderPaymentState s = v == null ? new OrderPaymentState() : mapper.readValue(v, OrderPaymentState.class);
+                OrderPaymentState s = v == null ? new OrderPaymentState()
+                        : mapper.readValue(v, OrderPaymentState.class);
                 boolean changed = false;
-                if (s.ruleADeadlineEpochMs != null && !s.ruleAFired && now >= s.ruleADeadlineEpochMs && s.orderConfirmedAt == null) {
+                if (s.ruleADeadlineEpochMs != null && !s.ruleAFired && now >= s.ruleADeadlineEpochMs
+                        && s.orderConfirmedAt == null) {
                     emitAlert(key, "A", "P2", s);
-                    log.info("rule A fired: orderId={} deadlineEpochMs={} nowEpochMs={}", key, s.ruleADeadlineEpochMs, now);
+                    log.info("rule A fired: orderId={} deadlineEpochMs={} nowEpochMs={}", key, s.ruleADeadlineEpochMs,
+                            now);
                     s.ruleAFired = true;
                     changed = true;
                 }
-                if (s.ruleBDeadlineEpochMs != null && !s.ruleBFired && now >= s.ruleBDeadlineEpochMs && s.paymentSucceededAt == null) {
+                if (s.ruleBDeadlineEpochMs != null && !s.ruleBFired && now >= s.ruleBDeadlineEpochMs
+                        && s.paymentSucceededAt == null) {
                     emitAlert(key, "B", "P2", s);
-                    log.info("rule B fired: orderId={} deadlineEpochMs={} nowEpochMs={}", key, s.ruleBDeadlineEpochMs, now);
+                    log.info("rule B fired: orderId={} deadlineEpochMs={} nowEpochMs={}", key, s.ruleBDeadlineEpochMs,
+                            now);
                     s.ruleBFired = true;
                     changed = true;
                 }
@@ -97,7 +102,8 @@ public class OrderPaymentTransformer implements Transformer<String, String, KeyV
             String eventType = node.has("eventType") ? node.get("eventType").asText() : null;
             String occurredAt = node.has("occurredAt") ? node.get("occurredAt").asText() : Instant.now().toString();
             String raw = store.get(key);
-            OrderPaymentState s = raw == null ? new OrderPaymentState() : mapper.readValue(raw, OrderPaymentState.class);
+            OrderPaymentState s = raw == null ? new OrderPaymentState()
+                    : mapper.readValue(raw, OrderPaymentState.class);
 
             if ("PaymentSucceeded".equals(eventType)) {
                 s.paymentSuccessCount = s.paymentSuccessCount + 1;
@@ -111,18 +117,20 @@ public class OrderPaymentTransformer implements Transformer<String, String, KeyV
                 }
                 if (s.orderConfirmedAt == null && s.paymentSucceededAt != null) {
                     long deadline = parseEventTime(s.paymentSucceededAt)
-                        .plusSeconds(tConfirmSeconds)
-                        .toEpochMilli();
+                            .plusSeconds(tConfirmSeconds)
+                            .toEpochMilli();
                     s.ruleADeadlineEpochMs = deadline;
                 }
-            } else if ("OrderConfirmed".equals(eventType)) {
+            } else if ("OrderStatusChanged".equals(eventType)
+                    && node.has("payload")
+                    && "PAID".equals(node.path("payload").path("newStatus").asText())) {
                 if (s.orderConfirmedAt == null) {
                     s.orderConfirmedAt = occurredAt;
                 }
                 if (s.paymentSucceededAt == null && s.orderConfirmedAt != null) {
                     long deadline = parseEventTime(s.orderConfirmedAt)
-                        .plusSeconds(tPaySeconds)
-                        .toEpochMilli();
+                            .plusSeconds(tPaySeconds)
+                            .toEpochMilli();
                     s.ruleBDeadlineEpochMs = deadline;
                 }
             }
@@ -155,7 +163,8 @@ public class OrderPaymentTransformer implements Transformer<String, String, KeyV
     }
 
     @Override
-    public void close() {}
+    public void close() {
+    }
 
     private Instant parseEventTime(String timestamp) {
         if (timestamp == null || timestamp.isBlank()) {
