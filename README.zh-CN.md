@@ -4,9 +4,7 @@
 
 > 日本語: `README.md` / English: `README.en.md`
 
-## 🤖 AI-Assisted Development
 
-本项目采用 **AI（Cursor、GitHub Copilot）** 辅助开发。设计决策记录在 [ADR](./docs/adr/) 中，保持 Hybrid Hexagonal 架构一致性。
 
 ## 设计要点
 
@@ -46,7 +44,10 @@
 
 1. **购买请求**: `./test-saga.sh` 创建订单（`PENDING → WAITING_PAYMENT`）
 2. **支付事件反映**: Webhook（优先）或轮询（兜底）收敛到 `PAID/FAILED`
-3. **观测**: WebSocket即时反映到画面，（kafka-alert运行时）确认主题中的 Rule A/B/C `AlertRaised`
+3. **观测**: 
+   - WebSocket 即时反映到画面
+   - （kafka-alert 运行时）Kafka Streams 检测不整合 → 向 `alerts.order_payment_inconsistency.v1` 输出 `AlertRaised`
+   - MySQL (ec_system.sys_pay_alert) 确认告警历史
 
 ## 服务组成
 
@@ -105,3 +106,9 @@
 - 本地启动手册：`docs/runbook/README_LOCAL_SETUP.md`
 - 架构深挖（Saga 范围、状态机、kafka-alert 契约、非功能）：`docs/architecture/README_ARCHITECTURE.md`
 - 部署手册（偏 VPS）：`docs/docker/demo/deploy.md`
+
+
+## 🤖 AI-Assisted Development
+
+本项目采用 **AI（Cursor、GitHub Copilot、Codex）** 辅助开发。设计决策记录在 [ADR](./docs/adr/) 中，保持 Hybrid Hexagonal 架构一致性。
+

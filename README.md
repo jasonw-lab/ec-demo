@@ -4,9 +4,6 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
 
 > English: `README.en.md` / 中文: `README.zh-CN.md`
 
-## 🤖 AI-Assisted Development
-
-本プロジェクトは **AI（Cursor、GitHub Copilot）** を活用した開発を採用しています。設計判断は [ADR](./docs/adr/) に記録し、Hybrid Hexagonal アーキテクチャで一貫性を保っています。
 
 ## リーダー視点の設計ポイント（要約）
 
@@ -119,3 +116,8 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
 - 起動手順（確定版）: `docs/runbook/README_LOCAL_SETUP.md`
 - アーキテクチャ詳細（Saga保証範囲、状態機械、kafka-alert契約、非機能）: `docs/architecture/README_ARCHITECTURE.md`
 - デプロイ手順（VPS想定）: `docs/docker/demo/deploy.md`
+
+
+## 🤖 AI-Assisted Development
+
+本プロジェクトは **AI（Cursor、GitHub Copilot、Codex）** を活用した開発を採用しています。設計判断は [ADR](./docs/adr/) に記録し、Hybrid Hexagonal アーキテクチャで一貫性を保っています。
