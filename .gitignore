@@ -46,8 +46,7 @@ e2e/**/*.js.map
 _test-output
 _temp
 .DS_Store
-CLAUDE*
-AGENTS*
+
 
 # Java class files
 *.class

@@ -1,0 +1,262 @@
+# Title
+Resilience4j でサービス間通信のレジリエンス（回復性）を強化する
+
+## Status (Proposed / Accepted / Deprecated)
+Proposed
+
+## Context
+- 現在のec-demoはSeata Sagaで分散トランザクションの整合性を管理しているが、**サービス間のネットワーク遅延・タイムアウト・一時障害への耐性が不足**している。
+- order-serviceからpayment-serviceへの同期呼び出し、BFFから各サービスへのAPI呼び出しなど、複数のサービス間通信箇所がある。
+- 外部決済（PayPay API）は自システムの制御外であり、応答遅延やダウンが発生し得る。
+- 一つのサービス障害が連鎖してシステム全体を停止させる「カスケード障害」を防ぐ設計が必要である。
+- Spring Boot 3.x + Java 21環境でResilience4jは公式にサポートされており、Micrometer連携も標準対応している。
+
+## Decision
+
+### 1. Circuit Breaker（サーキットブレーカー）
+
+外部サービスが障害状態にあるとき、リクエストを即座にフェイルさせ、カスケード障害を防止する。
+
+#### 適用箇所
+
+| 呼び出し元 | 呼び出し先 | 理由 |
+|---|---|---|
+| order-service | payment-service | 決済サービス障害時に注文処理全体を保護 |
+| order-service | storage-service | 在庫サービス障害時にSaga全体を保護 |
+| payment-service | PayPay API | 外部決済の障害・遅延を遮断 |
+| BFF | 各 service | フロントエンドへの影響を局所化 |
+
+#### 設定方針
+
+```yaml
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10           # 直近10リクエストで判定
+        failure-rate-threshold: 50        # 50%以上失敗でOPEN
+        wait-duration-in-open-state: 30s  # 30秒後にHALF-OPEN
+        permitted-number-of-calls-in-half-open-state: 3
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+    instances:
+      paymentService:
+        base-config: default
+      storageService:
+        base-config: default
+      payPayApi:
+        base-config: default
+        failure-rate-threshold: 40        # 外部APIはより厳しく
+        wait-duration-in-open-state: 60s  # 外部APIは復旧に時間がかかる
+```
+
+#### 状態遷移
+
+```
+  CLOSED ──(失敗率 ≥ 閾値)──→ OPEN ──(待機時間経過)──→ HALF-OPEN
+    ▲                                                      │
+    └──────(成功率が十分)──────────────────────────────────┘
+                          │
+                          └──(失敗継続)──→ OPEN に戻る
+```
+
+### 2. Retry（リトライ）
+
+一時的な障害（ネットワーク瞬断、一時的な503）に対して自動リトライで回復を試みる。
+
+#### 適用箇所と設定
+
+```yaml
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2  # 500ms → 1s → 2s
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+        ignore-exceptions:
+          - com.demo.ec.common.exception.BusinessException  # ビジネスエラーはリトライしない
+    instances:
+      paymentService:
+        base-config: default
+      storageService:
+        base-config: default
+        max-attempts: 2                    # 在庫操作は冪等性に注意
+```
+
+#### リトライ対象の判断基準
+
+| 条件 | リトライ | 理由 |
+|---|---|---|
+| ネットワークタイムアウト | ✅ | 一時的な遅延の可能性が高い |
+| 503 Service Unavailable | ✅ | サービス再起動中の可能性 |
+| 400 Bad Request | ❌ | リクエスト自体が不正、リトライしても同結果 |
+| 409 Conflict | ❌ | ビジネスロジック上の競合、リトライで解消しない |
+| 決済作成リクエスト | ⚠️ 条件付き | 冪等キー付きの場合のみリトライ可 |
+
+### 3. TimeLimiter（タイムアウト制御）
+
+外部呼び出しに上限時間を設定し、無制限の待機を防止する。
+
+```yaml
+resilience4j:
+  timelimiter:
+    instances:
+      paymentService:
+        timeout-duration: 5s
+      payPayApi:
+        timeout-duration: 10s             # 外部APIは余裕を持つ
+      storageService:
+        timeout-duration: 3s
+```
+
+### 4. Bulkhead（バルクヘッド）
+
+同時実行数を制限し、一つのサービスへの呼び出しがスレッドプールを枯渇させることを防ぐ。
+
+```yaml
+resilience4j:
+  bulkhead:
+    instances:
+      payPayApi:
+        max-concurrent-calls: 20          # PayPay APIへの同時呼び出し上限
+        max-wait-duration: 500ms
+```
+
+### 5. Fallback（フォールバック戦略）
+
+Circuit BreakerがOPENの際に、ユーザー体験を維持するためのフォールバック応答を定義する。
+
+| サービス | Fallback戦略 |
+|---|---|
+| payment-service障害 | 注文を「決済保留（PAYMENT_PENDING）」で受け付け、後続処理はSagaのタイムアウトで補償 |
+| storage-service障害 | 注文受付を一時停止し、503 + `Retry-After`ヘッダーで再試行を促す |
+| PayPay API障害 | ポーリングにフォールバックし、Webhook復旧後に再開 |
+| BFF → service障害 | サービス別の縮退レスポンスを返し、UI側で該当機能を無効化 |
+
+### 6. Seataとの統合方針
+
+- Resilience4jはSagaの**内側**（各Sagaステップのサービス呼び出し）に適用する。
+- Circuit BreakerがOPENの場合、Sagaステップは即座に失敗し、Saga Orchestratorが補償トランザクションを起動する。
+- リトライはSagaステップの**内部**で完結させ、Sagaレベルのリトライとは独立に管理する。
+
+```
+Saga Orchestrator (Seata)
+  │
+  ├─ Step1: 在庫引当
+  │    └─ Resilience4j [Retry → CircuitBreaker → TimeLimiter] → storage-service
+  │
+  ├─ Step2: 決済要求
+  │    └─ Resilience4j [Retry → CircuitBreaker → TimeLimiter] → payment-service
+  │         └─ Resilience4j [Retry → CircuitBreaker → Bulkhead] → PayPay API
+  │
+  └─ 失敗時: 補償トランザクション（在庫解放・注文キャンセル）
+```
+
+### 7. Observabilityとの連携（ADR-105参照）
+
+- Resilience4jの全イベント（状態遷移、リトライ、タイムアウト）をMicrometerメトリクスとして自動公開する。
+- Circuit Breaker状態は `resilience4j.circuitbreaker.state` メトリクスでPrometheus/Grafanaに反映される。
+- Grafanaダッシュボードで以下を可視化する：
+  - Circuit Breaker状態（CLOSED / OPEN / HALF-OPEN）の時系列
+  - リトライ回数とバックオフ分布
+  - フォールバック発動回数
+
+## Alternatives
+
+### A. Netflix Hystrix
+- 長い実績があるが、**メンテナンスモード（2018年以降更新なし）**。
+- **不採用理由**: 新規プロジェクトでの採用は非推奨。Spring Boot 3.xとの互換性も保証されない。
+
+### B. Spring Cloud Circuit Breaker（抽象レイヤー）
+- Resilience4jのラッパーとして機能する。
+- **不採用理由**: 抽象化層を通すことで設定の柔軟性が低下する。Resilience4jを直接使う方がきめ細かい制御が可能。
+
+### C. Istio / Envoy によるサービスメッシュレベルのリトライ・サーキットブレーカー
+- インフラ層で透過的に適用できる。
+- **不採用理由**: 現時点ではKubernetes不要のdocker-compose構成であり、サービスメッシュは過剰。将来のK8s移行時に検討する。
+
+### D. レジリエンス未導入（現状維持）
+- 導入コストなし。
+- **不採用理由**: PayPay APIの障害やサービス間のネットワーク遅延でカスケード障害が発生するリスクがある。「外部サービスが死んでいるときにシステム全体を落とさない設計」は運用能力の証明として必須。
+
+## Consequences
+
+### メリット
+- PayPay APIやサービス間通信の障害が**局所化**され、システム全体のダウンを防止する。
+- Circuit Breaker / Retry / TimeLimiterの組み合わせにより、**一時的な障害は自動回復**し、恒久的な障害は素早く遮断される。
+- Seata Sagaと統合することで、「リトライで回復しない場合は補償トランザクションで整合性を保つ」という**二段階の回復戦略**が実現する。
+- Micrometerメトリクスとの連携により、回復性の状態がGrafanaで可視化され、運用判断が迅速になる。
+- 技術ポートフォリオとして、Resilience4j + Circuit Breaker + Sagaの統合実装を証明できる。
+
+### デメリット・注意点
+- **冪等性の確保が必須**: リトライ対象のAPI（特に決済作成）は冪等キーの実装が前提となる。
+- **設定の調整が必要**: 閾値（失敗率、待機時間、リトライ回数）は実測に基づくチューニングが必要。
+- **テストの複雑化**: Circuit BreakerがOPEN状態のときのSaga補償フロー等、異常系のテストシナリオが増加する。
+- **依存関係追加**: 全サービスにResilience4j Starterの依存が追加される（ただしSpring Boot統合のため軽量）。
+
+## References
+
+### 公式ドキュメント
+- [Resilience4j 公式](https://resilience4j.readme.io/) — CircuitBreaker, Retry, TimeLimiter, Bulkhead
+- [Resilience4j Spring Boot 3 Starter](https://resilience4j.readme.io/docs/getting-started-3) — Spring Boot統合
+- [Micrometer × Resilience4j](https://resilience4j.readme.io/docs/micrometer) — メトリクス連携
+
+### Maven依存関係
+
+```xml
+<!-- Resilience4j Spring Boot 3 Starter -->
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-spring-boot3</artifactId>
+    <version>2.2.0</version>
+</dependency>
+
+<!-- AOP (アノテーション駆動に必要) -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+```
+
+### 実装例（order-serviceからpayment-serviceへの呼び出し）
+
+```java
+@Service
+public class PaymentServiceClient {
+
+    private final RestClient restClient;
+
+    @CircuitBreaker(name = "paymentService", fallbackMethod = "paymentFallback")
+    @Retry(name = "paymentService")
+    @TimeLimiter(name = "paymentService")
+    public PaymentResponse createPayment(PaymentRequest request) {
+        return restClient.post()
+            .uri("/api/payments")
+            .body(request)
+            .retrieve()
+            .body(PaymentResponse.class);
+    }
+
+    private PaymentResponse paymentFallback(PaymentRequest request, Throwable t) {
+        log.warn("Payment service unavailable, fallback triggered: {}", t.getMessage());
+        return PaymentResponse.pending(request.getOrderNo());
+    }
+}
+```
+
+### Actuatorで確認できるエンドポイント
+
+```
+GET /actuator/circuitbreakers         — 全Circuit Breakerの状態一覧
+GET /actuator/circuitbreakerevents    — 状態遷移イベント履歴
+GET /actuator/retries                 — Retry設定一覧
+GET /actuator/retryevents             — リトライイベント履歴
+```

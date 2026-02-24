@@ -4,9 +4,7 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 
 > 日本語: `README.md` / 中文: `README.zh-CN.md`
 
-## 🤖 AI-Assisted Development
 
-This project uses **AI (Cursor, GitHub Copilot)** for development assistance. Design decisions are recorded in [ADR](./docs/adr/), maintaining Hybrid Hexagonal architecture consistency.
 
 ## Tech-lead design highlights
 
@@ -46,7 +44,10 @@ This project uses **AI (Cursor, GitHub Copilot)** for development assistance. De
 
 1. **Purchase request**: Create order with `./test-saga.sh` (`PENDING → WAITING_PAYMENT`)
 2. **Payment event reflection**: Webhook (priority) or polling (fallback) converges to `PAID/FAILED`
-3. **Observation**: Immediate screen updates via WebSocket, confirm Rule A/B/C `AlertRaised` in topics (when kafka-alert is running)
+3. **Observation**: 
+   - Immediate screen updates via WebSocket
+   - (When kafka-alert is running) Kafka Streams detects inconsistencies → outputs `AlertRaised` to `alerts.order_payment_inconsistency.v1`
+   - Check alert history in MySQL (ec_system.sys_pay_alert)
 
 ## Services
 
@@ -105,3 +106,9 @@ This project uses **AI (Cursor, GitHub Copilot)** for development assistance. De
 - Local startup guide: `docs/runbook/README_LOCAL_SETUP.md`
 - Architecture deep dive (Saga scope, state machine, kafka-alert contract, non-functional): `docs/architecture/README_ARCHITECTURE.md`
 - Deployment guide (VPS-oriented): `docs/docker/demo/deploy.md`
+
+
+## 🤖 AI-Assisted Development
+
+This project uses **AI (Cursor, GitHub Copilot, Codex)** for development assistance. Design decisions are recorded in [ADR](./docs/adr/), maintaining Hybrid Hexagonal architecture consistency.
+
