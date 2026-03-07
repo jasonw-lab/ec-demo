@@ -1,5 +1,6 @@
 networks:
   jason-lab-net:
+    name: jason-lab-net
     driver: bridge
 
 services:
@@ -195,36 +196,6 @@ services:
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - ${BASEPATH}/minio/data:/data
-    networks:
-      - jason-lab-net
-
-  # =========================
-  # es-service (Elasticsearch API)
-  # =========================
-  ec-demo-es-service:
-    build:
-      context: ../../..
-      dockerfile: platform/docker/demo/Dockerfile.es-service
-    platform: ${PLATFORM:-linux/amd64}
-    container_name: ec-demo-es-service
-    profiles: ["elastic"]
-    restart: unless-stopped
-    depends_on:
-      ec-demo-elasticsearch:
-        condition: service_healthy
-    environment:
-      - ELASTICSEARCH_ENDPOINT=http://ec-demo-elasticsearch:9200
-      - ES_INDEX_NAME=${ES_INDEX_NAME:-products_v1}
-      - ES_INDEX_ALIAS=${ES_INDEX_ALIAS:-products}
-      - MINIO_ENDPOINT=http://ec-demo-minio:9000
-      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
-      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin123}
-      - MINIO_BUCKET=${MINIO_BUCKET:-ec-demo}
-      - MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL:-http://localhost:9000}
-    ports:
-      - "8086:8086"
-    volumes:
-      - ${IMPORT_DIR:-/tmp/ec-demo-import}:/data/import:ro
     networks:
       - jason-lab-net
 
