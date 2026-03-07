@@ -35,14 +35,18 @@ FILES=(
 
 usage() {
   cat <<EOF
-Usage: $0 [push|pull]
+Usage: $0 [push|pull] [--force]
 
   push  (default) : copy from project -> $DEST_BASE (overwrite)
   pull            : copy from $DEST_BASE -> project (skip if target exists)
+
+Options:
+  --force         : overwrite existing target on pull
 EOF
 }
 
 action="${1:-push}"
+force="${2:-}"
 
 if [ "$action" = "push" ]; then
   echo "Pushing environment files to $DEST_BASE/$APP_NAME (preserving path structure)..."
@@ -72,13 +76,11 @@ elif [ "$action" = "pull" ]; then
       echo "Warning: source not found in DEST_BASE: $src" >&2
       continue
     fi
-    if [ -e "$dest_path" ]; then
-      echo "File/directory exists: $dest_path"
-      read -r -p "Overwrite? Type 'yes' to overwrite: " answer
-      if [ "$answer" != "yes" ]; then
-        echo "Skip (user chose not to overwrite): $dest_path"
-        continue
-      fi
+    if [ -e "$dest_path" ] && [ "$force" != "--force" ]; then
+      echo "Skip (exists): $dest_path"
+      continue
+    fi
+    if [ -e "$dest_path" ] && [ "$force" = "--force" ]; then
       rm -rf "$dest_path"
     fi
     mkdir -p "$dest_dir"
