@@ -37,7 +37,7 @@ services:
     container_name: ec-demo-storage-service
     restart: unless-stopped
     ports:
-      - "18082:8082"
+      - "18082:8083"
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
@@ -63,7 +63,7 @@ services:
     container_name: ec-demo-order-service
     restart: unless-stopped
     ports:
-      - "18081:8081"
+      - "18081:8082"
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
@@ -122,7 +122,8 @@ services:
       - ${BASEPATH}/env/ec-demo-bff.env
     environment:
       - TZ=Asia/Tokyo
-      - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8081
+      - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8082
+      - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
       - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
       - LOGGING_LEVEL_ORG_APACHE_KAFKA=WARN
     volumes:
@@ -133,18 +134,18 @@ services:
     depends_on:
       - ec-demo-order-service
 
-  # Frontend (nginx static files) - デバッグ用のみ
-  # 本番は既存nginx (youlai-nginx) から直接配信
-  ec-demo-front:
-    image: nginx:stable-alpine
-    container_name: ec-demo-front
-    restart: unless-stopped
-    ports:
-      - "18000:80"
-    volumes:
-      - ${BASEPATH}/front/dist:/usr/share/nginx/html/ec-demo:ro
-    networks:
-      - jason-lab-net
+  # # Frontend (nginx static files) - デバッグ用のみ
+  # # 本番は既存nginx (youlai-nginx) から直接配信
+  # ec-demo-front:
+  #   image: nginx:stable-alpine
+  #   container_name: ec-demo-front
+  #   restart: unless-stopped
+  #   ports:
+  #     - "18000:80"
+  #   volumes:
+  #     - ${BASEPATH}/front/dist:/usr/share/nginx/html/ec-demo:ro
+  #   networks:
+  #     - jason-lab-net
 
   # =========================
   # es-service (Elasticsearch API)

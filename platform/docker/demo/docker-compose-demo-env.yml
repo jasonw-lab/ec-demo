@@ -4,6 +4,22 @@ networks:
     driver: bridge
 
 services:
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: ec-demo-nginx
+    restart: unless-stopped
+    volumes:
+      - ${BASEPATH}/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ${BASEPATH}/nginx/conf/conf.d:/etc/nginx/conf.d
+      - ${BASEPATH}/nginx/html:/usr/share/nginx/html
+      - ${BASEPATH}/nginx/logs:/var/log/nginx
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - jason-lab-net
+
   # MySQL for ec-demo
   ec-demo-mysql:
     image: mysql:8.0.29
@@ -211,6 +227,9 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-admin123}
       - MONGO_INITDB_DATABASE=ec_demo
+    command: >
+      mongod --quiet
+      --setParameter logComponentVerbosity={network:{verbosity:-1},command:{verbosity:-1}}
     volumes:
       - ./sql/mongodb-init:/docker-entrypoint-initdb.d:ro
       - ${BASEPATH}/mongodb/data:/data/db

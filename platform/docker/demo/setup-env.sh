@@ -27,6 +27,8 @@ mkdir -p "${BASEPATH}/kafka/data"
 mkdir -p "${BASEPATH}/elasticsearch/data"
 mkdir -p "${BASEPATH}/mongodb/data"
 mkdir -p "${BASEPATH}/minio/data"
+mkdir -p "${BASEPATH}/nginx/conf/conf.d/sub"
+mkdir -p "${BASEPATH}/nginx/html"
 
 # Copy config files if they don't exist
 copy_if_not_exists() {
@@ -48,6 +50,16 @@ copy_if_not_exists "${CONF_SRC}/seata/conf/application.yml" "${BASEPATH}/seata/c
 
 # Redis config
 copy_if_not_exists "${CONF_SRC}/redis/conf/redis.conf" "${BASEPATH}/redis/conf/redis.conf"
+
+# Nginx config
+NGINX_SRC="${SCRIPT_DIR}/nginx"
+copy_if_not_exists "${NGINX_SRC}/conf/nginx.conf" "${BASEPATH}/nginx/conf/nginx.conf"
+copy_if_not_exists "${NGINX_SRC}/conf/conf.d/default.conf" "${BASEPATH}/nginx/conf/conf.d/default.conf"
+copy_if_not_exists "${NGINX_SRC}/conf/conf.d/sub/ec-demo.conf" "${BASEPATH}/nginx/conf/conf.d/sub/ec-demo.conf"
+
+# Nginx html
+copy_if_not_exists "${NGINX_SRC}/html/index.html" "${BASEPATH}/nginx/html/index.html"
+copy_if_not_exists "${NGINX_SRC}/html/50x.html" "${BASEPATH}/nginx/html/50x.html"
 
 echo ""
 echo "Setup complete!"
