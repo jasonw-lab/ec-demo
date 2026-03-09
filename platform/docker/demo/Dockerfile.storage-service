@@ -13,7 +13,7 @@ COPY apps/bff/pom.xml ./apps/bff/
 RUN mvn dependency:go-offline -pl apps/services/storage-service -B || true
 
 COPY apps/services/storage-service ./apps/services/storage-service
-RUN mvn clean package -pl apps/services/storage-service -DskipTests -B
+RUN mvn clean package -pl apps/services/storage-service -Dmaven.test.skip=true -B
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

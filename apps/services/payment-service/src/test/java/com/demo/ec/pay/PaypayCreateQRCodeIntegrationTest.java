@@ -1,5 +1,7 @@
 package com.demo.ec.pay;
 
+import com.demo.ec.payment.application.PayProperties;
+import com.demo.ec.payment.application.PaypayPaymentServiceImpl;
 import jp.ne.paypay.model.QRCodeDetails;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;

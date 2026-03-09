@@ -1,15 +1,13 @@
-version: '3.8'
-
 networks:
-  youlai-boot:
+  jason-lab-net:
     external: true
-    name: docker_youlai-boot
+    name: jason-lab-net
 
 services:
   # Account Service
   ec-demo-account-service:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.account-service
     container_name: ec-demo-account-service
     restart: unless-stopped
@@ -18,84 +16,78 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_account?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata_account?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
-      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=account-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
     volumes:
-      - /mydata/ec-demo/app/account-service/logs:/var/logs
+      - ${BASEPATH}/app/account-service/logs:/var/logs
       - /etc/localtime:/etc/localtime
     networks:
-      - youlai-boot
-    external_links:
-      - ec-demo-mysql-8:ec-demo-mysql
-      - ec-demo-seata-server-2.0:ec-demo-seata-server
+      - jason-lab-net
 
   # Storage Service
   ec-demo-storage-service:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.storage-service
     container_name: ec-demo-storage-service
     restart: unless-stopped
     ports:
-      - "18082:8082"
+      - "18082:8083"
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
       - REDIS_HOST=ec-demo-redis
-      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=storage-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
     volumes:
-      - /mydata/ec-demo/app/storage-service/logs:/var/logs
+      - ${BASEPATH}/app/storage-service/logs:/var/logs
       - /etc/localtime:/etc/localtime
     networks:
-      - youlai-boot
-    external_links:
-      - ec-demo-mysql-8:ec-demo-mysql
-      - ec-demo-seata-server-2.0:ec-demo-seata-server
-      - ec-demo-redis:ec-demo-redis
+      - jason-lab-net
 
   # Order Service
   ec-demo-order-service:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.order-service
     container_name: ec-demo-order-service
     restart: unless-stopped
     ports:
-      - "18081:8081"
+      - "18081:8082"
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
-      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
-      - SAGA_DATASOURCE_URL=jdbc:mysql://ec-demo-mysql-8:3306/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SAGA_DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - SAGA_DATASOURCE_USERNAME=root
       - SAGA_DATASOURCE_PASSWORD=${SAGA_DATASOURCE_PASSWORD}
-      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server-2.0:8091
+      - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=order-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
-      - PAYMENT_SERVICE_BASE_URL=http://ec-demo-payment-service:8090
-      - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8082
+      - PAYMENT_SERVICE_BASE_URL=http://ec-demo-payment-service:8084
+      - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
+      - KAFKA_BOOTSTRAP_SERVERS=ec-demo-kafka:9092
+      - MONGODB_URL=mongodb://admin:admin123@ec-demo-mongodb:27017/ec_demo?authSource=admin
+      - LOGGING_LEVEL_ORG_APACHE_KAFKA=WARN
+      - LOGGING_LEVEL_ORG_MONGODB_DRIVER=WARN
     volumes:
-      - /mydata/ec-demo/app/order-service/logs:/var/logs
+      - ${BASEPATH}/app/order-service/logs:/var/logs
       - /etc/localtime:/etc/localtime
     networks:
-      - youlai-boot
-    external_links:
-      - ec-demo-mysql-8:ec-demo-mysql
-      - ec-demo-seata-server-2.0:ec-demo-seata-server
+      - jason-lab-net
     depends_on:
       - ec-demo-storage-service
       - ec-demo-payment-service
@@ -103,52 +95,81 @@ services:
   # Payment Service
   ec-demo-payment-service:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.payment-service
     container_name: ec-demo-payment-service
     restart: unless-stopped
     ports:
       - "18090:8090"
     env_file:
-      - /mydata/ec-demo/env/ec-demo-payment-service.env
+      - ${BASEPATH}/env/ec-demo-payment-service.env
     volumes:
-      - /mydata/ec-demo/app/payment-service/logs:/var/logs
+      - ${BASEPATH}/app/payment-service/logs:/var/logs
       - /etc/localtime:/etc/localtime
     networks:
-      - youlai-boot
+      - jason-lab-net
 
   # BFF
   ec-demo-bff:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.bff
     container_name: ec-demo-bff
     restart: unless-stopped
     ports:
       - "18080:8080"
     env_file:
-      - /mydata/ec-demo/env/ec-demo-bff.env
+      - ${BASEPATH}/env/ec-demo-bff.env
     environment:
       - TZ=Asia/Tokyo
-      - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8081
+      - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8082
+      - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
       - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
+      - LOGGING_LEVEL_ORG_APACHE_KAFKA=WARN
     volumes:
-      - /mydata/ec-demo/app/bff/logs:/var/logs
+      - ${BASEPATH}/app/bff/logs:/var/logs
       - /etc/localtime:/etc/localtime
     networks:
-      - youlai-boot
+      - jason-lab-net
     depends_on:
       - ec-demo-order-service
 
-  # Frontend (nginx static files) - デバッグ用のみ
-  # 本番は既存nginx (youlai-nginx) から直接 /mydata/nginx/html/ec-demo/ を配信
-  ec-demo-front:
-    image: nginx:stable-alpine
-    container_name: ec-demo-front
+  # # Frontend (nginx static files) - デバッグ用のみ
+  # # 本番は既存nginx (youlai-nginx) から直接配信
+  # ec-demo-front:
+  #   image: nginx:stable-alpine
+  #   container_name: ec-demo-front
+  #   restart: unless-stopped
+  #   ports:
+  #     - "18000:80"
+  #   volumes:
+  #     - ${BASEPATH}/front/dist:/usr/share/nginx/html/ec-demo:ro
+  #   networks:
+  #     - jason-lab-net
+
+  # =========================
+  # es-service (Elasticsearch API)
+  # =========================
+  ec-demo-es-service:
+    build:
+      context: ../../..
+      dockerfile: platform/docker/demo/Dockerfile.es-service
+    platform: ${PLATFORM:-linux/amd64}
+    container_name: ec-demo-es-service
+    profiles: ["elastic"]
     restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_ENDPOINT=http://ec-demo-elasticsearch:9200
+      - ES_INDEX_NAME=${ES_INDEX_NAME:-products_v1}
+      - ES_INDEX_ALIAS=${ES_INDEX_ALIAS:-products}
+      - MINIO_ENDPOINT=http://ec-demo-minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin123}
+      - MINIO_BUCKET=${MINIO_BUCKET:-ec-demo}
+      - MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL:-http://localhost:9000}
     ports:
-      - "18000:80"
+      - "8086:8086"
     volumes:
-      - /mydata/ec-demo/front/dist:/usr/share/nginx/html/ec-demo:ro
+      - ${IMPORT_DIR:-/tmp/ec-demo-import}:/data/import:ro
     networks:
-      - youlai-boot
+      - jason-lab-net

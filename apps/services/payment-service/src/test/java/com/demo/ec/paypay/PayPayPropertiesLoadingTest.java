@@ -1,6 +1,6 @@
 package com.demo.ec.paypay;
 
-import com.demo.ec.pay.PayProperties;
+import com.demo.ec.payment.application.PayProperties;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
