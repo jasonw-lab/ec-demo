@@ -125,6 +125,7 @@ services:
       - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8082
       - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
       - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
+      - ES_SERVICE_BASE_URL=http://ec-demo-es-service:8086
       - LOGGING_LEVEL_ORG_APACHE_KAFKA=WARN
     volumes:
       - ${BASEPATH}/app/bff/logs:/var/logs
