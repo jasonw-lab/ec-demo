@@ -77,8 +77,8 @@ services:
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=order-service-saga
       - SEATA_TX_SERVICE_GROUP=saga_tx_group
-      - PAYMENT_SERVICE_BASE_URL=http://ec-demo-payment-service:8090
-      - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8082
+      - PAYMENT_SERVICE_BASE_URL=http://ec-demo-payment-service:8084
+      - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
       - KAFKA_BOOTSTRAP_SERVERS=ec-demo-kafka:9092
       - MONGODB_URL=mongodb://admin:admin123@ec-demo-mongodb:27017/ec_demo?authSource=admin
       - LOGGING_LEVEL_ORG_APACHE_KAFKA=WARN
