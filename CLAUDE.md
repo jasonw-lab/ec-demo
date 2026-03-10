@@ -39,13 +39,33 @@ pnpm build      # Production build
 
 ### Infrastructure (Docker)
 ```bash
-# Start local middleware (MySQL, Redis, Seata)
-cd platform/docker/local
-docker compose up -d
+# Setup environment (copies config files to BASEPATH if not exists)
+cd platform/docker/demo
+export BASEPATH=/Users/wangjw/Dev/_Env/_demo/seata-mode
+./setup-env.sh
 
-# Add optional Kafka + Elasticsearch
-docker compose --profile kafka --profile elastic up -d
+# Start middleware
+docker compose -f docker-compose-demo-env.yml up -d
+
+# Add optional profiles
+docker compose -f docker-compose-demo-env.yml --profile kafka --profile elastic --profile mongo up -d
 ```
+
+#### Docker Config Management Rules
+- All middleware config files must be placed under `BASEPATH` (not in the repository)
+- Source configs are stored in `platform/docker/demo/conf/` as templates
+- Run `setup-env.sh` to copy configs to BASEPATH if they don't exist
+- BASEPATH structure:
+  ```
+  ${BASEPATH}/
+    mysql/conf/my.cnf
+    seata/conf/application.yml
+    redis/conf/redis.conf
+    kafka/data/
+    elasticsearch/data/
+    mongodb/data/
+    minio/data/
+  ```
 
 ### Test Scripts
 ```bash
@@ -138,3 +158,64 @@ Kafka Streams detects order/payment inconsistencies:
 - Architecture details: `docs/architecture/README_ARCHITECTURE.md`
 - Local setup: `docs/runbook/README_LOCAL_SETUP.md`
 - Saga example: `apps/services/order-service/src/main/resources/statelang/order_create_saga.json`
+
+## Docker Service Port Rules
+
+### Internal vs External Ports
+| Service | Internal Port | External Port |
+|---------|--------------|---------------|
+| BFF | 8080 | 18080 |
+| order-service | 8082 | 18081 |
+| storage-service | 8083 | 18082 |
+| account-service | 8083 | 18083 |
+| payment-service | 8084 | 18090 |
+| es-service | 8086 | 8086 |
+
+### Service URL Environment Variables
+Docker コンテナ間通信では**コンテナ名 + 内部ポート**を使用:
+```yaml
+environment:
+  - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8082
+  - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
+  - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
+  - PAYMENT_SERVICE_BASE_URL=http://ec-demo-payment-service:8084
+  - ES_SERVICE_BASE_URL=http://ec-demo-es-service:8086
+```
+
+### Common Port Mistakes
+- ❌ `localhost` をコンテナ間通信に使用（→ コンテナ名を使用）
+- ❌ 外部ポートをコンテナ間通信に使用（→ 内部ポートを使用）
+- ❌ application.yml のポートと docker-compose マッピングの不一致
+
+## Demo Environment Initialization
+
+### Full Setup Commands
+```bash
+cd platform/docker/demo
+export BASEPATH=/Users/wangjw/Dev/_Env/_demo/seata-mode
+
+# 1. Setup config files
+./setup-env.sh
+
+# 2. Start middleware (all profiles)
+docker compose -f docker-compose-demo-env.yml \
+  --profile kafka --profile elastic --profile mongo --profile minio up -d
+
+# 3. Initialize ES index & import products
+cd elasticsearch
+./init-es-products-index.sh
+./init-upload-product-minio.sh
+cd ..
+
+# 4. Start applications
+docker compose -f docker-compose-demo-app.yml --profile elastic up -d
+```
+
+### Verify
+```bash
+# ES search
+curl "http://localhost/ec-api/api/products/search?q=iphone"
+
+# MinIO image
+curl -I "http://localhost:9000/ec-demo/product/images/1001.jpg"
+```
