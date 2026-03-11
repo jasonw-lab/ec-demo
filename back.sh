@@ -14,8 +14,10 @@ if [[ $# -eq 0 ]]; then
   exit 0
 fi
 
-echo "Updating repository..."
-git pull
+# git pull is handled by deploy.yml when called from GitHub Actions
+# Uncomment below for standalone execution
+# echo "Updating repository..."
+# git pull
 
 declare -a services=()
 
@@ -39,6 +41,12 @@ map_argument_to_service() {
       ;;
     storage-service)
       add_service "ec-demo-storage-service"
+      ;;
+    payment-service)
+      add_service "ec-demo-payment-service"
+      ;;
+    es-service)
+      add_service "ec-demo-es-service"
       ;;
     bff)
       add_service "ec-demo-bff"

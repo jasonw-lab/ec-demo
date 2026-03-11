@@ -4,13 +4,17 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'front/**'
+      - 'apps/web/**'
       - 'front.sh'
-      - 'account-service/**'
-      - 'order-service/**'
-      - 'storage-service/**'
-      - 'bff/**'
+      - 'apps/services/account-service/**'
+      - 'apps/services/order-service/**'
+      - 'apps/services/storage-service/**'
+      - 'apps/services/payment-service/**'
+      - 'apps/services/es-service/**'
+      - 'apps/bff/**'
       - 'back.sh'
+      - 'platform/docker/demo/Dockerfile.*'
+      - 'platform/docker/demo/docker-compose-demo-app.yml'
       - '.github/workflows/deploy.yml'
 
 jobs:
@@ -25,7 +29,7 @@ jobs:
       - name: Check for frontend changes
         id: check_frontend
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -Eq "^(front/|front\.sh$)"; then
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -Eq "^(apps/web/|front\.sh$)"; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
@@ -48,26 +52,36 @@ jobs:
             SERVICES+=("$svc")
           }
 
-          if grep -Eq '^account-service/|^_docker/demo/Dockerfile\.account-service$' <<< "$CHANGED_FILES"; then
+          if grep -Eq '^apps/services/account-service/|^platform/docker/demo/Dockerfile\.account-service$' <<< "$CHANGED_FILES"; then
             add_service "account-service"
           fi
 
-          if grep -Eq '^order-service/|^_docker/demo/Dockerfile\.order-service$' <<< "$CHANGED_FILES"; then
+          if grep -Eq '^apps/services/order-service/|^platform/docker/demo/Dockerfile\.order-service$' <<< "$CHANGED_FILES"; then
             add_service "order-service"
           fi
 
-          if grep -Eq '^storage-service/|^_docker/demo/Dockerfile\.storage-service$' <<< "$CHANGED_FILES"; then
+          if grep -Eq '^apps/services/storage-service/|^platform/docker/demo/Dockerfile\.storage-service$' <<< "$CHANGED_FILES"; then
             add_service "storage-service"
           fi
 
-          if grep -Eq '^bff/|^_docker/demo/Dockerfile\.bff$' <<< "$CHANGED_FILES"; then
+          if grep -Eq '^apps/services/payment-service/|^platform/docker/demo/Dockerfile\.payment-service$' <<< "$CHANGED_FILES"; then
+            add_service "payment-service"
+          fi
+
+          if grep -Eq '^apps/services/es-service/|^platform/docker/demo/Dockerfile\.es-service$' <<< "$CHANGED_FILES"; then
+            add_service "es-service"
+          fi
+
+          if grep -Eq '^apps/bff/|^platform/docker/demo/Dockerfile\.bff$' <<< "$CHANGED_FILES"; then
             add_service "bff"
           fi
 
-          if grep -q '^_docker/demo/docker-compose-demo-app\.yml$' <<< "$CHANGED_FILES"; then
+          if grep -q '^platform/docker/demo/docker-compose-demo-app\.yml$' <<< "$CHANGED_FILES"; then
             add_service "account-service"
             add_service "order-service"
             add_service "storage-service"
+            add_service "payment-service"
+            add_service "es-service"
             add_service "bff"
           fi
 
