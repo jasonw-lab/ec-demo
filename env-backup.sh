@@ -21,6 +21,7 @@ ENV_FILES=(
     "apps/web/.env"
     "apps/web/.env.production"
     "apps/web/.env.development"
+    "apps/bff/src/main/resources/serviceAccountKey.json"
 )
 
 backup() {
