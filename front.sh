@@ -3,11 +3,16 @@
 # Exit on error
 set -e
 
+# BASEPATH設定（デフォルト: /mydata）
+BASEPATH="${BASEPATH:-/mydata}"
+FRONTEND_DIR="${BASEPATH}/nginx/html/ec-demo"
+
 #source ~/.bashrc
 export VOLTA_HOME="$HOME/.volta"
 export PATH="$VOLTA_HOME/bin:$PATH"
 echo "node version: $(node -v)"
 echo "npm version: $(npm -v)"
+echo "BASEPATH: $BASEPATH"
 
 echo "Starting build process for frontend..."
 
@@ -28,11 +33,11 @@ pnpm run build -- --mode production
 
 # Create target directory if it doesn't exist
 echo "Creating target directory if it doesn't exist..."
-rm -rf /mydata/nginx/html/ec-demo
-mkdir -p /mydata/nginx/html/ec-demo
+rm -rf "$FRONTEND_DIR"
+mkdir -p "$FRONTEND_DIR"
 
 # Copy the built assets to the target directory
-echo "Copying built assets to /mydata/nginx/html/ec-demo..."
-cp -r dist/* /mydata/nginx/html/ec-demo/
+echo "Copying built assets to $FRONTEND_DIR..."
+cp -r dist/* "$FRONTEND_DIR/"
 
 echo "Build and deployment completed successfully!"
