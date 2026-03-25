@@ -169,14 +169,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import {
   GoogleAuthProvider,
   OAuthProvider,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getImageUrl } from '../store'
@@ -199,6 +200,26 @@ const loading = ref(false)
 const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
+
+// Handle redirect result after Google login redirect returns
+onMounted(async () => {
+  try {
+    const result = await getRedirectResult(auth)
+    if (result) {
+      loading.value = true
+      const idToken = await result.user.getIdToken()
+      await sendTokenToBackend(idToken)
+      await router.push('/')
+    }
+  } catch (e: any) {
+    console.error('Redirect result error:', e)
+    if (e?.code === 'auth/unauthorized-domain') {
+      window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
+    }
+  } finally {
+    loading.value = false
+  }
+})
 
 const getApiBase = () => {
   // Highest priority: user-specified base URL
@@ -292,46 +313,16 @@ async function handleGoogleLogin() {
   loading.value = true
   try {
     const provider = new GoogleAuthProvider()
-    // Suppress console warnings for Cross-Origin-Opener-Policy (these are harmless)
-    const originalWarn = console.warn
-    console.warn = (...args: any[]) => {
-      const message = typeof args[0] === 'string' ? args[0] : String(args[0] || '')
-      if (message.includes('Cross-Origin-Opener-Policy')) {
-        return // Suppress this specific warning
-      }
-      originalWarn.apply(console, args)
-    }
-    
-    try {
-      const cred = await signInWithPopup(auth, provider)
-      const idToken = await cred.user.getIdToken()
-      await sendTokenToBackend(idToken)
-      await router.push('/')
-    } finally {
-      console.warn = originalWarn
-    }
+    // Use redirect instead of popup to avoid Cross-Origin-Opener-Policy issues
+    await signInWithRedirect(auth, provider)
+    // Page will redirect to Google, then back. Result handled in onMounted.
   } catch (e: any) {
-    // Ignore Cross-Origin-Opener-Policy warnings as they don't affect functionality
-    if (e?.message?.includes?.('Cross-Origin-Opener-Policy')) {
-      console.warn('Cross-Origin-Opener-Policy warning (can be ignored):', e.message)
-      return
-    }
-    
     console.error('Google login error:', e)
     
     let errorMessage = 'Googleでのログインに失敗しました。'
     
     if (e?.code) {
       switch (e.code) {
-        case 'auth/popup-blocked':
-          errorMessage = 'ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。'
-          break
-        case 'auth/popup-closed-by-user':
-          errorMessage = 'ログインウィンドウが閉じられました。もう一度お試しください。'
-          break
-        case 'auth/cancelled-popup-request':
-          errorMessage = 'ログインがキャンセルされました。'
-          break
         case 'auth/unauthorized-domain':
           errorMessage = 'このドメインは認証されていません。Firebase Consoleで設定を確認してください。'
           break
