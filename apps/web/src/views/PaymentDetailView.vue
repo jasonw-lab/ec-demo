@@ -513,6 +513,20 @@ async function fetchQr(): Promise<void> {
       return
     }
 
+    if (res.status === 409) {
+      const data = await res.json().catch(() => ({}))
+      const status = String((data as Record<string, unknown>).status || '').toUpperCase()
+      console.log('⚠️ Order already in terminal state, status:', status)
+      if (status === 'PAID') {
+        finalizeSuccess()
+      } else if (status === 'PAYMENT_FAILED' || status === 'FAILED') {
+        const msg = String((data as Record<string, unknown>).message || '支払いに失敗しました。')
+        paymentError.value = { code: 'PAYMENT_FAILED', message: msg }
+        hasFinalized.value = true
+      }
+      return
+    }
+
     if (!res.ok) {
       console.log('❌ Failed to fetch QR code, status:', res.status)
       return
