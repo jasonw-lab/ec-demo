@@ -178,11 +178,13 @@ import {
   signInWithEmailAndPassword,
   signInWithRedirect,
   getRedirectResult,
+  onAuthStateChanged,
 } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getImageUrl } from '../store'
 
 const router = useRouter()
+const GOOGLE_LOGIN_REDIRECT_KEY = 'ec-demo:google-login-redirect'
 
 function goBack() {
   router.back()
@@ -196,28 +198,54 @@ const emailOrPhone = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
+let isFinalizingGoogleLogin = false
 
 const togglePassword = () => {
   showPassword.value = !showPassword.value
+}
+
+async function finalizeGoogleLogin(user: { getIdToken: () => Promise<string> }) {
+  if (isFinalizingGoogleLogin) return
+  isFinalizingGoogleLogin = true
+
+  try {
+    loading.value = true
+    const idToken = await user.getIdToken()
+    await sendTokenToBackend(idToken)
+    sessionStorage.removeItem(GOOGLE_LOGIN_REDIRECT_KEY)
+    await router.push('/')
+  } catch (e: any) {
+    console.error('Google login finalize error:', e)
+    if (e?.code === 'auth/unauthorized-domain') {
+      window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
+    }
+  } finally {
+    loading.value = false
+    isFinalizingGoogleLogin = false
+  }
 }
 
 // Handle redirect result after Google login redirect returns
 onMounted(async () => {
   try {
     const result = await getRedirectResult(auth)
-    if (result) {
-      loading.value = true
-      const idToken = await result.user.getIdToken()
-      await sendTokenToBackend(idToken)
-      await router.push('/')
+    if (result?.user) {
+      await finalizeGoogleLogin(result.user)
+      return
+    }
+
+    if (sessionStorage.getItem(GOOGLE_LOGIN_REDIRECT_KEY) === '1') {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user) return
+        unsubscribe()
+        await finalizeGoogleLogin(user)
+      })
     }
   } catch (e: any) {
     console.error('Redirect result error:', e)
     if (e?.code === 'auth/unauthorized-domain') {
       window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
     }
-  } finally {
-    loading.value = false
   }
 })
 
@@ -313,10 +341,12 @@ async function handleGoogleLogin() {
   loading.value = true
   try {
     const provider = new GoogleAuthProvider()
+    sessionStorage.setItem(GOOGLE_LOGIN_REDIRECT_KEY, '1')
     // Use redirect instead of popup to avoid Cross-Origin-Opener-Policy issues
     await signInWithRedirect(auth, provider)
     // Page will redirect to Google, then back. Result handled in onMounted.
   } catch (e: any) {
+    sessionStorage.removeItem(GOOGLE_LOGIN_REDIRECT_KEY)
     console.error('Google login error:', e)
     
     let errorMessage = 'Googleでのログインに失敗しました。'
@@ -665,5 +695,4 @@ async function handleLineLogin() {
   cursor: pointer;
 }
 </style>
-
 
