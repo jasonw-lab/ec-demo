@@ -111,17 +111,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   GoogleAuthProvider,
   OAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  onAuthStateChanged,
 } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getImageUrl, apiBase } from '../store'
 
 const router = useRouter()
+const GOOGLE_REGISTRATION_REDIRECT_KEY = 'ec-demo:google-registration-redirect'
+let isFinalizingGoogleRegistration = false
 
 const getApiBase = () => {
   // Highest priority: user-specified base URL
@@ -203,63 +207,82 @@ function goToEmailRegistration() {
 
 const loading = ref(false)
 
+async function finalizeGoogleRegistration(user: {
+  email: string | null
+  displayName: string | null
+  getIdToken: () => Promise<string>
+}) {
+  if (isFinalizingGoogleRegistration) return
+  isFinalizingGoogleRegistration = true
+
+  try {
+    loading.value = true
+    const idToken = await user.getIdToken()
+
+    // バックエンドにログインしてセッションを作成
+    await sendTokenToBackend(idToken)
+    sessionStorage.removeItem(GOOGLE_REGISTRATION_REDIRECT_KEY)
+
+    // Googleログイン成功後、会員登録入力画面へ遷移
+    await router.push({
+      path: '/registration/form',
+      query: {
+        email: user.email || '',
+        name: user.displayName || '',
+        provider: 'google',
+      }
+    })
+  } catch (e: any) {
+    console.error('Google registration finalize error:', e)
+    if (e?.code === 'auth/unauthorized-domain') {
+      window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
+    }
+  } finally {
+    loading.value = false
+    isFinalizingGoogleRegistration = false
+  }
+}
+
+// Handle redirect result after Google registration redirect returns
+onMounted(async () => {
+  try {
+    const result = await getRedirectResult(auth)
+    if (result?.user) {
+      await finalizeGoogleRegistration(result.user)
+      return
+    }
+
+    if (sessionStorage.getItem(GOOGLE_REGISTRATION_REDIRECT_KEY) === '1') {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user) return
+        unsubscribe()
+        await finalizeGoogleRegistration(user)
+      })
+    }
+  } catch (e: any) {
+    console.error('Redirect result error:', e)
+    if (e?.code === 'auth/unauthorized-domain') {
+      window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
+    }
+  }
+})
+
 async function handleGoogleRegistration() {
   loading.value = true
   try {
     const provider = new GoogleAuthProvider()
-    // Suppress console warnings for Cross-Origin-Opener-Policy (these are harmless)
-    const originalWarn = console.warn
-    console.warn = (...args: any[]) => {
-      const message = typeof args[0] === 'string' ? args[0] : String(args[0] || '')
-      if (message.includes('Cross-Origin-Opener-Policy')) {
-        return // Suppress this specific warning
-      }
-      originalWarn.apply(console, args)
-    }
-    
-    try {
-      const cred = await signInWithPopup(auth, provider)
-      const user = cred.user
-      const idToken = await user.getIdToken()
-      
-      // バックエンドにログインしてセッションを作成
-      await sendTokenToBackend(idToken)
-      
-      // Googleログイン成功後、会員登録入力画面へ遷移
-      // ユーザー情報をクエリパラメータまたはstateで渡す
-      await router.push({
-        path: '/registration/form',
-        query: {
-          email: user.email || '',
-          name: user.displayName || '',
-          provider: 'google',
-        }
-      })
-    } finally {
-      console.warn = originalWarn
-    }
+    sessionStorage.setItem(GOOGLE_REGISTRATION_REDIRECT_KEY, '1')
+    // Use redirect instead of popup to avoid Cross-Origin-Opener-Policy issues
+    await signInWithRedirect(auth, provider)
+    // Page will redirect to Google, then back. Result handled in onMounted.
   } catch (e: any) {
-    // Ignore Cross-Origin-Opener-Policy warnings as they don't affect functionality
-    if (e?.message?.includes?.('Cross-Origin-Opener-Policy')) {
-      console.warn('Cross-Origin-Opener-Policy warning (can be ignored):', e.message)
-      return
-    }
-    
+    sessionStorage.removeItem(GOOGLE_REGISTRATION_REDIRECT_KEY)
     console.error('Google registration error:', e)
     
     let errorMessage = 'Googleでの登録に失敗しました。'
     
     if (e?.code) {
       switch (e.code) {
-        case 'auth/popup-blocked':
-          errorMessage = 'ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。'
-          break
-        case 'auth/popup-closed-by-user':
-          errorMessage = '登録ウィンドウが閉じられました。もう一度お試しください。'
-          break
-        case 'auth/cancelled-popup-request':
-          errorMessage = '登録がキャンセルされました。'
-          break
         case 'auth/unauthorized-domain':
           errorMessage = 'このドメインは認証されていません。Firebase Consoleで設定を確認してください。'
           break
@@ -536,4 +559,3 @@ async function handleFacebookRegistration() {
   cursor: pointer;
 }
 </style>
-

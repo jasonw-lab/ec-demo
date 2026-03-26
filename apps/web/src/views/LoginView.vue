@@ -169,19 +169,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import {
   GoogleAuthProvider,
   OAuthProvider,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  onAuthStateChanged,
 } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getImageUrl } from '../store'
 
 const router = useRouter()
+const GOOGLE_LOGIN_REDIRECT_KEY = 'ec-demo:google-login-redirect'
 
 function goBack() {
   router.back()
@@ -195,10 +198,56 @@ const emailOrPhone = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
+let isFinalizingGoogleLogin = false
 
 const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
+
+async function finalizeGoogleLogin(user: { getIdToken: () => Promise<string> }) {
+  if (isFinalizingGoogleLogin) return
+  isFinalizingGoogleLogin = true
+
+  try {
+    loading.value = true
+    const idToken = await user.getIdToken()
+    await sendTokenToBackend(idToken)
+    sessionStorage.removeItem(GOOGLE_LOGIN_REDIRECT_KEY)
+    await router.push('/')
+  } catch (e: any) {
+    console.error('Google login finalize error:', e)
+    if (e?.code === 'auth/unauthorized-domain') {
+      window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
+    }
+  } finally {
+    loading.value = false
+    isFinalizingGoogleLogin = false
+  }
+}
+
+// Handle redirect result after Google login redirect returns
+onMounted(async () => {
+  try {
+    const result = await getRedirectResult(auth)
+    if (result?.user) {
+      await finalizeGoogleLogin(result.user)
+      return
+    }
+
+    if (sessionStorage.getItem(GOOGLE_LOGIN_REDIRECT_KEY) === '1') {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user) return
+        unsubscribe()
+        await finalizeGoogleLogin(user)
+      })
+    }
+  } catch (e: any) {
+    console.error('Redirect result error:', e)
+    if (e?.code === 'auth/unauthorized-domain') {
+      window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
+    }
+  }
+})
 
 const getApiBase = () => {
   // Highest priority: user-specified base URL
@@ -292,46 +341,18 @@ async function handleGoogleLogin() {
   loading.value = true
   try {
     const provider = new GoogleAuthProvider()
-    // Suppress console warnings for Cross-Origin-Opener-Policy (these are harmless)
-    const originalWarn = console.warn
-    console.warn = (...args: any[]) => {
-      const message = typeof args[0] === 'string' ? args[0] : String(args[0] || '')
-      if (message.includes('Cross-Origin-Opener-Policy')) {
-        return // Suppress this specific warning
-      }
-      originalWarn.apply(console, args)
-    }
-    
-    try {
-      const cred = await signInWithPopup(auth, provider)
-      const idToken = await cred.user.getIdToken()
-      await sendTokenToBackend(idToken)
-      await router.push('/')
-    } finally {
-      console.warn = originalWarn
-    }
+    sessionStorage.setItem(GOOGLE_LOGIN_REDIRECT_KEY, '1')
+    // Use redirect instead of popup to avoid Cross-Origin-Opener-Policy issues
+    await signInWithRedirect(auth, provider)
+    // Page will redirect to Google, then back. Result handled in onMounted.
   } catch (e: any) {
-    // Ignore Cross-Origin-Opener-Policy warnings as they don't affect functionality
-    if (e?.message?.includes?.('Cross-Origin-Opener-Policy')) {
-      console.warn('Cross-Origin-Opener-Policy warning (can be ignored):', e.message)
-      return
-    }
-    
+    sessionStorage.removeItem(GOOGLE_LOGIN_REDIRECT_KEY)
     console.error('Google login error:', e)
     
     let errorMessage = 'Googleでのログインに失敗しました。'
     
     if (e?.code) {
       switch (e.code) {
-        case 'auth/popup-blocked':
-          errorMessage = 'ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。'
-          break
-        case 'auth/popup-closed-by-user':
-          errorMessage = 'ログインウィンドウが閉じられました。もう一度お試しください。'
-          break
-        case 'auth/cancelled-popup-request':
-          errorMessage = 'ログインがキャンセルされました。'
-          break
         case 'auth/unauthorized-domain':
           errorMessage = 'このドメインは認証されていません。Firebase Consoleで設定を確認してください。'
           break
@@ -674,5 +695,4 @@ async function handleLineLogin() {
   cursor: pointer;
 }
 </style>
-
 
