@@ -36,6 +36,17 @@ if [ -f "${ENV_FILE}" ]; then
     set +a
 fi
 
+# PLATFORM を自動検出
+if [ -z "${PLATFORM}" ]; then
+    case "$(uname -m)" in
+        arm64|aarch64) export PLATFORM="linux/arm64" ;;
+        *)             export PLATFORM="linux/amd64"  ;;
+    esac
+    echo -e "${GREEN}✓ PLATFORM を自動検出: ${PLATFORM}${NC}"
+else
+    echo -e "${GREEN}✓ PLATFORM は既に設定済み: ${PLATFORM}${NC}"
+fi
+
 # HOST_IP を自動検出 (外部ネットワークへのルートから取得)
 if [ -z "${HOST_IP}" ]; then
     # Linux/macOS で動作するIPアドレス検出
@@ -67,6 +78,7 @@ echo ""
 echo -e "${YELLOW}使用する環境変数:${NC}"
 echo "  HOST_IP: ${HOST_IP}"
 echo "  BASEPATH: ${BASEPATH}"
+echo "  PLATFORM: ${PLATFORM}"
 echo ""
 
 # docker-compose起動

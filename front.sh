@@ -4,7 +4,7 @@
 set -e
 
 # BASEPATH設定（デフォルト: /mydata）
-BASEPATH="${BASEPATH:-/mydata}"
+BASEPATH="${BASEPATH:-/mydata2}"
 FRONTEND_DIR="${BASEPATH}/nginx/html/ec-demo"
 
 #source ~/.bashrc

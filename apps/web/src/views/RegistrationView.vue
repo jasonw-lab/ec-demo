@@ -111,20 +111,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   GoogleAuthProvider,
   OAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
-  onAuthStateChanged,
+  signInWithPopup,
 } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getImageUrl, apiBase } from '../store'
 
 const router = useRouter()
-const GOOGLE_REGISTRATION_REDIRECT_KEY = 'ec-demo:google-registration-redirect'
 let isFinalizingGoogleRegistration = false
 
 const getApiBase = () => {
@@ -221,8 +218,6 @@ async function finalizeGoogleRegistration(user: {
 
     // バックエンドにログインしてセッションを作成
     await sendTokenToBackend(idToken)
-    sessionStorage.removeItem(GOOGLE_REGISTRATION_REDIRECT_KEY)
-
     // Googleログイン成功後、会員登録入力画面へ遷移
     await router.push({
       path: '/registration/form',
@@ -243,40 +238,14 @@ async function finalizeGoogleRegistration(user: {
   }
 }
 
-// Handle redirect result after Google registration redirect returns
-onMounted(async () => {
-  try {
-    const result = await getRedirectResult(auth)
-    if (result?.user) {
-      await finalizeGoogleRegistration(result.user)
-      return
-    }
-
-    if (sessionStorage.getItem(GOOGLE_REGISTRATION_REDIRECT_KEY) === '1') {
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (!user) return
-        unsubscribe()
-        await finalizeGoogleRegistration(user)
-      })
-    }
-  } catch (e: any) {
-    console.error('Redirect result error:', e)
-    if (e?.code === 'auth/unauthorized-domain') {
-      window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
-    }
-  }
-})
 
 async function handleGoogleRegistration() {
   loading.value = true
   try {
     const provider = new GoogleAuthProvider()
-    sessionStorage.setItem(GOOGLE_REGISTRATION_REDIRECT_KEY, '1')
-    // Use redirect instead of popup to avoid Cross-Origin-Opener-Policy issues
-    await signInWithRedirect(auth, provider)
-    // Page will redirect to Google, then back. Result handled in onMounted.
+    const cred = await signInWithPopup(auth, provider)
+    await finalizeGoogleRegistration(cred.user)
   } catch (e: any) {
-    sessionStorage.removeItem(GOOGLE_REGISTRATION_REDIRECT_KEY)
     console.error('Google registration error:', e)
     
     let errorMessage = 'Googleでの登録に失敗しました。'

@@ -100,7 +100,7 @@ services:
     container_name: ec-demo-payment-service
     restart: unless-stopped
     ports:
-      - "18090:8090"
+      - "18090:8084"
     env_file:
       - ${BASEPATH}/env/ec-demo-payment-service.env
     volumes:
