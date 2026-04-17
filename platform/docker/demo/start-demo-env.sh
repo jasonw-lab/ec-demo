@@ -62,11 +62,24 @@ fi
 BASEPATH="${BASEPATH:-/Users/wangjw/Dev/_Env/_demo/seata-mode}"
 export BASEPATH
 
+# DOCKER_PLATFORM をアーキテクチャから自動検出
+if [ -z "${DOCKER_PLATFORM}" ]; then
+    ARCH="$(uname -m)"
+    case "${ARCH}" in
+        arm64|aarch64) export DOCKER_PLATFORM="linux/arm64" ;;
+        *)             export DOCKER_PLATFORM="linux/amd64" ;;
+    esac
+    echo -e "${GREEN}✓ DOCKER_PLATFORM を自動検出: ${DOCKER_PLATFORM} (uname -m: ${ARCH})${NC}"
+else
+    echo -e "${GREEN}✓ DOCKER_PLATFORM は既に設定済み: ${DOCKER_PLATFORM}${NC}"
+fi
+
 # 環境変数の表示
 echo ""
 echo -e "${YELLOW}使用する環境変数:${NC}"
-echo "  HOST_IP: ${HOST_IP}"
-echo "  BASEPATH: ${BASEPATH}"
+echo "  HOST_IP:         ${HOST_IP}"
+echo "  BASEPATH:        ${BASEPATH}"
+echo "  DOCKER_PLATFORM: ${DOCKER_PLATFORM}"
 echo ""
 
 # docker-compose起動
@@ -76,8 +89,13 @@ echo "  Compose file: ${COMPOSE_FILE}"
 echo ""
 
 # プロファイルの指定（オプション）
+ALL_PROFILES="kafka elastic minio mongo"
 PROFILES=""
-if [ -n "$1" ]; then
+if [ "$1" = "all" ]; then
+    for p in ${ALL_PROFILES}; do
+        PROFILES="$PROFILES --profile $p"
+    done
+elif [ -n "$1" ]; then
     PROFILES="--profile $1"
     shift
     while [ -n "$1" ]; do
@@ -123,6 +141,7 @@ echo -e "${GREEN}使用例:${NC}"
 echo -e "  ./start-demo-env.sh                    # 基本サービスのみ起動"
 echo -e "  ./start-demo-env.sh kafka elastic      # Kafka と Elasticsearch も起動"
 echo -e "  ./start-demo-env.sh kafka elastic minio mongo  # 全サービス起動"
+echo -e "  ./start-demo-env.sh all                        # 全サービス起動 (ショートカット)"
 echo ""
 echo -e "${GREEN}✓ サービスが起動しました${NC}"
 echo ""
