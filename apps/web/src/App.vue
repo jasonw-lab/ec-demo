@@ -9,15 +9,17 @@
         </router-link>
         
         <!-- 検索バー（ロゴに寄せて配置） -->
-        <form @submit.prevent="doSearch" style="flex:1;max-width:600px;margin:0 0 0 16px;display:flex;">
+        <form data-tour="search-form" @submit.prevent="doSearch" style="flex:1;max-width:600px;margin:0 0 0 16px;display:flex;">
           <div style="position:relative;flex:1;display:flex;">
-            <input 
-              v-model="keyword" 
-              placeholder="なにをお探しですか?" 
-              style="flex:1;padding:12px 16px;border:1px solid #e5e7eb;border-radius:8px;outline:none;font-size:16px;" 
+            <input
+              data-tour="search-input"
+              v-model="keyword"
+              placeholder="なにをお探しですか?"
+              style="flex:1;padding:12px 16px;border:1px solid #e5e7eb;border-radius:8px;outline:none;font-size:16px;"
             />
-            <button 
-              type="submit" 
+            <button
+              data-tour="search-button"
+              type="submit"
               style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:8px;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -109,8 +111,16 @@
             </div>
           </template>
           
+          <!-- ツアー起動ボタン -->
+          <button
+            @click="handleTourClick"
+            :title="tourState.active ? 'ツアー実行中' : 'ガイドツアーを開始'"
+            style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;border:1.5px solid #e5e7eb;background:#fff;cursor:pointer;color:#6b7280;font-size:14px;font-weight:700;transition:border-color 0.2s,color 0.2s;"
+            :style="tourState.active ? 'border-color:#E60033;color:#E60033;' : ''"
+          >?</button>
+
           <!-- カート（常に表示） -->
-          <router-link to="/cart" style="display:flex;align-items:center;gap:6px;color:#111827;text-decoration:none;">
+          <router-link data-tour="cart-link" to="/cart" style="display:flex;align-items:center;gap:6px;color:#111827;text-decoration:none;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="9" cy="21" r="1"></circle>
               <circle cx="20" cy="21" r="1"></circle>
@@ -164,19 +174,22 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { useStore } from './store'
 import { useRouter, useRoute } from 'vue-router'
 import { apiBase, type Category, getImageUrl } from './store'
+import { useProductTour } from './composables/useProductTour'
 
 const router = useRouter()
 const route = useRoute()
 const store = useStore()
 const cartCount = computed(() => store.cart.reduce((acc, item) => acc + item.quantity, 0))
-const logoUrl = '/logo.svg'
 const keyword = ref<string>('')
 const categories = ref<Category[]>([])
 const showModal = ref<boolean>(false)
 const showProfileMenu = ref<boolean>(false)
 const isLoggedIn = ref<boolean>(false)
 const userName = ref<string>('')
-const notificationCount = ref<number>(23) // 仮の値、後でAPIから取得
+const notificationCount = ref<number>(23)
+
+const { state: tourState, startTour, resumeTour, restartTour, shouldAutoStart, setRouter } = useProductTour()
+setRouter(router)
 
 const isLoginPage = computed(() => {
   const path = route.path
@@ -283,11 +296,12 @@ async function handleLogout() {
   router.push('/')
 }
 
-// ルート変更時にログイン状態をチェック
-watch(() => route.path, () => {
+// ルート変更時にログイン状態チェック＋ツアー再開
+watch(() => route.path, async (newPath) => {
   if (!isLoginPage.value) {
     checkLoginStatus()
   }
+  await resumeTour(newPath)
 })
 
 onMounted(async () => {
@@ -297,11 +311,25 @@ onMounted(async () => {
   } catch (_) {
     categories.value = []
   }
-  
+
   if (!isLoginPage.value) {
     await checkLoginStatus()
   }
+
+  // URL パラメータ ?tour=true で明示的に起動
+  if (route.query.tour === 'true') {
+    await startTour(isLoggedIn.value)
+  } else if (shouldAutoStart()) {
+    await startTour(isLoggedIn.value)
+  } else {
+    // 中断中のツアーを再開
+    await resumeTour(route.path)
+  }
 })
+
+function handleTourClick() {
+  restartTour(isLoggedIn.value)
+}
 </script>
 
 <style>

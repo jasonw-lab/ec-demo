@@ -13,7 +13,7 @@
     
     <div v-else>
       <!-- カート商品一覧 -->
-      <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:24px;">
+      <div data-tour="cart-items" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:24px;">
         <div v-for="c in cart" :key="c.productId" style="display:flex;align-items:center;padding:16px;border-bottom:1px solid #f1f5f9;">
           <img :src="c.product.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f9fafb;margin-right:16px;" />
           <div style="flex:1;">
@@ -46,6 +46,7 @@
           <div style="font-size:24px;font-weight:700;color:#ff6b6b;">¥ {{ total.toLocaleString() }}</div>
         </div>
         <button
+          data-tour="checkout-button"
           style="width:100%;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:16px;cursor:pointer;font-size:16px;font-weight:600;"
           @click="handleCheckout"
         >

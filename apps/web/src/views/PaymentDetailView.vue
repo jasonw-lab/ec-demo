@@ -27,7 +27,7 @@
       </div>
       
       <!-- QRコード -->
-      <div style="text-align:center;margin-bottom:16px;">
+      <div data-tour="payment-qr" style="text-align:center;margin-bottom:16px;">
         <div v-if="qrImgUrl" style="display:inline-block;padding:16px;background:#f8fafc;border-radius:12px;border:2px solid #4ECDC4;">
           <img :src="qrImgUrl" alt="PayPay QRコード" style="width:200px;height:200px;" />
         </div>

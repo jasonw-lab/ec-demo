@@ -25,7 +25,7 @@
     </header>
 
     <main class="login-main">
-      <section class="login-form-section">
+      <section class="login-form-section" data-tour="login-form">
         <div class="form-group">
           <label class="label">電話番号（メールアドレスも可）</label>
           <input
@@ -33,6 +33,7 @@
             type="text"
             class="input"
             placeholder="09000012345"
+            data-tour="login-email"
           />
         </div>
 
@@ -68,6 +69,7 @@
           type="button"
           :disabled="loading"
           @click="handleEmailPasswordLogin"
+          data-tour="login-submit"
         >
           {{ loading ? 'ログイン中...' : 'ログイン' }}
         </button>
