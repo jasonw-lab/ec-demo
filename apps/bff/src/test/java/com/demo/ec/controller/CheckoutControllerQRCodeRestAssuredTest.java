@@ -1,7 +1,9 @@
 package com.demo.ec.controller;
 
-import com.demo.ec.client.OrderServiceClient;
-import com.demo.ec.client.dto.OrderSummary;
+import com.demo.ec.bff.EcBackendApplication;
+import com.demo.ec.bff.application.auth.AuthSessionFilter;
+import com.demo.ec.bff.gateway.client.OrderServiceClient;
+import com.demo.ec.bff.gateway.client.dto.OrderSummary;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +20,10 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.eq;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    classes = EcBackendApplication.class
+)
 class CheckoutControllerQRCodeRestAssuredTest {
 
     @LocalServerPort
@@ -26,6 +31,9 @@ class CheckoutControllerQRCodeRestAssuredTest {
 
     @MockBean
     private OrderServiceClient orderServiceClient;
+
+    @MockBean
+    private AuthSessionFilter authSessionFilter;
 
     private static final String TEST_ORDER_ID = "ra-order-1";
 
