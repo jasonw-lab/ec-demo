@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# Exit on error
-set -e
+set -euo pipefail
 
-# BASEPATH設定（デフォルト: /mydata）
-BASEPATH="${BASEPATH:-/mydata2}"
+source "$HOME/.bashrc"
+export BASEPATH="${BASEPATH:-/mydata2}"
 FRONTEND_DIR="${BASEPATH}/nginx/html/ec-demo"
 
-#source ~/.bashrc
 export VOLTA_HOME="$HOME/.volta"
 export PATH="$VOLTA_HOME/bin:$PATH"
 echo "node version: $(node -v)"
@@ -15,9 +13,6 @@ echo "npm version: $(npm -v)"
 echo "BASEPATH: $BASEPATH"
 
 echo "Starting build process for frontend..."
-
-
-
 # Navigate to the frontend directory
 # git pull
 cd apps/web
