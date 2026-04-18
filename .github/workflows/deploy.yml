@@ -119,9 +119,17 @@ jobs:
           script: |
             echo "Working directory: ${{ secrets.PROJECT_PATH }}"
             cd ${{ secrets.PROJECT_PATH }}
+
+            TARGET_BRANCH="${{ github.ref_name }}"
+            TARGET_SHA="${{ github.sha }}"
+
+            echo "Preparing repository for ${TARGET_BRANCH} @ ${TARGET_SHA}"
             BEFORE_SHA=$(git rev-parse HEAD)
-            git pull
+            git fetch --all --prune
+            git checkout "$TARGET_BRANCH"
+            git reset --hard "$TARGET_SHA"
             AFTER_SHA=$(git rev-parse HEAD)
+            echo "Repository updated: ${BEFORE_SHA} -> ${AFTER_SHA}"
 
             # Execute front.sh if there are frontend changes
             if [[ "${{ steps.check_frontend.outputs.changed }}" == "true" ]]; then
