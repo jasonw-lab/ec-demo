@@ -5,7 +5,7 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
 > English: `README.en.md` / 中文: `README.zh-CN.md`
 
 
-## リーダー視点の設計ポイント（要約）
+## 設計ポイント（要約）
 
 - **BFF + WebSocket**: UI最適化とリアルタイム通知をBFFに集約し、変更耐性とUXを両立
 - **Seata Saga**: サービス間の一貫性を「状態機械 + 補償」に落とし込み、運用可能な形で最終整合性を実装
@@ -41,15 +41,6 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
 | 決済成功/失敗の順不同到達 | `PAID` 後に失敗が来る等 | `PAID` 後の失敗は状態変更せず記録のみ |
 | Saga途中失敗（在庫/注文/決済の不整合） | 最終整合性が崩れる | 補償トランザクションで巻き戻し、kafka-alertで検知 |
 | Redisセッション障害 | 認証/認可の劣化 | `/api/**` は 503（安全側）に倒して復旧を促す |
-
-## デモの見せ場（3ステップ）
-
-1. **購入リクエスト**: `./test-saga.sh` で注文作成（`PENDING → WAITING_PAYMENT`）
-2. **決済イベント反映**: Webhook（優先）またはポーリング（フォールバック）で `PAID/FAILED` へ収束
-3. **観測**: 
-   - WebSocketで画面に即時反映
-   - （kafka-alert稼働時）Kafka Streamsで不整合検知 → `alerts.order_payment_inconsistency.v1` に `AlertRaised` 出力
-   - MySQL (ec_system.sys_pay_alert) でアラート履歴を確認
 
 ## サービス概要
 

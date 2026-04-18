@@ -7,6 +7,8 @@ set -euo pipefail
 export ITERM2_SQUELCH_MARK="${ITERM2_SQUELCH_MARK:-0}"
 
 # BASEPATH設定（デフォルト: /mydata）
+
+source "$HOME/.bashrc"
 export BASEPATH="${BASEPATH:-/mydata}"
 ENV_FILE="${BASEPATH}/nginx/apps-env/ec-demo/platform/docker/demo/.env"
 

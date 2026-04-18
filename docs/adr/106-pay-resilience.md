@@ -7,7 +7,8 @@ Proposed
 ## Context
 - 現在のec-demoはSeata Sagaで分散トランザクションの整合性を管理しているが、**サービス間のネットワーク遅延・タイムアウト・一時障害への耐性が不足**している。
 - order-serviceからpayment-serviceへの同期呼び出し、BFFから各サービスへのAPI呼び出しなど、複数のサービス間通信箇所がある。
-- 外部決済（PayPay API）は自システムの制御外であり、応答遅延やダウンが発生し得る。
+- 各サービスのHTTPクライアントはSpring標準の `RestTemplate`（`RestTemplateBuilder` 経由）で実装されており、Seata XIDや `X-Request-Id` の伝播Interceptorも設定済みである。
+- 外部決済（PayPay API）は自システムの制御外であり、応答遅延やダウンが発生し得る。なお、PayPay APIの呼び出しにはPayPay公式Java SDK（`jp.ne.paypay.ApiClient`）を利用しており、直接HTTPクライアントを操作しない設計になっている。
 - 一つのサービス障害が連鎖してシステム全体を停止させる「カスケード障害」を防ぐ設計が必要である。
 - Spring Boot 3.x + Java 21環境でResilience4jは公式にサポートされており、Micrometer連携も標準対応している。
 
@@ -200,7 +201,8 @@ Saga Orchestrator (Seata)
 - **冪等性の確保が必須**: リトライ対象のAPI（特に決済作成）は冪等キーの実装が前提となる。
 - **設定の調整が必要**: 閾値（失敗率、待機時間、リトライ回数）は実測に基づくチューニングが必要。
 - **テストの複雑化**: Circuit BreakerがOPEN状態のときのSaga補償フロー等、異常系のテストシナリオが増加する。
-- **依存関係追加**: 全サービスにResilience4j Starterの依存が追加される（ただしSpring Boot統合のため軽量）。
+- **依存関係追加**: 全サービスにResilience4j Starterの依存が追加される（全サービス共通だが、Spring Boot Starterのため設定変更主体で実装負荷は低い）。
+- **RestTemplateとの相性（好材料）**: 既存コードは `RestTemplateBuilder` 経由でBean構築済みであるため、Micrometer Tracer（ADR-105）が自動的にInterceptorを注入し、Trace IDの伝播もスムーズに行える。また、Seata XIDの伝播Interceptorと共存する形で Resilience4j のデコレーションを重ねられる。
 
 ## References
 
@@ -226,31 +228,83 @@ Saga Orchestrator (Seata)
 </dependency>
 ```
 
-### 実装例（order-serviceからpayment-serviceへの呼び出し）
+### 実装例1: order-service → payment-service（`RestTemplate`ベースのクライアント）
+
+現在の実装は `RestTemplate`（`RestTemplateBuilder` 経由）を使用しています。Resilience4jのアノテーションはメソッドに付与します。
 
 ```java
-@Service
-public class PaymentServiceClient {
+// order-service: PaymentClient.java に Circuit Breaker / Retry を追加する例
+@Component
+public class PaymentClient {
 
-    private final RestClient restClient;
+    private final RestTemplate restTemplate;
+    private final String paymentBaseUrl;
 
-    @CircuitBreaker(name = "paymentService", fallbackMethod = "paymentFallback")
-    @Retry(name = "paymentService")
-    @TimeLimiter(name = "paymentService")
-    public PaymentResponse createPayment(PaymentRequest request) {
-        return restClient.post()
-            .uri("/api/payments")
-            .body(request)
-            .retrieve()
-            .body(PaymentResponse.class);
+    public PaymentClient(RestTemplate restTemplate,
+                         @Value("${svc.payment.baseUrl:http://localhost:8090}") String paymentBaseUrl) {
+        this.restTemplate = restTemplate;
+        this.paymentBaseUrl = paymentBaseUrl;
     }
 
-    private PaymentResponse paymentFallback(PaymentRequest request, Throwable t) {
-        log.warn("Payment service unavailable, fallback triggered: {}", t.getMessage());
-        return PaymentResponse.pending(request.getOrderNo());
+    @CircuitBreaker(name = "paymentService", fallbackMethod = "requestPaymentFallback")
+    @Retry(name = "paymentService")
+    public PaymentResult requestPayment(String orderNo, BigDecimal amount) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Order-No", orderNo);
+        Map<String, Object> body = Map.of("orderNo", orderNo, "amount", amount);
+        ResponseEntity<PaymentResult> response = restTemplate.postForEntity(
+                paymentBaseUrl + "/internal/payment/paypay/pay",
+                new HttpEntity<>(body, headers),
+                PaymentResult.class
+        );
+        return bodyOrFailure(response, orderNo);
+    }
+
+    // Circuit Breaker OPEN時のフォールバック: 即座にPENDINGを返しSagaの補償へ
+    private PaymentResult requestPaymentFallback(String orderNo, BigDecimal amount, Throwable t) {
+        log.warn("PaymentClient CB open or retry exhausted orderNo={} err={}", orderNo, t.getMessage());
+        PaymentResult result = new PaymentResult();
+        result.setSuccess(false);
+        result.setCode("CB_OPEN");
+        result.setMessage("payment-service unavailable: " + t.getMessage());
+        result.setOrderNo(orderNo);
+        return result;
     }
 }
 ```
+
+### 実装例2: payment-service → PayPay API（公式Java SDKの場合）
+
+PayPay APIはSpringのHTTPクライアント直接ではなく**PayPay公式Java SDK**（`jp.ne.paypay.ApiClient`）経由で呼び出すため、SDKのHTTP層はResilience4jの自動Proxyの対象外となります。そのため、**SDKを呼び出すServiceメソッドのレイヤー**（`PaypayPaymentServiceImpl`）に対してアノテーションを付与します。
+
+```java
+// payment-service: PaypayPaymentServiceImpl.java に Circuit Breaker / Retry を追加する例
+@Service
+public class PaypayPaymentServiceImpl implements PaymentService {
+
+    // ... 既存フィールド ...
+
+    @Override
+    @CircuitBreaker(name = "payPayApi", fallbackMethod = "createPaymentSessionFallback")
+    @Retry(name = "payPayApi")
+    public PaymentSession createPaymentSession(String merchantPaymentId, BigDecimal amountJPY,
+                                               Map<String, Object> metadata) {
+        // 既存のSDK呼び出しロジックをそのままラップ
+        QRCodeDetails details = createQrCode(merchantPaymentId, amountJPY, metadata);
+        return toPaymentSession(merchantPaymentId, details);
+    }
+
+    private PaymentSession createPaymentSessionFallback(String merchantPaymentId, BigDecimal amountJPY,
+                                                        Map<String, Object> metadata, Throwable t) {
+        log.warn("PayPay SDK CB open orderNo={} cause={}", merchantPaymentId, t.getMessage());
+        // フォールバック: 呼び出し元（InternalPaypayController）へ例外を伝播し
+        // Saga Orchestratorがcompensateへ遷移する
+        throw new PayPayApiUnavailableException("PayPay API unavailable", t);
+    }
+}
+```
+
+> **ポイント**: SDKの `ApiClient` は内部でHTTPを発行するが、SpringのBean管理外のため`@CircuitBreaker`でラップするにはService層（`PaypayPaymentServiceImpl`のpublicメソッド）を対象にするのが最も実装負荷が低い。
 
 ### Actuatorで確認できるエンドポイント
 

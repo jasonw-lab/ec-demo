@@ -82,8 +82,9 @@ Proposed
 ### デメリット・注意点
 - docker-composeにJaeger / Prometheus / Grafanaが追加され、開発環境のリソース消費が増加する。
 - トレースデータの保持期間とストレージ管理が必要（開発環境はインメモリ/短期保持で対応）。
-- Kafka Streams（alert-service）のトレース伝播はカスタム実装が必要な場合がある。
+- Kafka Streams（alert-service）のトレース伝播はカスタム実装が必要な場合がある（Phase 4で対応）。
 - 全サービスへの依存追加が必要だが、Spring Boot Starterのため設定変更主体で実装負荷は低い。
+- **既存実装との相性（好材料）**: 各サービスはすでに `RestTemplateBuilder` 経由で `RestTemplate` を構築しているため、Micrometer Tracing が Interceptor を自動挿入でき、`traceparent`ヘッダーによる Trace ID 伝播を**コード変更なし**で実現できる。また Seata XID の伝播 Interceptor との共存も問題ない。
 
 ## References
 
