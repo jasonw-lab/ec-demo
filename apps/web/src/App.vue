@@ -155,20 +155,12 @@
     <!-- フッター -->
     <footer v-if="!isLoginPage" style="background:#f0f0f0;border-top:1px solid #e0e0e0;margin-top:32px;">
       <div style="max-width:1200px;margin:0 auto;padding:32px 16px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
           <div style="display:flex;gap:48px;flex-wrap:wrap;">
-            <div>
-              <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">メルカリについて</p>
-            </div>
-            <div>
-              <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">ヘルプ</p>
-            </div>
-            <div>
-              <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">プライバシーと利用規約</p>
-            </div>
+            <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">メルカリについて</p>
+            <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">ヘルプ</p>
+            <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">プライバシーと利用規約</p>
           </div>
-        </div>
-        <div style="margin-top:24px;display:flex;justify-content:flex-end;">
           <span style="font-size:12px;color:#9ca3af;">v0.1</span>
         </div>
       </div>
