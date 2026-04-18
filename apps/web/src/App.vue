@@ -31,12 +31,20 @@
         
         <!-- 右側のナビゲーション -->
         <div style="display:flex;align-items:center;gap:16px;margin-left:auto;">
+          <!-- ツアー起動ボタン -->
+          <button
+            @click="handleTourClick"
+            :title="tourState.active ? 'ツアー実行中' : 'ガイドツアーを開始'"
+            style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;border:1.5px solid #e5e7eb;background:#fff;cursor:pointer;color:#6b7280;font-size:14px;font-weight:700;transition:border-color 0.2s,color 0.2s;"
+            :style="tourState.active ? 'border-color:#E60033;color:#E60033;' : ''"
+          >?</button>
+
           <!-- ログインしていない場合 -->
           <template v-if="!isLoggedIn">
             <router-link to="/login" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">ログイン</router-link>
             <router-link to="/registration" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;">会員登録</router-link>
           </template>
-          
+
           <!-- ログインしている場合 -->
           <template v-else>
             <!-- ユーザープロフィール -->
@@ -111,14 +119,6 @@
             </div>
           </template>
           
-          <!-- ツアー起動ボタン -->
-          <button
-            @click="handleTourClick"
-            :title="tourState.active ? 'ツアー実行中' : 'ガイドツアーを開始'"
-            style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;border:1.5px solid #e5e7eb;background:#fff;cursor:pointer;color:#6b7280;font-size:14px;font-weight:700;transition:border-color 0.2s,color 0.2s;"
-            :style="tourState.active ? 'border-color:#E60033;color:#E60033;' : ''"
-          >?</button>
-
           <!-- カート（常に表示） -->
           <router-link data-tour="cart-link" to="/cart" style="display:flex;align-items:center;gap:6px;color:#111827;text-decoration:none;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
