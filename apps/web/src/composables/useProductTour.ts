@@ -135,8 +135,6 @@ async function highlightStep(step: StepDef) {
     },
     onCloseClick() {
       _highlighting = false
-      _advancing = false
-      _driverObj = null
       skipTour()
     },
     onDestroyStarted() {
