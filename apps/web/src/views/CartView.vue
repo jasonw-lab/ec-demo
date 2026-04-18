@@ -55,10 +55,33 @@
       </div>
     </div>
   </div>
+
+  <!-- 未ログイン時モーダル -->
+  <div v-if="showLoginPrompt" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;" @click.self="showLoginPrompt = false">
+    <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;max-width:360px;width:calc(100% - 32px);box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+      <div style="font-size:44px;margin-bottom:16px;">🔒</div>
+      <h3 style="margin:0 0 12px 0;font-size:18px;font-weight:600;color:#111827;">ログインが必要です</h3>
+      <p style="margin:0 0 24px 0;color:#6b7280;font-size:14px;line-height:1.6;">購入手続きを進めるには<br>ログインしてください。</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button
+          @click="goToLogin"
+          style="width:100%;background:#e60033;color:#fff;border:none;border-radius:8px;padding:13px;cursor:pointer;font-size:15px;font-weight:600;"
+        >
+          ログイン
+        </button>
+        <button
+          @click="showLoginPrompt = false"
+          style="width:100%;background:#fff;color:#6b7280;border:1px solid #e5e7eb;border-radius:8px;padding:13px;cursor:pointer;font-size:15px;"
+        >
+          キャンセル
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore, type CartItem, getImageUrl, apiBase } from '../store'
 
@@ -66,6 +89,7 @@ const store = useStore()
 const cart: CartItem[] = store.cart
 const remove = store.removeFromCart
 const router = useRouter()
+const showLoginPrompt = ref(false)
 
 const total = computed<number>(() => cart.reduce((a,c)=> a + Number(c.product.price)*c.quantity, 0))
 
@@ -73,6 +97,11 @@ function updateQuantity(productId: string, newQuantity: number) {
   if (newQuantity > 0) {
     store.updateCartQuantity(productId, newQuantity)
   }
+}
+
+function goToLogin() {
+  showLoginPrompt.value = false
+  router.push('/login')
 }
 
 async function handleCheckout(): Promise<void> {
@@ -89,11 +118,9 @@ async function handleCheckout(): Promise<void> {
         return
       }
     }
-
-    router.push('/login')
   } catch (err) {
     console.error('Failed to check login status before checkout', err)
-    router.push('/login')
   }
+  showLoginPrompt.value = true
 }
 </script>

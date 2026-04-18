@@ -6,6 +6,9 @@ import com.demo.ec.bff.gateway.client.OrderServiceClient;
 import com.demo.ec.bff.gateway.client.dto.OrderSummary;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -18,7 +21,9 @@ import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -38,11 +43,18 @@ class CheckoutControllerQRCodeRestAssuredTest {
     private static final String TEST_ORDER_ID = "ra-order-1";
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
 
-        // no-op
+        doAnswer(inv -> {
+            ((FilterChain) inv.getArgument(2))
+                    .doFilter(inv.getArgument(0), inv.getArgument(1));
+            return null;
+        }).when(authSessionFilter).doFilter(
+                any(HttpServletRequest.class),
+                any(HttpServletResponse.class),
+                any(FilterChain.class));
     }
 
     @Test

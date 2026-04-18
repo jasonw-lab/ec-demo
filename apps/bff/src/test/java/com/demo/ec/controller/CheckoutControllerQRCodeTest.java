@@ -4,6 +4,9 @@ import com.demo.ec.bff.EcBackendApplication;
 import com.demo.ec.bff.application.auth.AuthSessionFilter;
 import com.demo.ec.bff.gateway.client.OrderServiceClient;
 import com.demo.ec.bff.gateway.client.dto.OrderSummary;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -19,7 +22,9 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.isEmptyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -39,8 +44,15 @@ class CheckoutControllerQRCodeTest {
     private static final String TEST_ORDER_ID = "test-order-1";
 
     @BeforeEach
-    void setUp() {
-        // no-op
+    void setUp() throws Exception {
+        doAnswer(inv -> {
+            ((FilterChain) inv.getArgument(2))
+                    .doFilter(inv.getArgument(0), inv.getArgument(1));
+            return null;
+        }).when(authSessionFilter).doFilter(
+                any(HttpServletRequest.class),
+                any(HttpServletResponse.class),
+                any(FilterChain.class));
     }
 
     @Test

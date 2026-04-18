@@ -6,7 +6,7 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 
 
 
-## Tech-lead design highlights
+## Design highlights
 
 - **BFF + WebSocket**: Concentrates UI-optimized APIs and realtime notifications in the BFF to maximize change resilience and UX
 - **Seata Saga**: Implements cross-service consistency with a state machine + compensations (operationally manageable eventual consistency)
@@ -39,15 +39,6 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 | Success/failure events arrive out-of-order | Failure arrives after `PAID`, etc. | Record-only for failures after `PAID`, no state change |
 | Saga mid-failure (stock/order/payment inconsistency) | Eventual consistency breakdown | Compensation rollback, kafka-alert detection |
 | Redis session failure | Auth/authorization degradation | Return 503 for `/api/**` (fail safe) to prompt recovery |
-
-## Demo highlights (3 steps)
-
-1. **Purchase request**: Create order with `./test-saga.sh` (`PENDING → WAITING_PAYMENT`)
-2. **Payment event reflection**: Webhook (priority) or polling (fallback) converges to `PAID/FAILED`
-3. **Observation**: 
-   - Immediate screen updates via WebSocket
-   - (When kafka-alert is running) Kafka Streams detects inconsistencies → outputs `AlertRaised` to `alerts.order_payment_inconsistency.v1`
-   - Check alert history in MySQL (ec_system.sys_pay_alert)
 
 ## Services
 

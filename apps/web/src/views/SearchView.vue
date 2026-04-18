@@ -86,10 +86,12 @@ import { apiBase, useStore, type Product, getImageUrl } from '../store'
 import type { SearchApiResponse } from '../types/search'
 import { productCardToProduct } from '../types/search'
 import Pagination from '../components/Pagination.vue'
+import { useProductTour } from '../composables/useProductTour'
 
 const route = useRoute()
 const router = useRouter()
 const store = useStore()
+const { registerStepAction } = useProductTour()
 
 // 状態管理
 const loading = ref<boolean>(false)
@@ -187,5 +189,12 @@ function retrySearch(): void {
 // URLパラメータの変更を監視して検索実行
 watch([q, page, size], () => {
   performSearch()
+}, { immediate: true })
+
+// 検索結果がロードされたら Step 3 (index=3) のアクションとして先頭商品をカートへ自動追加登録
+watch(results, (newResults) => {
+  if (newResults.length > 0) {
+    registerStepAction(3, () => store.addToCart(newResults[0], 1))
+  }
 }, { immediate: true })
 </script>

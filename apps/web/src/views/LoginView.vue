@@ -104,6 +104,7 @@
           type="button"
           class="social-button google"
           :disabled="loading"
+          data-tour="login-google"
           @click="handleGoogleLogin"
         >
           <span class="social-icon">

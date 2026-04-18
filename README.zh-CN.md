@@ -40,15 +40,6 @@
 | Saga中途失败（库存/订单/支付不一致） | 最终一致性崩溃 | 补偿事务回滚，kafka-alert检测 |
 | Redis会话故障 | 认证/授权劣化 | `/api/**` 返回 503（安全侧）促恢复 |
 
-## 演示亮点（3步骤）
-
-1. **购买请求**: `./test-saga.sh` 创建订单（`PENDING → WAITING_PAYMENT`）
-2. **支付事件反映**: Webhook（优先）或轮询（兜底）收敛到 `PAID/FAILED`
-3. **观测**: 
-   - WebSocket 即时反映到画面
-   - （kafka-alert 运行时）Kafka Streams 检测不整合 → 向 `alerts.order_payment_inconsistency.v1` 输出 `AlertRaised`
-   - MySQL (ec_system.sys_pay_alert) 确认告警历史
-
 ## 服务组成
 
 - **BFF**（8080）

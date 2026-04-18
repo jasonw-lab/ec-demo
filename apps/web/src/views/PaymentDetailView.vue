@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore, apiBase } from '../store'
 
@@ -199,6 +199,29 @@ const QR_FETCH_MAX_WAIT_MS = 30_000
 
 // QR画像URL（base64画像があれば優先、それ以外はURLを利用）
 const qrImgUrl = computed(() => paymentImageDataUrl.value || paymentUrl.value || '')
+
+// QRコードが表示されたタイミングで1回だけ操作ヒントを表示
+let _qrHintShown = false
+watch(qrImgUrl, async (url) => {
+  if (!url || _qrHintShown) return
+  _qrHintShown = true
+  const { driver } = await import('driver.js')
+  const d = driver({
+    overlayOpacity: 0.5,
+    smoothScroll: true,
+    allowClose: true,
+    popoverClass: 'product-tour-popover',
+  })
+  d.highlight({
+    element: '[data-tour="payment-qr"]',
+    popover: {
+      title: 'QRコードで支払い',
+      description: 'paypay(developer mode)アプリでQRコードをスキャンしてお支払いください。',
+      showButtons: ['close'],
+      nextBtnText: '閉じる',
+    },
+  })
+})
 
 let pollTimer: number | undefined
 const pollingStart = ref<number>(0)

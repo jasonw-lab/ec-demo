@@ -19,9 +19,9 @@ const STEPS: StepDef[] = [
     index: 0,
     route: '/login',
     routeMatch: (p) => p === '/login',
-    element: '[data-tour="login-form"]',
+    element: '[data-tour="login-google"]',
     title: 'ログイン',
-    description: '購入フローを試すため、まずはログインしてください。メールアドレスまたは電話番号とパスワードでログインできます。',
+    description: 'まずはログインしてください。デモでは Google ログインの利用を推奨します。メールアドレスまたは電話番号でのログインも利用できます。',
   },
   {
     index: 1,
@@ -53,31 +53,7 @@ const STEPS: StepDef[] = [
     routeMatch: (p) => p === '/cart',
     element: '[data-tour="cart-items"]',
     title: 'カート確認',
-    description: '追加した商品はカートで確認できます。内容を確認したらレジへ進みます。',
-  },
-  {
-    index: 5,
-    route: '/checkout',
-    routeMatch: (p) => p === '/checkout',
-    element: '[data-tour="checkout-summary"]',
-    title: '注文内容確認',
-    description: '注文内容とお客様情報を確認し、PayPay 決済画面へ進みます。',
-  },
-  {
-    index: 6,
-    route: '/payment-detail',
-    routeMatch: (p) => p === '/payment-detail',
-    element: '[data-tour="payment-qr"]',
-    title: 'PayPay 支払い詳細',
-    description: 'ここで QR コードや支払い情報を確認します。ツアーでは外部認証の自動操作は行いません。',
-  },
-  {
-    index: 7,
-    route: '/payment-success',
-    routeMatch: (p) => p === '/payment-success',
-    element: '[data-tour="payment-success"]',
-    title: '決済成功',
-    description: '購入が完了しました。オーダー ID と支払い金額を確認できます。',
+    description: '追加した商品はカートで確認できます。このツアーではここまでを対象とし、購入前の主要導線を確認して完了します。',
   },
 ]
 
@@ -86,6 +62,9 @@ const state = reactive({
   active: false,
   currentStep: 0,
 })
+
+// Step index → action executed on "次へ" before advancing
+const _stepActions = new Map<number, () => void | Promise<void>>()
 
 let _router: Router | null = null
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,6 +85,15 @@ function destroyDriver() {
   }
 }
 
+async function waitForElement(selector: string, maxRetries = 15, intervalMs = 200): Promise<Element | null> {
+  for (let i = 0; i < maxRetries; i++) {
+    const el = document.querySelector(selector)
+    if (el) return el
+    await new Promise<void>((resolve) => setTimeout(resolve, intervalMs))
+  }
+  return null
+}
+
 async function highlightStep(step: StepDef) {
   if (_highlighting) return
   _highlighting = true
@@ -113,7 +101,7 @@ async function highlightStep(step: StepDef) {
   destroyDriver()
   await nextTick()
 
-  const el = document.querySelector(step.element)
+  const el = await waitForElement(step.element)
   if (!el) {
     console.warn(`[ProductTour] Element not found: ${step.element}`)
     _highlighting = false
@@ -183,6 +171,10 @@ async function handleNext() {
     return
   }
 
+  // Execute registered step action (e.g. auto-add first product to cart on step 3)
+  const action = _stepActions.get(currentIndex)
+  if (action) await action()
+
   const nextIndex = currentIndex + 1
   if (nextIndex >= STEPS.length) {
     destroyDriver()
@@ -227,18 +219,17 @@ function skipTour() {
   if (!state.active) return
   state.active = false
   destroyDriver()
+  _stepActions.clear()
   localStorage.removeItem(STORAGE_ACTIVE)
   localStorage.removeItem(STORAGE_STEP)
 }
 
 function completeTour() {
   state.active = false
+  _stepActions.clear()
   localStorage.setItem(STORAGE_COMPLETED, 'true')
   localStorage.removeItem(STORAGE_ACTIVE)
   localStorage.removeItem(STORAGE_STEP)
-  if (_router && _router.currentRoute.value.path !== '/') {
-    _router.push('/')
-  }
 }
 
 export function useProductTour() {
@@ -310,6 +301,10 @@ export function useProductTour() {
     startTour(isLoggedIn)
   }
 
+  function registerStepAction(stepIndex: number, fn: () => void | Promise<void>) {
+    _stepActions.set(stepIndex, fn)
+  }
+
   return {
     state,
     startTour,
@@ -319,5 +314,6 @@ export function useProductTour() {
     isCompleted,
     shouldAutoStart,
     setRouter,
+    registerStepAction,
   }
 }
