@@ -83,7 +83,7 @@
           <button
             type="button"
             class="registration-button facebook"
-            :disabled="loading"
+            disabled
             @click="handleFacebookRegistration"
           >
             <span class="registration-icon">

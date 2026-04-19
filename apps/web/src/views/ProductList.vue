@@ -8,7 +8,7 @@
     <!-- 掘り出し物セクション -->
     <div style="margin-bottom:24px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h2 style="margin:0;font-size:16px;font-weight:600;">掘り出し物300円オークション</h2>
+        <h2 style="margin:0;font-size:16px;font-weight:600;">掘り出しもの ¥300スタート</h2>
         <a @click="showUnderConstruction" style="color:#3b82f6;text-decoration:none;font-size:14px;cursor:pointer;">すべて見る ></a>
       </div>
       
