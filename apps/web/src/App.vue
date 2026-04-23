@@ -135,14 +135,14 @@
       <nav style="border-top:1px solid #f1f5f9;background:#fff;">
         <div style="max-width:1200px;margin:0 auto;padding:0 16px;display:flex;gap:20px;height:44px;align-items:center;">
           <router-link to="/" style="color:#E60033;text-decoration:none;font-weight:600;border-bottom:2px solid #E60033;padding:12px 0;font-size:14px;">おすすめ</router-link>
-          <a @click.prevent="navigateToTop" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">マイリスト</a>
-          <a @click.prevent="navigateToTop" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">メルカリShops</a>
-          <a @click.prevent="navigateToTop" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">ゲーム・おもちゃ・グッズ</a>
-          <a @click.prevent="navigateToTop" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">本・雑誌・漫画</a>
-          <a @click.prevent="navigateToTop" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">メンズ</a>
-          <a @click.prevent="navigateToTop" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">レディース</a>
-          <a @click.prevent="navigateToTop" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">ベビー・キッズ</a>
-          <router-link to="/products" style="color:#111827;text-decoration:none;font-size:14px;">すべて見る</router-link>
+          <a @click.prevent="navigateToTop" title="工事中" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">マイリスト</a>
+          <a @click.prevent="navigateToTop" title="工事中" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">メルカリShops</a>
+          <a @click.prevent="navigateToTop" title="工事中" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">ゲーム・おもちゃ・グッズ</a>
+          <a @click.prevent="navigateToTop" title="工事中" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">本・雑誌・漫画</a>
+          <a @click.prevent="navigateToTop" title="工事中" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">メンズ</a>
+          <a @click.prevent="navigateToTop" title="工事中" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">レディース</a>
+          <a @click.prevent="navigateToTop" title="工事中" style="color:#111827;text-decoration:none;font-size:14px;cursor:pointer;padding:12px 0;">ベビー・キッズ</a>
+          <router-link to="/products" title="工事中" style="color:#111827;text-decoration:none;font-size:14px;">すべて見る</router-link>
         </div>
       </nav>
     </header>
