@@ -161,7 +161,7 @@
             <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">ヘルプ</p>
             <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">プライバシーと利用規約</p>
           </div>
-          <span style="font-size:12px;color:#9ca3af;">v0.1</span>
+          <span style="font-size:12px;color:#9ca3af;">v0.1.1</span>
         </div>
       </div>
     </footer>
