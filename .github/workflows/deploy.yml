@@ -1,0 +1,115 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "apps/web/**"
+      - "apps/bff/**"
+      - "apps/services/account-service/**"
+      - "apps/services/order-service/**"
+      - "apps/services/storage-service/**"
+      - "apps/services/payment-service/**"
+      - "apps/services/es-service/**"
+      - "front.sh"
+      - "back.sh"
+      - "platform/docker/demo/Dockerfile.bff"
+      - "platform/docker/demo/Dockerfile.account-service"
+      - "platform/docker/demo/Dockerfile.order-service"
+      - "platform/docker/demo/Dockerfile.storage-service"
+      - "platform/docker/demo/Dockerfile.payment-service"
+      - "platform/docker/demo/Dockerfile.es-service"
+      - "platform/docker/demo/docker-compose-demo-app.yml"
+      - ".github/workflows/deploy.yml"
+      - ".github/workflows/_deploy-app.yml"
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_web: ${{ steps.filter.outputs.web }}
+      backend_services: ${{ steps.collect.outputs.backend_services }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - "apps/web/**"
+              - "front.sh"
+            bff:
+              - "apps/bff/**"
+              - "back.sh"
+              - "platform/docker/demo/Dockerfile.bff"
+              - "platform/docker/demo/docker-compose-demo-app.yml"
+            account_service:
+              - "apps/services/account-service/**"
+              - "back.sh"
+              - "platform/docker/demo/Dockerfile.account-service"
+              - "platform/docker/demo/docker-compose-demo-app.yml"
+            order_service:
+              - "apps/services/order-service/**"
+              - "back.sh"
+              - "platform/docker/demo/Dockerfile.order-service"
+              - "platform/docker/demo/docker-compose-demo-app.yml"
+            storage_service:
+              - "apps/services/storage-service/**"
+              - "back.sh"
+              - "platform/docker/demo/Dockerfile.storage-service"
+              - "platform/docker/demo/docker-compose-demo-app.yml"
+            payment_service:
+              - "apps/services/payment-service/**"
+              - "back.sh"
+              - "platform/docker/demo/Dockerfile.payment-service"
+              - "platform/docker/demo/docker-compose-demo-app.yml"
+            es_service:
+              - "apps/services/es-service/**"
+              - "back.sh"
+              - "platform/docker/demo/Dockerfile.es-service"
+              - "platform/docker/demo/docker-compose-demo-app.yml"
+
+      - name: Collect backend services
+        id: collect
+        run: |
+          set -euo pipefail
+
+          services=()
+
+          if [[ "${{ steps.filter.outputs.bff }}" == "true" ]]; then
+            services+=("bff")
+          fi
+          if [[ "${{ steps.filter.outputs.account_service }}" == "true" ]]; then
+            services+=("account-service")
+          fi
+          if [[ "${{ steps.filter.outputs.order_service }}" == "true" ]]; then
+            services+=("order-service")
+          fi
+          if [[ "${{ steps.filter.outputs.storage_service }}" == "true" ]]; then
+            services+=("storage-service")
+          fi
+          if [[ "${{ steps.filter.outputs.payment_service }}" == "true" ]]; then
+            services+=("payment-service")
+          fi
+          if [[ "${{ steps.filter.outputs.es_service }}" == "true" ]]; then
+            services+=("es-service")
+          fi
+
+          echo "backend_services=${services[*]}" >> "$GITHUB_OUTPUT"
+          echo "Web changed: ${{ steps.filter.outputs.web }}"
+          echo "Backend services: ${services[*]:-none}"
+
+  deploy:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.deploy_web == 'true' ||
+      needs.detect-changes.outputs.backend_services != ''
+    uses: ./.github/workflows/_deploy-app.yml
+    with:
+      deploy_web: ${{ needs.detect-changes.outputs.deploy_web == 'true' }}
+      backend_services: ${{ needs.detect-changes.outputs.backend_services }}
+    secrets: inherit

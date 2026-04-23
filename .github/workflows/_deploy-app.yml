@@ -1,28 +1,23 @@
-name: Reusable App Deploy
+name: Reusable Deploy
 
 on:
   workflow_call:
     inputs:
-      app_name:
-        description: App name for display and concurrency control
+      deploy_web:
+        description: Whether to deploy the web frontend
         required: true
-        type: string
-      deploy_target:
-        description: frontend or backend
+        type: boolean
+      backend_services:
+        description: Space-separated back.sh service arguments
         required: true
-        type: string
-      service_name:
-        description: back.sh service argument for backend deploys
-        required: false
-        default: ""
         type: string
 
 jobs:
   deploy:
-    name: Deploy ${{ inputs.app_name }}
+    name: Deploy Changed Apps
     runs-on: ubuntu-latest
     concurrency:
-      group: deploy-${{ inputs.app_name }}-${{ github.ref_name }}
+      group: deploy-${{ github.ref_name }}
       cancel-in-progress: false
     steps:
       - name: Deploy to VPS
@@ -49,10 +44,13 @@ jobs:
             AFTER_SHA=$(git rev-parse HEAD)
             echo "Repository updated: ${BEFORE_SHA} -> ${AFTER_SHA}"
 
-            if [[ "${{ inputs.deploy_target }}" == "frontend" ]]; then
-              echo "Starting frontend deploy for ${{ inputs.app_name }}"
+            if [[ "${{ inputs.deploy_web }}" == "true" ]]; then
+              echo "Starting frontend deploy"
               bash ./front.sh
-            else
-              echo "Starting backend deploy for ${{ inputs.app_name }}"
-              bash ./back.sh "${{ inputs.service_name }}"
+            fi
+
+            if [[ -n "${{ inputs.backend_services }}" ]]; then
+              echo "Starting backend deploy for: ${{ inputs.backend_services }}"
+              # shellcheck disable=SC2086
+              bash ./back.sh ${{ inputs.backend_services }}
             fi
