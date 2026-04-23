@@ -51,9 +51,11 @@
             <div style="font-weight:600;font-size:16px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ p.name }}</div>
             <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center">
               <div style="color:#ff6b6b;font-weight:700;font-size:18px;">¥ {{ Number(p.price).toLocaleString() }}</div>
-              <button @click="add(p)" :data-tour="idx === 0 ? 'add-to-cart-primary' : undefined" title="追加後は、右上のカートアイコンをクリックして会計へお進みください。" style="background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;transition:background-color 0.2s;" @mouseenter="(e) => e.currentTarget.style.backgroundColor = '#e55555'" @mouseleave="(e) => e.currentTarget.style.backgroundColor = '#ff6b6b'">
-                カートに追加
-              </button>
+              <HoverHint text="追加後は、右上のカートアイコンをクリックして会計へお進みください。">
+                <button @click="add(p)" :data-tour="idx === 0 ? 'add-to-cart-primary' : undefined" style="background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;transition:background-color 0.2s;" @mouseenter="(e) => e.currentTarget.style.backgroundColor = '#e55555'" @mouseleave="(e) => e.currentTarget.style.backgroundColor = '#ff6b6b'">
+                  カートに追加
+                </button>
+              </HoverHint>
             </div>
           </div>
         </div>
@@ -87,6 +89,7 @@ import type { SearchApiResponse } from '../types/search'
 import { productCardToProduct } from '../types/search'
 import Pagination from '../components/Pagination.vue'
 import { useProductTour } from '../composables/useProductTour'
+import HoverHint from '../components/HoverHint.vue'
 
 const route = useRoute()
 const router = useRouter()
