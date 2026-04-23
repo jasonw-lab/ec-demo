@@ -4,25 +4,7 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - "apps/web/**"
-      - "apps/bff/**"
-      - "apps/services/account-service/**"
-      - "apps/services/order-service/**"
-      - "apps/services/storage-service/**"
-      - "apps/services/payment-service/**"
-      - "apps/services/es-service/**"
-      - "front.sh"
-      - "back.sh"
-      - "platform/docker/demo/Dockerfile.bff"
-      - "platform/docker/demo/Dockerfile.account-service"
-      - "platform/docker/demo/Dockerfile.order-service"
-      - "platform/docker/demo/Dockerfile.storage-service"
-      - "platform/docker/demo/Dockerfile.payment-service"
-      - "platform/docker/demo/Dockerfile.es-service"
-      - "platform/docker/demo/docker-compose-demo-app.yml"
-      - ".github/workflows/deploy.yml"
-      - ".github/workflows/_deploy-app.yml"
+  workflow_dispatch:
 
 jobs:
   detect-changes:
