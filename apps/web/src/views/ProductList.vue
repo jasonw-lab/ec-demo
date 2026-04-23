@@ -22,7 +22,7 @@
             </div>
             <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;">
               <div style="color:#ff6b6b;font-weight:700;font-size:16px;">現在¥300</div>
-              <button @click="add(p)" style="background:#ff6b6b;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;">カートに追加</button>
+              <button @click="add(p)" title="追加後は、右上のカートアイコンをクリックして会計へお進みください。" style="background:#ff6b6b;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;">カートに追加</button>
             </div>
           </div>
         </div>
