@@ -1,0 +1,22 @@
+name: Deploy Order Service
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - "apps/services/order-service/**"
+      - "back.sh"
+      - "platform/docker/demo/Dockerfile.order-service"
+      - "platform/docker/demo/docker-compose-demo-app.yml"
+      - ".github/workflows/deploy-order-service.yml"
+      - ".github/workflows/_deploy-app.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-app.yml
+    with:
+      app_name: order-service
+      deploy_target: backend
+      service_name: order-service
+    secrets: inherit

@@ -1,0 +1,19 @@
+name: Deploy Web
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - "apps/web/**"
+      - "front.sh"
+      - ".github/workflows/deploy-web.yml"
+      - ".github/workflows/_deploy-app.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-app.yml
+    with:
+      app_name: web
+      deploy_target: frontend
+    secrets: inherit

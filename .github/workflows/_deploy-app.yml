@@ -1,0 +1,58 @@
+name: Reusable App Deploy
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        description: App name for display and concurrency control
+        required: true
+        type: string
+      deploy_target:
+        description: frontend or backend
+        required: true
+        type: string
+      service_name:
+        description: back.sh service argument for backend deploys
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.app_name }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-${{ inputs.app_name }}-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -euo pipefail
+
+            echo "Working directory: ${{ secrets.PROJECT_PATH }}"
+            cd "${{ secrets.PROJECT_PATH }}"
+
+            TARGET_BRANCH="${{ github.ref_name }}"
+            TARGET_SHA="${{ github.sha }}"
+
+            echo "Preparing repository for ${TARGET_BRANCH} @ ${TARGET_SHA}"
+            BEFORE_SHA=$(git rev-parse HEAD)
+            git fetch --all --prune
+            git checkout "$TARGET_BRANCH"
+            git reset --hard "$TARGET_SHA"
+            AFTER_SHA=$(git rev-parse HEAD)
+            echo "Repository updated: ${BEFORE_SHA} -> ${AFTER_SHA}"
+
+            if [[ "${{ inputs.deploy_target }}" == "frontend" ]]; then
+              echo "Starting frontend deploy for ${{ inputs.app_name }}"
+              bash ./front.sh
+            else
+              echo "Starting backend deploy for ${{ inputs.app_name }}"
+              bash ./back.sh "${{ inputs.service_name }}"
+            fi
