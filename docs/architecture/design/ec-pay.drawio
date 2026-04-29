@@ -5,7 +5,7 @@
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-14" value="alt" style="shape=umlFrame;dashed=1;pointerEvents=0;dropTarget=0;strokeColor=#B3B3B3;height=20;width=30" parent="1" vertex="1">
-                    <mxGeometry x="20" y="710" width="1032" height="1120" as="geometry"/>
+                    <mxGeometry x="20" y="960" width="1032" height="1120" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-15" value="[決済成功 (COMPLETED)]" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;" parent="vYZ6-0DS3YeXlyoQywWr-14" vertex="1">
                     <mxGeometry x="30" width="1002" height="20" as="geometry"/>
@@ -17,61 +17,61 @@
                     <mxGeometry y="731" width="1032" height="4" as="geometry"/>
                 </mxCell>
                 <mxCell id="saga-boundary" value="" style="shape=rectangle;whiteSpace=wrap;rounded=0;fillColor=none;dashed=1;strokeColor=#6C8EBF;fontColor=#2F4F4F;labelPosition=left;verticalLabelPosition=top;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" parent="1" vertex="1">
-                    <mxGeometry x="10" y="80" width="1380" height="520" as="geometry"/>
+                    <mxGeometry x="10" y="80" width="1380" height="770" as="geometry"/>
                 </mxCell>
                 <mxCell id="async-boundary" value="" style="shape=rectangle;whiteSpace=wrap;rounded=0;fillColor=none;dashed=1;strokeColor=#82B366;fontColor=#2F4F4F;labelPosition=left;verticalLabelPosition=top;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" parent="1" vertex="1">
-                    <mxGeometry x="10" y="620" width="1380" height="1200" as="geometry"/>
+                    <mxGeometry x="10" y="870" width="1380" height="1300" as="geometry"/>
                 </mxCell>
                 <mxCell id="saga-end-note" value="Saga ends at PAYMENT_PENDING; payment result is handled asynchronously." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" vertex="1">
-                    <mxGeometry x="70" y="585" width="520" height="40" as="geometry"/>
+                    <mxGeometry x="70" y="835" width="520" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-1" value="Frontend (UI)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="29" y="20" width="150" height="1897" as="geometry"/>
+                    <mxGeometry x="29" y="20" width="150" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-2" value="Backend (BFF)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="417" y="20" width="150" height="1897" as="geometry"/>
+                    <mxGeometry x="417" y="20" width="150" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-3" value="OrderService (Saga)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="650" y="20" width="168" height="1897" as="geometry"/>
+                    <mxGeometry x="650" y="20" width="168" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-4" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" parent="vYZ6-0DS3YeXlyoQywWr-3" vertex="1">
-                    <mxGeometry x="84" y="755" width="10" height="114" as="geometry"/>
+                    <mxGeometry x="84" y="1005" width="10" height="114" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-5" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" parent="vYZ6-0DS3YeXlyoQywWr-3" vertex="1">
-                    <mxGeometry x="84" y="1118" width="10" height="114" as="geometry"/>
+                    <mxGeometry x="84" y="1368" width="10" height="114" as="geometry"/>
                 </mxCell>
                 <mxCell id="kafka-websocket-all" value="Kafka" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="1740" y="20" width="120" height="1897" as="geometry"/>
+                    <mxGeometry x="1740" y="20" width="120" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="order-audit-service" value="OrderAuditService (Logical)&#xa;OrderAuditConsumer (Kafka)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;fontColor=#009900;" parent="1" vertex="1">
-                    <mxGeometry x="1870" y="20" width="170" height="1897" as="geometry"/>
+                    <mxGeometry x="1870" y="20" width="170" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-6" value="Inventory Service" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;fontColor=#FF0000;" parent="1" vertex="1">
-                    <mxGeometry x="962" y="20" width="150" height="1897" as="geometry"/>
+                    <mxGeometry x="962" y="20" width="150" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-7" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" parent="vYZ6-0DS3YeXlyoQywWr-6" vertex="1">
-                    <mxGeometry x="70" y="199" width="10" height="38" as="geometry"/>
+                    <mxGeometry x="70" y="449" width="10" height="38" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-8" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" parent="vYZ6-0DS3YeXlyoQywWr-6" vertex="1">
-                    <mxGeometry x="70" y="803" width="10" height="8" as="geometry"/>
+                    <mxGeometry x="70" y="1053" width="10" height="8" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-9" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" parent="vYZ6-0DS3YeXlyoQywWr-6" vertex="1">
-                    <mxGeometry x="70" y="1166" width="10" height="8" as="geometry"/>
+                    <mxGeometry x="70" y="1416" width="10" height="8" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-10" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" parent="vYZ6-0DS3YeXlyoQywWr-6" vertex="1">
-                    <mxGeometry x="70" y="1530" width="10" height="18" as="geometry"/>
+                    <mxGeometry x="70" y="1780" width="10" height="18" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-11" value="Payment Service" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;fontColor=#FF0000;" parent="1" vertex="1">
-                    <mxGeometry x="1173" y="20" width="150" height="1897" as="geometry"/>
+                    <mxGeometry x="1173" y="20" width="150" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-12" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" parent="vYZ6-0DS3YeXlyoQywWr-11" vertex="1">
-                    <mxGeometry x="70" y="343" width="10" height="28" as="geometry"/>
+                    <mxGeometry x="70" y="610" width="10" height="28" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-13" value="PayPay (API/Webhook)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;fontColor=#FF0000;" parent="1" vertex="1">
-                    <mxGeometry x="1373" y="20" width="150" height="1897" as="geometry"/>
+                    <mxGeometry x="1373" y="20" width="150" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="mongodb-websocket-all" value="MongoDB (order_audit)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="2050" y="20" width="170" height="1897" as="geometry"/>
+                    <mxGeometry x="2050" y="20" width="170" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="order-audit-impl-note" value="実装時: OrderService内に OrderAuditConsumer として統合&#xa;(alert-service同様、dockerコンテナを減らすため / Javaクラスは分離)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#2F4F4F;" parent="1" vertex="1">
                     <mxGeometry x="1870" y="90" width="350" height="60" as="geometry"/>
@@ -80,7 +80,7 @@
                     <mxGeometry x="2070" y="90" width="330" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="seata-saga-server" value="Seata Server (Saga)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" parent="1" vertex="1">
-                    <mxGeometry x="1560" y="20" width="170" height="1897" as="geometry"/>
+                    <mxGeometry x="1560" y="20" width="170" height="2200" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-18" value="購入リクエスト (API)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-1" target="vYZ6-0DS3YeXlyoQywWr-2" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -106,87 +106,73 @@
                         <mxPoint x="-124.5" y="-7" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="seata-saga-start" value="Saga start (state machine instance)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
+                <mxCell id="seata-saga-start" value="Saga start + begin (order_initialization_saga)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1500" y="180"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="seata-global-begin" value="Saga begin (order_initialization_saga)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1500" y="165"/>
+                            <mxPoint x="1500" y="175"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="seata-saga-state-init" value="State report: InitOrder" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1500" y="210"/>
+                            <mxPoint x="1500" y="215"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="seata-saga-state-reserve" value="State report: ReserveStock" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1500" y="250"/>
+                            <mxPoint x="1500" y="255"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="seata-saga-state-request" value="State report: RequestPayment" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1500" y="320"/>
+                            <mxPoint x="1500" y="295"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="seata-saga-end" value="Saga end (Succeed/Fail)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
+                <mxCell id="seata-saga-end" value="Saga end (Succeed/Fail) + Global TX Commit/Rollback" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1500" y="360"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="seata-global-commit" value="Global TX Commit / Rollback" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;dashed=1;dashPattern=2 3;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="seata-saga-server" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1500" y="390"/>
+                            <mxPoint x="1500" y="335"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-websocket-all-pub-pending" value="publish OrderStatusChanged(CREATED) → ec-demo.orders.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="kafka-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1760" y="205"/>
+                            <mxPoint x="1760" y="370"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-to-audit-created" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="kafka-websocket-all" target="order-audit-service" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1830" y="215"/>
+                            <mxPoint x="1830" y="390"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="audit-to-mongo-created" value="order_audit 追記 (CREATED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="order-audit-service" target="mongodb-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="2000" y="225"/>
+                            <mxPoint x="2000" y="410"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-websocket-all-sub-created" value="consume → OrderSummary取得 → WS broadcast" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="1" source="kafka-websocket-all" target="vYZ6-0DS3YeXlyoQywWr-2">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1700" y="235"/>
+                            <mxPoint x="1700" y="430"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-22" value="在庫予約 reserveStock" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=horizontal;curved=0;rounded=0;endArrow=block;fontStyle=1;fontColor=#3333FF;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="vYZ6-0DS3YeXlyoQywWr-7" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="894" y="219"/>
+                            <mxPoint x="894" y="470"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -198,7 +184,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-24" value="OK" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-6" target="vYZ6-0DS3YeXlyoQywWr-3" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="897" y="267"/>
+                            <mxPoint x="897" y="520"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -210,7 +196,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-26" value="決済開始要求 (RequestPayment)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="vYZ6-0DS3YeXlyoQywWr-11" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1100" y="315"/>
+                            <mxPoint x="1100" y="560"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -222,14 +208,14 @@
                 <mxCell id="kafka-websocket-all-pub-waiting" value="publish OrderStatusChanged(PAYMENT_PENDING) → ec-demo.orders.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="kafka-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1720" y="330"/>
+                            <mxPoint x="1720" y="590"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-28" value="createPayment (QR/URL)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-11" target="vYZ6-0DS3YeXlyoQywWr-13" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1320" y="363"/>
+                            <mxPoint x="1320" y="630"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -241,7 +227,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-30" value="QR/URL" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-13" target="vYZ6-0DS3YeXlyoQywWr-11" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1320" y="411"/>
+                            <mxPoint x="1320" y="680"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -253,7 +239,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-32" value="QR/URL と channelToken を返却" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-2" target="vYZ6-0DS3YeXlyoQywWr-1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="308" y="459"/>
+                            <mxPoint x="308" y="730"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -265,8 +251,8 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-34" value="QR表示" style="curved=1;dashed=1;dashPattern=2 3;endArrow=block;rounded=0;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-1" target="vYZ6-0DS3YeXlyoQywWr-1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="155" y="507"/>
-                            <mxPoint x="155" y="537"/>
+                            <mxPoint x="155" y="780"/>
+                            <mxPoint x="155" y="810"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -278,7 +264,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-36" value="WebSocket接続 (channelToken)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-1" target="vYZ6-0DS3YeXlyoQywWr-2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="305" y="585"/>
+                            <mxPoint x="305" y="850"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -290,7 +276,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-38" value="Webhook(決済結果)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-13" target="vYZ6-0DS3YeXlyoQywWr-11" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1320" y="682"/>
+                            <mxPoint x="1320" y="940"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -299,10 +285,17 @@
                         <mxPoint x="466.75" y="-7" as="offset"/>
                     </mxGeometry>
                 </mxCell>
+                <mxCell id="kafka-pub-payment-succeeded" value="publish PaymentSucceeded → ec-demo.payments.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF8C00;fontColor=#FF8C00;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-11" target="kafka-websocket-all" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1760" y="980"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-40" value="支払いステータス更新通知 (SUCCESS)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-11" target="vYZ6-0DS3YeXlyoQywWr-4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1100" y="775"/>
+                            <mxPoint x="1100" y="1025"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -314,7 +307,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-42" value="commitStock（在庫確定: RESERVED→COMMITTED）" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;fontColor=#3333FF;fontStyle=1" parent="1" source="vYZ6-0DS3YeXlyoQywWr-4" target="vYZ6-0DS3YeXlyoQywWr-8" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="897" y="823"/>
+                            <mxPoint x="897" y="1073"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -326,7 +319,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-44" value="OK" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-6" target="vYZ6-0DS3YeXlyoQywWr-4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="900" y="871"/>
+                            <mxPoint x="900" y="1121"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -338,7 +331,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-46" value="PAID 確定" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="vYZ6-0DS3YeXlyoQywWr-2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="630" y="919"/>
+                            <mxPoint x="630" y="1169"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -350,35 +343,35 @@
                 <mxCell id="kafka-websocket-all-pub-paid" value="publish OrderStatusChanged(PAID) → ec-demo.orders.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="kafka-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1760" y="930"/>
+                            <mxPoint x="1760" y="1180"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-to-audit-paid" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="kafka-websocket-all" target="order-audit-service" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1830" y="940"/>
+                            <mxPoint x="1830" y="1200"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="audit-to-mongo-paid" value="order_audit 追記 (PAID)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#009900;fontColor=#009900;" parent="1" source="order-audit-service" target="mongodb-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="2000" y="950"/>
+                            <mxPoint x="2000" y="1220"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-websocket-all-sub-paid" value="consume → OrderSummary取得 → WS broadcast" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" parent="1" source="kafka-websocket-all" target="vYZ6-0DS3YeXlyoQywWr-2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1700" y="970"/>
+                            <mxPoint x="1700" y="1240"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-48" value="WS push {&quot;status&quot;:&quot;SUCCESS&quot;,&quot;orderId&quot;:...}" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-2" target="vYZ6-0DS3YeXlyoQywWr-1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="308" y="967"/>
+                            <mxPoint x="308" y="1217"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -390,8 +383,8 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-50" value="成功画面へ遷移" style="curved=1;dashed=1;dashPattern=2 3;endArrow=block;rounded=0;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-1" target="vYZ6-0DS3YeXlyoQywWr-1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="155" y="1015"/>
-                            <mxPoint x="155" y="1045"/>
+                            <mxPoint x="155" y="1265"/>
+                            <mxPoint x="155" y="1295"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -403,7 +396,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-52" value="支払いステータス更新通知 (FAILED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-11" target="vYZ6-0DS3YeXlyoQywWr-5" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1100" y="1138"/>
+                            <mxPoint x="1100" y="1388"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -415,7 +408,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-54" value="releaseStock（在庫解放）" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=horizontal;curved=0;rounded=0;endArrow=block;fontStyle=1;fontColor=#3333FF;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-5" target="vYZ6-0DS3YeXlyoQywWr-9" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="897" y="1186"/>
+                            <mxPoint x="897" y="1436"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -427,7 +420,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-56" value="OK" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-6" target="vYZ6-0DS3YeXlyoQywWr-5" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="900" y="1234"/>
+                            <mxPoint x="900" y="1484"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -439,7 +432,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-58" value="CANCELLED 確定" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="vYZ6-0DS3YeXlyoQywWr-2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="630" y="1282"/>
+                            <mxPoint x="630" y="1532"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -451,35 +444,35 @@
                 <mxCell id="kafka-websocket-all-pub-failed" value="publish OrderStatusChanged(CANCELLED) → ec-demo.orders.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="kafka-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1760" y="1360"/>
+                            <mxPoint x="1760" y="1610"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-to-audit-failed" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="kafka-websocket-all" target="order-audit-service" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1830" y="1370"/>
+                            <mxPoint x="1830" y="1630"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="audit-to-mongo-failed" value="order_audit 追記 (CANCELLED)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="order-audit-service" target="mongodb-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="2000" y="1380"/>
+                            <mxPoint x="2000" y="1650"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-websocket-all-sub-failed" value="consume → OrderSummary取得 → WS broadcast" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" parent="1" source="kafka-websocket-all" target="vYZ6-0DS3YeXlyoQywWr-2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1700" y="1400"/>
+                            <mxPoint x="1700" y="1670"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-60" value="WS push {&quot;status&quot;:&quot;CANCELLED&quot;,&quot;orderId&quot;:...}" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-2" target="vYZ6-0DS3YeXlyoQywWr-1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="308" y="1330"/>
+                            <mxPoint x="308" y="1580"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -491,8 +484,8 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-62" value="失敗表示" style="curved=1;dashed=1;dashPattern=2 3;endArrow=block;rounded=0;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-1" target="vYZ6-0DS3YeXlyoQywWr-1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="155" y="1378"/>
-                            <mxPoint x="155" y="1408"/>
+                            <mxPoint x="155" y="1628"/>
+                            <mxPoint x="155" y="1658"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -504,7 +497,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-64" value="releaseStock（在庫解放）" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;fontColor=#3333FF;fontStyle=1" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="vYZ6-0DS3YeXlyoQywWr-10" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="894" y="1550"/>
+                            <mxPoint x="894" y="1800"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -516,7 +509,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-66" value="OK" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-6" target="vYZ6-0DS3YeXlyoQywWr-3" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="897" y="1598"/>
+                            <mxPoint x="897" y="1848"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -528,7 +521,7 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-68" value="CANCELLED 確定 (TIMEOUT)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="vYZ6-0DS3YeXlyoQywWr-2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="630" y="1620"/>
+                            <mxPoint x="630" y="1870"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -537,40 +530,38 @@
                         <mxPoint x="105.5" y="-7" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="kafka-websocket-all-pub-timeout" value="publish OrderStatusChanged(CANCELLED, reason: TIMEOUT) → ec-demo.orders.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" edge="1">
+                <mxCell id="kafka-websocket-all-pub-timeout" value="publish OrderStatusChanged(CANCELLED, reason: TIMEOUT) → ec-demo.orders.events.v1" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-3" target="kafka-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1760" y="1700"/>
+                            <mxPoint x="1760" y="1950"/>
                         </Array>
-                        <mxPoint x="733.5" y="1700" as="sourcePoint"/>
-                        <mxPoint x="1800" y="1700" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-to-audit-timeout" value="consume OrderStatusChanged" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="kafka-websocket-all" target="order-audit-service" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1830" y="1730"/>
+                            <mxPoint x="1830" y="1980"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="mongodb-websocket-all-timeout" value="order_audit 追記 (CANCELLED, reason: TIMEOUT)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="order-audit-service" target="mongodb-websocket-all" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="2000" y="1760"/>
+                            <mxPoint x="2000" y="2010"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="kafka-websocket-all-sub-timeout" value="consume → OrderSummary取得 → WS broadcast" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" parent="1" source="kafka-websocket-all" target="vYZ6-0DS3YeXlyoQywWr-2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1700" y="1810"/>
+                            <mxPoint x="1700" y="2060"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-70" value="WS push {&quot;status&quot;:&quot;CANCELLED&quot;,&quot;reason&quot;:&quot;TIMEOUT&quot;,&quot;orderId&quot;:...}" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;strokeColor=#FF0000;fontColor=#FF0000;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-2" target="vYZ6-0DS3YeXlyoQywWr-1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="308" y="1820"/>
+                            <mxPoint x="308" y="2070"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -582,8 +573,8 @@
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-72" value="タイムアウト表示" style="curved=1;dashed=1;dashPattern=2 3;endArrow=block;rounded=0;" parent="1" source="vYZ6-0DS3YeXlyoQywWr-1" target="vYZ6-0DS3YeXlyoQywWr-1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="155" y="1832"/>
-                            <mxPoint x="155" y="1862"/>
+                            <mxPoint x="155" y="2082"/>
+                            <mxPoint x="155" y="2112"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -593,10 +584,10 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-74" value="ユーザーがQRをスキャンし承認/取消/放置" style="fillColor=#ffff88;strokeColor=#9E916F;" parent="1" vertex="1">
-                    <mxGeometry x="79" y="620" width="1194" height="49" as="geometry"/>
+                    <mxGeometry x="79" y="870" width="1194" height="49" as="geometry"/>
                 </mxCell>
                 <mxCell id="vYZ6-0DS3YeXlyoQywWr-75" value="OrderPaymentTimeoutScheduler (payment_expires_at 監視)" style="fillColor=#ffff88;strokeColor=#9E916F;" parent="1" vertex="1">
-                    <mxGeometry x="573" y="1473" width="323" height="49" as="geometry"/>
+                    <mxGeometry x="573" y="1723" width="323" height="49" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
@@ -839,7 +830,7 @@
             </root>
         </mxGraphModel>
     </diagram>
-    <diagram id="1pkiW5eshti-wYOtl3Wf" name="決済失敗ケ">
+    <diagram id="1pkiW5eshti-wYOtl3Wf" name="決済失敗ケース">
         <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>

@@ -77,6 +77,8 @@ export const apiBase: string = import.meta.env.VITE_API_BASE
 
 // ベースパスを考慮した画像パスを返すヘルパー関数
 export function getImageUrl(path: string): string {
+  // 絶対URLはそのまま返す
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
   const base = import.meta.env.BASE_URL
   // 既にベースパスが含まれている場合はそのまま返す
   if (path.startsWith(base)) return path

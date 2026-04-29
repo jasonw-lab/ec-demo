@@ -27,7 +27,7 @@
       </div>
       
       <!-- QRコード -->
-      <div style="text-align:center;margin-bottom:16px;">
+      <div data-tour="payment-qr" style="text-align:center;margin-bottom:16px;">
         <div v-if="qrImgUrl" style="display:inline-block;padding:16px;background:#f8fafc;border-radius:12px;border:2px solid #4ECDC4;">
           <img :src="qrImgUrl" alt="PayPay QRコード" style="width:200px;height:200px;" />
         </div>
@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore, apiBase } from '../store'
 
@@ -199,6 +199,29 @@ const QR_FETCH_MAX_WAIT_MS = 30_000
 
 // QR画像URL（base64画像があれば優先、それ以外はURLを利用）
 const qrImgUrl = computed(() => paymentImageDataUrl.value || paymentUrl.value || '')
+
+// QRコードが表示されたタイミングで1回だけ操作ヒントを表示
+let _qrHintShown = false
+watch(qrImgUrl, async (url) => {
+  if (!url || _qrHintShown) return
+  _qrHintShown = true
+  const { driver } = await import('driver.js')
+  const d = driver({
+    overlayOpacity: 0.5,
+    smoothScroll: true,
+    allowClose: true,
+    popoverClass: 'product-tour-popover',
+  })
+  d.highlight({
+    element: '[data-tour="payment-qr"]',
+    popover: {
+      title: 'QRコードで支払い',
+      description: 'paypay(developer mode)アプリでQRコードをスキャンしてお支払いください。',
+      showButtons: ['close'],
+      nextBtnText: '閉じる',
+    },
+  })
+})
 
 let pollTimer: number | undefined
 const pollingStart = ref<number>(0)
@@ -509,6 +532,20 @@ async function fetchQr(): Promise<void> {
             void fetchQr()
           }, 2000)
         }
+      }
+      return
+    }
+
+    if (res.status === 409) {
+      const data = await res.json().catch(() => ({}))
+      const status = String((data as Record<string, unknown>).status || '').toUpperCase()
+      console.log('⚠️ Order already in terminal state, status:', status)
+      if (status === 'PAID') {
+        finalizeSuccess()
+      } else if (status === 'PAYMENT_FAILED' || status === 'FAILED') {
+        const msg = String((data as Record<string, unknown>).message || '支払いに失敗しました。')
+        paymentError.value = { code: 'PAYMENT_FAILED', message: msg }
+        hasFinalized.value = true
       }
       return
     }

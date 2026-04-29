@@ -25,7 +25,7 @@
     </header>
 
     <main class="login-main">
-      <section class="login-form-section">
+      <section class="login-form-section" data-tour="login-form">
         <div class="form-group">
           <label class="label">電話番号（メールアドレスも可）</label>
           <input
@@ -33,6 +33,7 @@
             type="text"
             class="input"
             placeholder="09000012345"
+            data-tour="login-email"
           />
         </div>
 
@@ -68,6 +69,7 @@
           type="button"
           :disabled="loading"
           @click="handleEmailPasswordLogin"
+          data-tour="login-submit"
         >
           {{ loading ? 'ログイン中...' : 'ログイン' }}
         </button>
@@ -102,6 +104,7 @@
           type="button"
           class="social-button google"
           :disabled="loading"
+          data-tour="login-google"
           @click="handleGoogleLogin"
         >
           <span class="social-icon">
@@ -195,10 +198,32 @@ const emailOrPhone = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
+let isFinalizingGoogleLogin = false
 
 const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
+
+async function finalizeGoogleLogin(user: { getIdToken: () => Promise<string> }) {
+  if (isFinalizingGoogleLogin) return
+  isFinalizingGoogleLogin = true
+
+  try {
+    loading.value = true
+    const idToken = await user.getIdToken()
+    await sendTokenToBackend(idToken)
+    await router.push('/')
+  } catch (e: any) {
+    console.error('Google login finalize error:', e)
+    if (e?.code === 'auth/unauthorized-domain') {
+      window.alert('このドメインは認証されていません。Firebase Consoleで設定を確認してください。')
+    }
+  } finally {
+    loading.value = false
+    isFinalizingGoogleLogin = false
+  }
+}
+
 
 const getApiBase = () => {
   // Highest priority: user-specified base URL
@@ -292,46 +317,15 @@ async function handleGoogleLogin() {
   loading.value = true
   try {
     const provider = new GoogleAuthProvider()
-    // Suppress console warnings for Cross-Origin-Opener-Policy (these are harmless)
-    const originalWarn = console.warn
-    console.warn = (...args: any[]) => {
-      const message = typeof args[0] === 'string' ? args[0] : String(args[0] || '')
-      if (message.includes('Cross-Origin-Opener-Policy')) {
-        return // Suppress this specific warning
-      }
-      originalWarn.apply(console, args)
-    }
-    
-    try {
-      const cred = await signInWithPopup(auth, provider)
-      const idToken = await cred.user.getIdToken()
-      await sendTokenToBackend(idToken)
-      await router.push('/')
-    } finally {
-      console.warn = originalWarn
-    }
+    const cred = await signInWithPopup(auth, provider)
+    await finalizeGoogleLogin(cred.user)
   } catch (e: any) {
-    // Ignore Cross-Origin-Opener-Policy warnings as they don't affect functionality
-    if (e?.message?.includes?.('Cross-Origin-Opener-Policy')) {
-      console.warn('Cross-Origin-Opener-Policy warning (can be ignored):', e.message)
-      return
-    }
-    
     console.error('Google login error:', e)
     
     let errorMessage = 'Googleでのログインに失敗しました。'
     
     if (e?.code) {
       switch (e.code) {
-        case 'auth/popup-blocked':
-          errorMessage = 'ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。'
-          break
-        case 'auth/popup-closed-by-user':
-          errorMessage = 'ログインウィンドウが閉じられました。もう一度お試しください。'
-          break
-        case 'auth/cancelled-popup-request':
-          errorMessage = 'ログインがキャンセルされました。'
-          break
         case 'auth/unauthorized-domain':
           errorMessage = 'このドメインは認証されていません。Firebase Consoleで設定を確認してください。'
           break
@@ -674,5 +668,4 @@ async function handleLineLogin() {
   cursor: pointer;
 }
 </style>
-
 

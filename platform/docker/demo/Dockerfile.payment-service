@@ -13,7 +13,7 @@ COPY apps/bff/pom.xml ./apps/bff/
 RUN mvn dependency:go-offline -pl apps/services/payment-service -B || true
 
 COPY apps/services/payment-service ./apps/services/payment-service
-RUN mvn clean package -pl apps/services/payment-service -DskipTests -B
+RUN mvn clean package -pl apps/services/payment-service -Dmaven.test.skip=true -B
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
