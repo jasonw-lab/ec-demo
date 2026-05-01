@@ -1,7 +1,7 @@
 package com.demo.ec.paypay;
 
-import com.demo.ec.pay.PayProperties;
-import com.demo.ec.pay.PaymentService;
+import com.demo.ec.payment.application.PayProperties;
+import com.demo.ec.payment.application.PaymentService;
 import jp.ne.paypay.model.PaymentDetails;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;

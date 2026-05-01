@@ -134,7 +134,7 @@ public class SearchService {
                 return thumbnailUrl;
             }
             boolean hostHasBucket = host.startsWith(bucket + ".");
-            boolean pathHasBucket = path.equals("/" + bucket) || path.startsWith("/" + bucket + "/");
+            boolean pathHasBucket = path.equals("/" + bucket) || path.startsWith("/" + bucket + "/") || path.contains("/" + bucket + "/");
             if (hostHasBucket || pathHasBucket) {
                 return thumbnailUrl;
             }

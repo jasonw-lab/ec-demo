@@ -13,7 +13,7 @@
     
     <div v-else>
       <!-- 注文内容確認 -->
-      <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:24px;">
+      <div data-tour="checkout-summary" style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:24px;">
         <h3 style="margin:0 0 16px 0;font-size:18px;font-weight:600;">注文内容</h3>
         <div v-for="c in cart" :key="c.productId" style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;">
           <img :src="c.product.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:60px;height:60px;object-fit:cover;border-radius:6px;background:#f9fafb;margin-right:12px;" />
@@ -59,8 +59,9 @@
 
       <!-- 決済ボタン -->
       <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-        <button 
-          @click="goToPaymentDetail" 
+        <button
+          @click="goToPaymentDetail"
+          data-tour="confirm-paypay"
           style="width:100%;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:16px;cursor:pointer;font-size:16px;font-weight:600;margin-bottom:16px;">
           注文確定 & PayPay へ
         </button>

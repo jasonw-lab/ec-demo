@@ -1,10 +1,25 @@
 networks:
-  ec-demo-net:
-    external: true
-    # 実際に接続するDocker network名（例: docker_youlai-boot）
-    name: ${EC_DEMO_NETWORK:-docker_youlai-boot}
+  jason-lab-net:
+    name: jason-lab-net
+    driver: bridge
 
 services:
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: ec-demo-nginx
+    restart: unless-stopped
+    volumes:
+      - ${BASEPATH}/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ${BASEPATH}/nginx/conf/conf.d:/etc/nginx/conf.d
+      - ${BASEPATH}/nginx/html:/usr/share/nginx/html
+      - ${BASEPATH}/nginx/logs:/var/log/nginx
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - jason-lab-net
+
   # MySQL for ec-demo
   ec-demo-mysql:
     image: mysql:8.0.29
@@ -20,9 +35,9 @@ services:
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_general_ci"]
     volumes:
       - ./sql/mysql-init:/docker-entrypoint-initdb.d
-      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mysql/conf/my.cnf:/etc/my.cnf
-      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mysql/data:/var/lib/mysql
-      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mysql/log:/var/log/mysql
+      - ${BASEPATH}/mysql/conf/my.cnf:/etc/my.cnf
+      - ${BASEPATH}/mysql/data:/var/lib/mysql
+      - ${BASEPATH}/mysql/log:/var/log/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
       interval: 10s
@@ -30,7 +45,7 @@ services:
       retries: 10
     restart: unless-stopped
     networks:
-      - ec-demo-net
+      - jason-lab-net
 
   # Seata Server for ec-demo
   ec-demo-seata-server:
@@ -46,11 +61,11 @@ services:
       - SEATA_IP=ec-demo-seata-server
       - SEATA_PORT=8091
     volumes:
-      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/seata/conf/application.yml:/seata-server/resources/application.yml:ro
-      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/seata/logs:/root/logs/seata
+      - ${BASEPATH}/seata/conf/application.yml:/seata-server/resources/application.yml:ro
+      - ${BASEPATH}/seata/logs:/root/logs/seata
     restart: unless-stopped
     networks:
-      - ec-demo-net
+      - jason-lab-net
     depends_on:
       ec-demo-mysql:
         condition: service_healthy
@@ -58,6 +73,7 @@ services:
   ec-demo-kafka:
     image: confluentinc/cp-kafka:latest
     container_name: ec-demo-kafka
+    profiles: ["kafka"]
     ports:
       - "29092:29092"
     environment:
@@ -83,11 +99,12 @@ services:
       - ec-demo-kafka-data:/var/lib/kafka/data
     restart: unless-stopped
     networks:
-      - ec-demo-net
+      - jason-lab-net
 
   ec-demo-kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: ec-demo-kafka-ui
+    profiles: ["kafka"]
     depends_on:
       - ec-demo-kafka
     ports:
@@ -97,29 +114,26 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ec-demo-kafka:9092
     restart: unless-stopped
     networks:
-      - ec-demo-net
+      - jason-lab-net
 
-#  ec-demo-redis:
-#    image: redis:7.2-alpine
-#    container_name: ec-demo-redis
-#    ports:
-#      - "6379:6379"
-#    command: ["redis-server", "--appendonly", "yes"]
-#    volumes:
-#      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/redis/data:/data
-#    restart: unless-stopped
-#    networks:
-#      - ec-demo-net
+  ec-demo-redis:
+    image: redis:7.2-alpine
+    container_name: ec-demo-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD:-123456}"]
+    volumes:
+      - ${BASEPATH}/redis/conf/redis.conf:/etc/redis/redis.conf:ro
+      - ${BASEPATH}/redis/data:/data
+    restart: unless-stopped
+    networks:
+      - jason-lab-net
 
   ec-demo-elasticsearch:
-    # kuromoji / icu / ingest-attachment を組み込んだカスタムES
-    build:
-      context: .
-      dockerfile: Dockerfile.elasticsearch
-      args:
-        ES_IMAGE: ${ELASTICSEARCH_IMAGE:-docker.elastic.co/elasticsearch/elasticsearch:9.0.0}
-    platform: ${EC_DEMO_PLATFORM:-linux/amd64}
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
+    platform: ${PLATFORM:-linux/amd64}
     container_name: ec-demo-elasticsearch9
+    profiles: ["elastic"]
     restart: unless-stopped
 
     environment:
@@ -152,12 +166,13 @@ services:
       retries: 60
 
     networks:
-      - ec-demo-net
+      - jason-lab-net
 
   ec-demo-kibana:
-    image: ${KIBANA_IMAGE:-docker.elastic.co/kibana/kibana:9.0.0}
-    platform: ${EC_DEMO_PLATFORM:-linux/amd64}
+    image: docker.elastic.co/kibana/kibana:9.3.1
+    platform: ${PLATFORM:-linux/amd64}
     container_name: ec-demo-kibana9
+    profiles: ["elastic"]
     restart: unless-stopped
 
     depends_on:
@@ -170,22 +185,21 @@ services:
       - SERVER_HOST=0.0.0.0
       - ELASTICSEARCH_HOSTS=http://ec-demo-elasticsearch:9200
       - xpack.security.enabled=false
-      # SavedObjects migration / Chromium対策
-      - NODE_OPTIONS=--max-old-space-size=2048
 
     ports:
       - "${KIBANA_PORT:-5601}:5601"
 
     networks:
-      - ec-demo-net
+      - jason-lab-net
 
   # =========================
   # MinIO (stable, version pinned)
   # =========================
   ec-demo-minio:
     image: minio/minio:RELEASE.2024-12-13T22-19-12Z
-    platform: ${EC_DEMO_PLATFORM:-linux/amd64}
+    platform: ${PLATFORM:-linux/amd64}
     container_name: ec-demo-minio
+    profiles: ["minio"]
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -196,45 +210,15 @@ services:
       - "${MINIO_API_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
-      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/minio/data:/data
+      - ${BASEPATH}/minio/data:/data
     networks:
-      - ec-demo-net
-
-  # =========================
-  # es-service (Elasticsearch API)
-  # =========================
-  ec-demo-es-service:
-    build:
-      context: ../../..
-      dockerfile: apps/services/es-service/Dockerfile
-    platform: ${EC_DEMO_PLATFORM:-linux/amd64}
-    container_name: ec-demo-es-service
-    restart: unless-stopped
-    depends_on:
-      ec-demo-elasticsearch:
-        condition: service_healthy
-      ec-demo-minio:
-        condition: service_started
-    environment:
-      - ELASTICSEARCH_ENDPOINT=http://ec-demo-elasticsearch:9200
-      - ES_INDEX_NAME=${ES_INDEX_NAME:-products_v1}
-      - ES_INDEX_ALIAS=${ES_INDEX_ALIAS:-products}
-      - MINIO_ENDPOINT=http://ec-demo-minio:9000
-      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
-      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin123}
-      - MINIO_BUCKET=${MINIO_BUCKET:-ec-demo}
-      - MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL:-http://localhost:9000}
-    ports:
-      - "8084:8084"
-    volumes:
-      - ${EC_DEMO_IMPORT_DIR:-/tmp/ec-demo-import}:/data/import:ro
-    networks:
-      - ec-demo-net
+      - jason-lab-net
 
   # MongoDB 6.0 LTS for ec-demo
   ec-demo-mongodb:
     image: mongo:6.0
     container_name: ec-demo-mongodb-6
+    profiles: ["mongo"]
     ports:
       - "27017:27017"
     environment:
@@ -242,9 +226,12 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-admin123}
       - MONGO_INITDB_DATABASE=ec_demo
+    command: >
+      mongod --quiet
+      --setParameter logComponentVerbosity={network:{verbosity:-1},command:{verbosity:-1}}
     volumes:
       - ./sql/mongodb-init:/docker-entrypoint-initdb.d:ro
-      - ${EC_DEMO_BASEPATH:-/mydata/ec-demo}/mongodb/data:/data/db
+      - ${BASEPATH}/mongodb/data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -252,7 +239,7 @@ services:
       retries: 10
     restart: unless-stopped
     networks:
-      - ec-demo-net
+      - jason-lab-net
 
 volumes:
   ec-demo-elasticsearch-data:

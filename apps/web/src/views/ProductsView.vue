@@ -46,9 +46,11 @@
             <div style="color:#6b7280;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ p.description }}</div>
             <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center">
               <div style="color:#ff6b6b;font-weight:700;font-size:18px;">¥ {{ Number(p.price).toLocaleString() }}</div>
-              <button @click="add(p)" style="background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;transition:background-color 0.2s;hover:background:#e55555;">
-                カートに追加
-              </button>
+              <HoverHint text="追加後は、右上のカートアイコンをクリックして会計へお進みください。">
+                <button @click="add(p)" style="background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;transition:background-color 0.2s;hover:background:#e55555;">
+                  カートに追加
+                </button>
+              </HoverHint>
             </div>
           </div>
         </div>
@@ -68,6 +70,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { apiBase, useStore, type Product, type Category, getImageUrl } from '../store'
 import { useRoute, useRouter } from 'vue-router'
 import Pagination from '../components/Pagination.vue'
+import HoverHint from '../components/HoverHint.vue'
 
 const products = ref<Product[]>([])
 const store = useStore()

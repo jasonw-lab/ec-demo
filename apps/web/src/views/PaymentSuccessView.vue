@@ -1,5 +1,5 @@
 <template>
-  <div style="max-width:720px;margin:40px auto;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);padding:32px;text-align:center;">
+  <div data-tour="payment-success" style="max-width:720px;margin:40px auto;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);padding:32px;text-align:center;">
     <div style="font-size:48px;margin-bottom:8px;">🎉</div>
     <h1 style="margin:0 0 8px 0;font-size:24px;font-weight:700;color:#111827;">お支払いが完了しました</h1>
     <div style="color:#6b7280;margin-bottom:24px;">ご購入ありがとうございます</div>

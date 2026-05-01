@@ -23,6 +23,8 @@ public class AuthSessionFilter extends OncePerRequestFilter {
     private static final Set<String> EXCLUDED_PATHS = Set.of(
             "/auth/session",
             "/auth/logout",
+            "/categories",
+            "/products",
             "/products/search",
             "/products/suggest",
             "/health",

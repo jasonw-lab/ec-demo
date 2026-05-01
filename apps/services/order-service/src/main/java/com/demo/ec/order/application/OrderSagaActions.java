@@ -228,7 +228,7 @@ public class OrderSagaActions {
     }
 
     private static String preferredUrl(PaymentResult result) {
-        return firstNonBlank(result.getDeeplink(), result.getPaymentUrl());
+        return firstNonBlank(result.getPaymentUrl(), result.getDeeplink());
     }
 
     private static String normalizeStatus(String status) {

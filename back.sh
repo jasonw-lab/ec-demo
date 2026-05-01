@@ -6,6 +6,12 @@ set -euo pipefail
 # Set default for iTerm2 variable if not set (prevents unbound variable error)
 export ITERM2_SQUELCH_MARK="${ITERM2_SQUELCH_MARK:-0}"
 
+# BASEPATH設定（デフォルト: /mydata）
+
+source "$HOME/.bashrc"
+export BASEPATH="${BASEPATH:-/mydata}"
+ENV_FILE="${BASEPATH}/nginx/apps-env/ec-demo/platform/docker/demo/.env"
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
@@ -14,8 +20,10 @@ if [[ $# -eq 0 ]]; then
   exit 0
 fi
 
-echo "Updating repository..."
-git pull
+# git pull is handled by deploy.yml when called from GitHub Actions
+# Uncomment below for standalone execution
+# echo "Updating repository..."
+# git pull
 
 declare -a services=()
 
@@ -40,6 +48,12 @@ map_argument_to_service() {
     storage-service)
       add_service "ec-demo-storage-service"
       ;;
+    payment-service)
+      add_service "ec-demo-payment-service"
+      ;;
+    es-service)
+      add_service "ec-demo-es-service"
+      ;;
     bff)
       add_service "ec-demo-bff"
       ;;
@@ -59,10 +73,18 @@ if [[ ${#services[@]} -eq 0 ]]; then
 fi
 
 echo "Services to rebuild: ${services[*]}"
+echo "BASEPATH: $BASEPATH"
 
 cd "$SCRIPT_DIR/platform/docker"
 COMPOSE_FILE="demo/docker-compose-demo-app.yml"
 
-docker compose -f "$COMPOSE_FILE" up -d --build "${services[@]}"
+# env-fileが存在する場合は使用
+if [[ -f "$ENV_FILE" ]]; then
+  echo "Using env-file: $ENV_FILE"
+  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build "${services[@]}"
+else
+  echo "Warning: env-file not found: $ENV_FILE"
+  docker compose -f "$COMPOSE_FILE" up -d --build "${services[@]}"
+fi
 
 echo "Selected backend services redeployed successfully."

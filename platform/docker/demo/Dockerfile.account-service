@@ -13,10 +13,10 @@ COPY apps/bff/pom.xml ./apps/bff/
 RUN mvn dependency:go-offline -pl apps/services/account-service -B || true
 
 COPY apps/services/account-service ./apps/services/account-service
-RUN mvn clean package -pl apps/services/account-service -DskipTests -B
+RUN mvn clean package -pl apps/services/account-service -Dmaven.test.skip=true -B
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/apps/services/account-service/target/*.jar app.jar
-EXPOSE 8081
+EXPOSE 8083
 ENTRYPOINT ["java", "-jar", "app.jar"]

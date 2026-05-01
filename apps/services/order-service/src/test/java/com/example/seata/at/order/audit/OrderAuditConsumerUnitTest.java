@@ -1,7 +1,9 @@
 package com.example.seata.at.order.audit;
 
-import com.example.seata.at.order.infrastructure.messaging.kafka.OrderStatusChangedEvent;
-import com.example.seata.at.order.infrastructure.messaging.kafka.OrderStatusChangedPayload;
+import com.demo.ec.order.gateway.audit.OrderAuditDocument;
+import com.demo.ec.order.gateway.audit.OrderAuditHistoryEntry;
+import com.demo.ec.order.gateway.messaging.kafka.OrderStatusChangedEvent;
+import com.demo.ec.order.gateway.messaging.kafka.OrderStatusChangedPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 

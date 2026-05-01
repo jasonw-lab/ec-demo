@@ -127,13 +127,13 @@
                         <mxPoint x="1495" y="493" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="cBfdUd4junJDnaiCbnr2-21" value="注文確定/支払確定&#xa;(orderId=O-2)" style="endArrow=block;html=1;" parent="1" edge="1">
+                <mxCell id="cBfdUd4junJDnaiCbnr2-21" value="OrderStatusChanged(newStatus=PAID)&#xa;(orderId=O-2)" style="endArrow=block;html=1;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="-71" y="583" as="sourcePoint"/>
                         <mxPoint x="144" y="583" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="cBfdUd4junJDnaiCbnr2-22" value="produce OrderStatusChanged&#xa;ec-demo.orders.events.v1" style="endArrow=block;html=1;" parent="1" edge="1">
+                <mxCell id="cBfdUd4junJDnaiCbnr2-22" value="produce OrderStatusChanged(newStatus=PAID)&#xa;ec-demo.orders.events.v1" style="endArrow=block;html=1;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="144" y="633" as="sourcePoint"/>
                         <mxPoint x="604" y="633" as="targetPoint"/>

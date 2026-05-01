@@ -45,15 +45,17 @@
       
       <!-- 商品グリッド -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
-        <div v-for="p in results" :key="p.id" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;transition:transform 0.2s;cursor:pointer;" @mouseenter="(e) => e.currentTarget.style.transform = 'translateY(-2px)'" @mouseleave="(e) => e.currentTarget.style.transform = 'translateY(0)'">
+        <div v-for="(p, idx) in results" :key="p.id" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;transition:transform 0.2s;cursor:pointer;" @mouseenter="(e) => e.currentTarget.style.transform = 'translateY(-2px)'" @mouseleave="(e) => e.currentTarget.style.transform = 'translateY(0)'">
           <img :src="p.imageUrl || getImageUrl('/product.svg')" alt="商品画像" style="width:100%;height:200px;object-fit:contain;background:#f9fafb" />
           <div style="padding:16px;display:flex;flex-direction:column;gap:12px;flex:1;">
             <div style="font-weight:600;font-size:16px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ p.name }}</div>
             <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center">
               <div style="color:#ff6b6b;font-weight:700;font-size:18px;">¥ {{ Number(p.price).toLocaleString() }}</div>
-              <button @click="add(p)" style="background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;transition:background-color 0.2s;" @mouseenter="(e) => e.currentTarget.style.backgroundColor = '#e55555'" @mouseleave="(e) => e.currentTarget.style.backgroundColor = '#ff6b6b'">
-                カートに追加
-              </button>
+              <HoverHint text="追加後は、右上のカートアイコンをクリックして会計へお進みください。">
+                <button @click="add(p)" :data-tour="idx === 0 ? 'add-to-cart-primary' : undefined" style="background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;transition:background-color 0.2s;" @mouseenter="(e) => e.currentTarget.style.backgroundColor = '#e55555'" @mouseleave="(e) => e.currentTarget.style.backgroundColor = '#ff6b6b'">
+                  カートに追加
+                </button>
+              </HoverHint>
             </div>
           </div>
         </div>
@@ -86,10 +88,13 @@ import { apiBase, useStore, type Product, getImageUrl } from '../store'
 import type { SearchApiResponse } from '../types/search'
 import { productCardToProduct } from '../types/search'
 import Pagination from '../components/Pagination.vue'
+import { useProductTour } from '../composables/useProductTour'
+import HoverHint from '../components/HoverHint.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = useStore()
+const { registerStepAction } = useProductTour()
 
 // 状態管理
 const loading = ref<boolean>(false)
@@ -187,5 +192,12 @@ function retrySearch(): void {
 // URLパラメータの変更を監視して検索実行
 watch([q, page, size], () => {
   performSearch()
+}, { immediate: true })
+
+// 検索結果がロードされたら Step 3 (index=3) のアクションとして先頭商品をカートへ自動追加登録
+watch(results, (newResults) => {
+  if (newResults.length > 0) {
+    registerStepAction(3, () => store.addToCart(newResults[0], 1))
+  }
 }, { immediate: true })
 </script>

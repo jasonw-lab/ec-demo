@@ -8,7 +8,7 @@
     <!-- 掘り出し物セクション -->
     <div style="margin-bottom:24px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h2 style="margin:0;font-size:16px;font-weight:600;">掘り出し物300円オークション</h2>
+        <h2 style="margin:0;font-size:16px;font-weight:600;">掘り出しもの ¥300スタート</h2>
         <a @click="showUnderConstruction" style="color:#3b82f6;text-decoration:none;font-size:14px;cursor:pointer;">すべて見る ></a>
       </div>
       
@@ -22,7 +22,9 @@
             </div>
             <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;">
               <div style="color:#ff6b6b;font-weight:700;font-size:16px;">現在¥300</div>
-              <button @click="add(p)" style="background:#ff6b6b;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;">カートに追加</button>
+              <HoverHint text="追加後は、右上のカートアイコンをクリックして会計へお進みください。">
+                <button @click="add(p)" style="background:#ff6b6b;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;">カートに追加</button>
+              </HoverHint>
             </div>
           </div>
         </div>
@@ -46,6 +48,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useStore, type Product, getImageUrl } from '../store'
+import HoverHint from '../components/HoverHint.vue'
 
 const store = useStore()
 const showModal = ref<boolean>(false)
