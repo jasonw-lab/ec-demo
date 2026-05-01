@@ -1,5 +1,170 @@
 # Repository Guidelines
 
+## Codex Autonomous Execution Policy
+
+This repository is used for ec-demo feature development and portfolio demonstration. Codex should work autonomously as much as possible while protecting source code, data, secrets, and external environments.
+
+### Basic Policy
+- In general, Codex may autonomously run commands required for investigation, implementation, verification, testing, formatting, and local development.
+- User confirmation should be required only for dangerous operations, destructive changes, external publication, secret exposure, production/VPS impact, or irreversible changes.
+- Before making changes, inspect related files and understand the impact scope.
+- After implementation, run build, test, lint, typecheck, or smoke checks where applicable.
+- Prioritize readability, maintainability, and explainability because this project is also used as a career portfolio.
+- If uncertainty is minor and the impact is limited, make a reasonable assumption and proceed autonomously.
+- If a change involves major architecture, specification, external exposure, permissions, or production-like environments, ask before proceeding.
+
+### Allowed Without Confirmation
+
+Codex may run non-dangerous commands without asking for user confirmation.
+
+#### Investigation / Read-only Checks
+- File listing and file content inspection
+- `grep`, `rg`, `find`, and similar search commands
+- `git status`
+- `git diff`
+- `git log`
+- `git branch`
+- `git show`
+- `gh status`
+- `gh repo view`
+- `gh issue list`
+- `gh issue view`
+- `gh pr list`
+- `gh pr view`
+- `gh pr diff`
+- `gh pr checks`
+- `gh workflow list`
+- `gh run list`
+- `gh run view`
+
+#### Development / Verification
+- Dependency installation
+- Build commands
+- Test commands
+- lint commands
+- formatter commands
+- typecheck commands
+- local development server startup
+- local verification scripts
+- smoke-test scripts
+
+Examples:
+- `npm install`
+- `npm ci`
+- `npm run dev`
+- `npm run build`
+- `npm run test`
+- `npm test`
+- `npm run lint`
+- `npm run format`
+- `npm run typecheck`
+- `pnpm install`
+- `pnpm dev`
+- `pnpm build`
+- `pnpm test`
+- `pnpm lint`
+- `mvn clean package -DskipTests`
+- `mvn test`
+- `./scripts/test-saga.sh 1 1`
+
+#### Local Docker Operations
+
+Local development Docker operations are allowed without confirmation as long as they do not delete persistent data or affect production/VPS/external environments.
+
+Allowed examples:
+- `docker ps`
+- `docker images`
+- `docker logs`
+- `docker compose ps`
+- `docker compose logs`
+- `docker compose up`
+- `docker compose up -d`
+- `docker compose build`
+- `docker compose restart`
+- `docker compose stop`
+
+#### Git / GitHub Operations
+
+Non-dangerous Git and GitHub operations are allowed without confirmation.
+
+Allowed examples:
+- `git checkout -b <branch>`
+- `git switch -c <branch>`
+- `git add <files>`
+- `git commit`
+- `gh issue create`
+- `gh issue edit`
+- `gh pr create`
+
+### Must Ask Before Running
+
+Codex must ask for user confirmation before running any dangerous operation.
+
+#### Destructive File / Git Operations
+- `rm -rf`
+- Mass file deletion
+- Deleting non-generated source/config files
+- `git reset --hard`
+- `git clean -fd`
+- `git rebase`
+- Any operation that rewrites existing history
+- Any operation that is difficult to undo
+
+#### GitHub / External Publication Operations
+- `git push`
+- `git push --force`
+- `gh pr merge`
+- `gh workflow run`
+- `gh release create`
+- `gh repo delete`
+- GitHub repository settings changes
+- Branch protection changes
+- Actions secrets changes
+- Deploy key changes
+- Any permission, visibility, or publication-scope change
+
+#### DB / Data Operations
+- DB deletion
+- DB initialization that removes existing data
+- Existing data deletion
+- Migrations that modify existing data
+- Operations affecting production, shared, or external data
+
+#### Docker / Infrastructure Operations
+- `docker compose down -v`
+- `docker volume rm`
+- `docker system prune`
+- `docker builder prune`
+- Docker volume deletion
+- Any operation that deletes persistent data
+- Any operation that affects VPS, production, or external services
+
+#### Secrets / Sensitive Information
+- Displaying `.env` contents
+- Displaying API keys
+- Displaying access tokens
+- Displaying passwords
+- Displaying full environment variables
+- Displaying full logs that may contain secrets
+
+When secrets are needed for troubleshooting, check only whether variables exist, and mask actual values.
+
+#### Cost / Account / Permission Impact
+- Deployment to external services
+- Operations that may incur cost
+- Account changes
+- Permission changes
+- Production environment changes
+
+### Completion Report
+
+After work is completed, report the following briefly:
+- What was changed
+- Files changed
+- Main commands executed
+- Build/test/lint/smoke-check results
+- Remaining risks or follow-up items
+
 ## Project Structure & Module Organization
 - `apps/bff`: Backend-for-Frontend (REST/WebSocket, auth/session handling).
 - `apps/services/*`: Domain microservices (`order-service`, `payment-service`, `storage-service`, `account-service`, `alert-service`, `es-service`).
