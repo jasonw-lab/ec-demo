@@ -129,68 +129,65 @@ services:
     networks:
       - jason-lab-net
 
-  ec-demo-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
-    platform: ${PLATFORM:-linux/amd64}
-    container_name: ec-demo-elasticsearch9
-    profiles: ["elastic"]
-    restart: unless-stopped
+  # ec-demo-opensearch:
+  #   image: opensearchproject/opensearch:${OPENSEARCH_VERSION:-2.19.1}
+  #   platform: ${PLATFORM:-linux/amd64}
+  #   container_name: ec-demo-opensearch
+  #   profiles: ["elastic"]
+  #   restart: unless-stopped
 
-    environment:
-      - TZ=Asia/Tokyo
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - ES_JAVA_OPTS=-Xms${ES_HEAP:-1g} -Xmx${ES_HEAP:-1g}
+  #   environment:
+  #     - TZ=Asia/Tokyo
+  #     - discovery.type=single-node
+  #     - DISABLE_SECURITY_PLUGIN=true
+  #     - DISABLE_INSTALL_DEMO_CONFIG=true
+  #     - bootstrap.memory_lock=true
+  #     - OPENSEARCH_JAVA_OPTS=-Xms${ES_HEAP:-1g} -Xmx${ES_HEAP:-1g}
 
-    ports:
-      - "${ES_HTTP_PORT:-9200}:9200"
-      - "${ES_TRANSPORT_PORT:-9300}:9300"
+  #   ports:
+  #     - "${ES_HTTP_PORT:-9200}:9200"
+  #     - "${ES_TRANSPORT_PORT:-9301}:9300"
 
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #     nofile:
+  #       soft: 65536
+  #       hard: 65536
 
-    volumes:
-      # ⚠ disk watermark 対策：ホストの空き容量 10%以上必須
-      - ec-demo-elasticsearch-data:/usr/share/elasticsearch/data
+  #   volumes:
+  #     - ec-demo-opensearch-data:/usr/share/opensearch/data
 
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 60
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -fsS 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 60
 
-    networks:
-      - jason-lab-net
+  #   networks:
+  #     - jason-lab-net
 
-  ec-demo-kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.1
-    platform: ${PLATFORM:-linux/amd64}
-    container_name: ec-demo-kibana9
-    profiles: ["elastic"]
-    restart: unless-stopped
+  # ec-demo-opensearch-dashboards:
+  #   image: opensearchproject/opensearch-dashboards:${OPENSEARCH_VERSION:-2.19.1}
+  #   platform: ${PLATFORM:-linux/amd64}
+  #   container_name: ec-demo-opensearch-dashboards
+  #   profiles: ["elastic"]
+  #   restart: unless-stopped
 
-    depends_on:
-      ec-demo-elasticsearch:
-        condition: service_healthy
+  #   depends_on:
+  #     ec-demo-opensearch:
+  #       condition: service_healthy
 
-    environment:
-      - TZ=Asia/Tokyo
-      - SERVER_NAME=ec-demo-kibana
-      - SERVER_HOST=0.0.0.0
-      - ELASTICSEARCH_HOSTS=http://ec-demo-elasticsearch:9200
-      - xpack.security.enabled=false
+  #   environment:
+  #     - TZ=Asia/Tokyo
+  #     - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
 
-    ports:
-      - "${KIBANA_PORT:-5601}:5601"
+  #   ports:
+  #     - "${KIBANA_PORT:-5601}:5601"
 
-    networks:
-      - jason-lab-net
+  #   networks:
+  #     - jason-lab-net
 
   # =========================
   # MinIO (stable, version pinned)
@@ -242,5 +239,5 @@ services:
       - jason-lab-net
 
 volumes:
-  ec-demo-elasticsearch-data:
+  ec-demo-opensearch-data:
   ec-demo-kafka-data:
