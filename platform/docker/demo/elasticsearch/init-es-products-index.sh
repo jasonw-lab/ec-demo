@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-OS_BASE_URL="${OS_BASE_URL:-${OPENSEARCH_ENDPOINT:-http://localhost:${ES_HTTP_PORT:-9200}}}"
+OS_BASE_URL="${OS_BASE_URL:-${OPENSEARCH_ENDPOINT:-http://localhost:${OPENSEARCH_HTTP_PORT:-9200}}}"
 INDEX_VERSIONED="${INDEX_VERSIONED:-products_v1}"
 ALIAS="${ALIAS:-products}"
 CSV_FILE="${CSV_FILE:-${SCRIPT_DIR}/data/product/sample-products.csv}"

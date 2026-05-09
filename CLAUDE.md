@@ -62,9 +62,9 @@ docker compose -f docker-compose-demo-env.yml --profile kafka --profile elastic 
     seata/conf/application.yml
     redis/conf/redis.conf
     kafka/data/
-    elasticsearch/data/
     mongodb/data/
     minio/data/
+    # Note: OpenSearch は外部コンテナ (smart-property-opensearch) に依存するためデータディレクトリ不要
   ```
 
 ### Test Scripts
@@ -94,7 +94,7 @@ apps/
     account-service/ # (port 8081) Account/balance
     payment-service/ # (port 8084) PayPay integration
     alert-service/   # (port 8085) Kafka Streams consistency checks
-    es-service/      # (port 8086) Elasticsearch product search
+    es-service/      # (port 8086) OpenSearch product search
   web/               # Vue 3 + TypeScript frontend
 platform/docker/     # Docker Compose configs (local vs demo/VPS)
 docs/adr/            # Architectural Decision Records
@@ -151,7 +151,7 @@ Kafka Streams detects order/payment inconsistencies:
 - Seata 2.0 (Saga mode), Kafka Streams
 - Firebase Authentication (ID token verification in BFF)
 - Redis (session storage), MySQL 8.0, MongoDB (audit logs)
-- Elasticsearch 8.x, MinIO (S3-compatible storage)
+- OpenSearch 2.x (外部コンテナ `smart-property-opensearch` に依存), MinIO (S3-compatible storage)
 
 ## Key References
 - ADRs: `docs/adr/` (read before making architectural changes)
@@ -197,23 +197,24 @@ export BASEPATH=/Users/wangjw/Dev/_Env/_demo/seata-mode
 # 1. Setup config files
 ./setup-env.sh
 
-# 2. Start middleware (all profiles)
+# 2. Start middleware (kafka / mongo / minio)
+# ※ OpenSearch は外部コンテナ (smart-property-opensearch) を別途起動
 docker compose -f docker-compose-demo-env.yml \
-  --profile kafka --profile elastic --profile mongo --profile minio up -d
+  --profile kafka --profile mongo --profile minio up -d
 
-# 3. Initialize ES index & import products
+# 3. Initialize OpenSearch index & import products
 cd elasticsearch
 ./init-es-products-index.sh
 ./init-upload-product-minio.sh
 cd ..
 
-# 4. Start applications
+# 4. Start applications (es-service は --profile elastic で起動)
 docker compose -f docker-compose-demo-app.yml --profile elastic up -d
 ```
 
 ### Verify
 ```bash
-# ES search
+# OpenSearch search via es-service
 curl "http://localhost/ec-api/api/products/search?q=iphone"
 
 # MinIO image
