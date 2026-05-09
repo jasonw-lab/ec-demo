@@ -12,7 +12,7 @@ services:
     container_name: ec-demo-account-service
     restart: unless-stopped
     ports:
-      - "18083:8083"
+      - "18083:8081"
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
@@ -124,7 +124,7 @@ services:
       - TZ=Asia/Tokyo
       - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8082
       - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
-      - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
+      - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8081
       - ES_SERVICE_BASE_URL=http://ec-demo-es-service:8086
       - LOGGING_LEVEL_ORG_APACHE_KAFKA=WARN
     volumes:

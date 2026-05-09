@@ -86,6 +86,8 @@ ai*
 update*.py
 update*.sh
 
+.review
+.claude
 
 
 # dotenv files
@@ -101,3 +103,4 @@ feature-README.md
 /alert-streams-service/
 /alert-process-service/
 docs/interview.md
+target/
