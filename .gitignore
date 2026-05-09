@@ -82,6 +82,7 @@ dist/*/
 
 rule*
 ai*
+p*
 *.log
 update*.py
 update*.sh
