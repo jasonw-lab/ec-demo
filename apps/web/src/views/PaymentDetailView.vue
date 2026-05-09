@@ -202,6 +202,13 @@ const qrImgUrl = computed(() => paymentImageDataUrl.value || paymentUrl.value ||
 
 // QRコードが表示されたタイミングで1回だけ操作ヒントを表示
 let _qrHintShown = false
+let qrHintDriver: { destroy: () => void } | null = null
+function dismissQrHint() {
+  if (qrHintDriver) {
+    try { qrHintDriver.destroy() } catch { /* noop */ }
+    qrHintDriver = null
+  }
+}
 watch(qrImgUrl, async (url) => {
   if (!url || _qrHintShown) return
   _qrHintShown = true
@@ -212,13 +219,15 @@ watch(qrImgUrl, async (url) => {
     allowClose: true,
     popoverClass: 'product-tour-popover',
   })
+  qrHintDriver = d
   d.highlight({
     element: '[data-tour="payment-qr"]',
     popover: {
       title: 'QRコードで支払い',
       description: 'paypay(developer mode)アプリでQRコードをスキャンしてお支払いください。',
       showButtons: ['close'],
-      nextBtnText: '閉じる',
+      closeBtnText: '閉じる',
+      onCloseClick: () => dismissQrHint(),
     },
   })
 })
@@ -272,6 +281,7 @@ async function startPolling() {
           // 支払い完了フラグを設定して、以降のポーリングを停止
           hasFinalized.value = true
           stopPolling()
+          dismissQrHint()
           store.clearCart()
           router.push({ path: '/payment-success', query: { orderId: orderId.value, total: String(total.value) } })
           return
@@ -280,6 +290,7 @@ async function startPolling() {
           // 支払い失敗フラグを設定して、以降のポーリングを停止
           hasFinalized.value = true
           stopPolling()
+          dismissQrHint()
           paymentError.value = {
             code: 'PAYMENT_FAILED',
             message: '支払いに失敗しました。もう一度お試しください。'
@@ -428,6 +439,7 @@ function finalizeSuccess() {
   hasFinalized.value = true
   stopPolling()
   disconnectWebSocket()
+  dismissQrHint()
   store.clearCart()
   router.push({ path: '/payment-success', query: { orderId: orderId.value, total: String(total.value) } })
 }
@@ -442,6 +454,7 @@ function finalizeFailure(message: Record<string, unknown>) {
   hasFinalized.value = true
   stopPolling()
   disconnectWebSocket()
+  dismissQrHint()
   const code = typeof message?.code === 'string' ? message.code : typeof message?.paymentStatus === 'string' ? message.paymentStatus : 'PAYMENT_FAILED'
   const text = typeof message?.message === 'string'
     ? message.message
@@ -458,6 +471,7 @@ function finalizeTimeout(message: Record<string, unknown>) {
   hasFinalized.value = true
   stopPolling()
   disconnectWebSocket()
+  dismissQrHint()
   const text = typeof message?.message === 'string'
     ? message.message
     : 'お支払いがタイムアウトしました。最初からやり直してください。'
@@ -624,5 +638,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   stopPolling()
   disconnectWebSocket()
+  dismissQrHint()
 })
 </script>
