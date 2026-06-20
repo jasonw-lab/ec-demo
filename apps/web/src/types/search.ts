@@ -1,15 +1,15 @@
-import type { Product } from '../store'
+import type { Product } from '../store';
 
 /**
  * Elasticsearch検索APIのレスポンス形式
  * BFFは SearchResponse を直接返却する（CommonResponse でラップしない）
  */
 export interface SearchApiResponse {
-  items: ProductCard[]
-  total: number
-  page: number
-  size: number
-  didYouMean?: string
+  items: ProductCard[];
+  total: number;
+  page: number;
+  size: number;
+  didYouMean?: string;
 }
 
 /**
@@ -17,11 +17,11 @@ export interface SearchApiResponse {
  * ES の ProductDocument に対応
  */
 export interface ProductCard {
-  productId: number
-  title: string
-  price: number
-  thumbnailUrl: string
-  createdAt: string
+  productId: number;
+  title: string;
+  price: number;
+  thumbnailUrl: string;
+  createdAt: string;
 }
 
 /**
@@ -40,5 +40,5 @@ export function productCardToProduct(card: ProductCard): Product {
     description: '', // API に含まれない
     price: card.price,
     imageUrl: card.thumbnailUrl,
-  }
+  };
 }

@@ -1,16 +1,15 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import CategoryList from './views/CategoryList.vue'
-import ProductList from './views/ProductList.vue'
-import ProductsView from './views/ProductsView.vue'
-import CartView from './views/CartView.vue'
-import LoginView from './views/LoginView.vue'
-import SearchView from './views/SearchView.vue'
-import CheckoutView from './views/CheckoutView.vue'
-import PaymentDetailView from './views/PaymentDetailView.vue'
-import PaymentSuccessView from './views/PaymentSuccessView.vue'
-import RegistrationView from './views/RegistrationView.vue'
-import RegistrationFormView from './views/RegistrationFormView.vue'
-import PersonalInformationView from './views/PersonalInformationView.vue'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import ProductList from './views/ProductList.vue';
+import ProductsView from './views/ProductsView.vue';
+import CartView from './views/CartView.vue';
+import LoginView from './views/LoginView.vue';
+import SearchView from './views/SearchView.vue';
+import CheckoutView from './views/CheckoutView.vue';
+import PaymentDetailView from './views/PaymentDetailView.vue';
+import PaymentSuccessView from './views/PaymentSuccessView.vue';
+import RegistrationView from './views/RegistrationView.vue';
+import RegistrationFormView from './views/RegistrationFormView.vue';
+import PersonalInformationView from './views/PersonalInformationView.vue';
 
 const routes: RouteRecordRaw[] = [
   { path: '/', component: ProductList },
@@ -25,11 +24,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/registration', component: RegistrationView },
   { path: '/registration/form', component: RegistrationFormView },
   { path: '/registration/personal-info', component: PersonalInformationView },
-]
+];
 
 export default createRouter({
   history: createWebHistory('/ec-demo/'),
   routes,
-})
-
-
+});
