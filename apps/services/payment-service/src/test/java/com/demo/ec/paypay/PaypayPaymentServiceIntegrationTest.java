@@ -3,6 +3,7 @@ package com.demo.ec.paypay;
 import com.demo.ec.payment.application.PayProperties;
 import com.demo.ec.payment.application.PaymentService;
 import jp.ne.paypay.model.PaymentDetails;
+import com.demo.ec.payment.PaymentServiceApplication;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
 import org.slf4j.Logger;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(classes = PaymentServiceApplication.class)
 class PaypayPaymentServiceIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(PaypayPaymentServiceIntegrationTest.class);
