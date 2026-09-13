@@ -1,27 +1,38 @@
 networks:
   jason-lab-net:
+    external: true
     name: jason-lab-net
-    driver: bridge
+
+# 共通ロギング設定（コンテナログの肥大化防止: 最大20MB x 3世代 = 60MB）
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "20m"
+      max-file: "3"
 
 services:
 
-  nginx:
-    image: nginx:stable-alpine
-    container_name: ec-demo-nginx
-    restart: unless-stopped
-    volumes:
-      - ${BASEPATH}/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
-      - ${BASEPATH}/nginx/conf/conf.d:/etc/nginx/conf.d
-      - ${BASEPATH}/nginx/html:/usr/share/nginx/html
-      - ${BASEPATH}/nginx/logs:/var/log/nginx
-    ports:
-      - 80:80
-      - 443:443
-    networks:
-      - jason-lab-net
+  # nginx (smart-dx-nginx in smart-retail-dx に移行のためコメントアウト)
+#  nginx:
+#    image: nginx:stable-alpine
+#    container_name: ec-demo-nginx
+#    restart: unless-stopped
+#    volumes:
+#      - ${BASEPATH}/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+#      - ${BASEPATH}/nginx/conf/conf.d:/etc/nginx/conf.d
+#      - ${BASEPATH}/nginx/html:/usr/share/nginx/html
+#      - ${BASEPATH}/nginx/logs:/var/log/nginx
+#    ports:
+#      - 80:80
+#      - 443:443
+#    networks:
+#      - jason-lab-net
+
 
   # MySQL for ec-demo
   ec-demo-mysql:
+    <<: *default-logging
     image: mysql:8.0.29
     # platform: ${EC_DEMO_PLATFORM:-linux/amd64}
     container_name: ec-demo-mysql-8
@@ -49,6 +60,7 @@ services:
 
   # Seata Server for ec-demo
   ec-demo-seata-server:
+    <<: *default-logging
     image: seataio/seata-server:2.0.0
     # platform: ${EC_DEMO_PLATFORM:-linux/amd64}
     container_name: ec-demo-seata-server-2.0
@@ -70,10 +82,13 @@ services:
       ec-demo-mysql:
         condition: service_healthy
 
+  # ==========================================
+  # Apache Kafka (KRaft mode, Confluent 7.7.1 商用安定版)
+  # ==========================================
   ec-demo-kafka:
-    image: confluentinc/cp-kafka:latest
+    <<: *default-logging
+    image: confluentinc/cp-kafka:7.7.1
     container_name: ec-demo-kafka
-    profiles: ["kafka"]
     ports:
       - "29092:29092"
     environment:
@@ -88,25 +103,46 @@ services:
       # PLAINTEXT: コンテナ間通信用 (ec-demo-kafka:9092)
       # PLAINTEXT_HOST: ホストからのアクセス用 (HOST_IP環境変数でカスタマイズ可能、デフォルト: localhost)
       KAFKA_LISTENERS: PLAINTEXT://ec-demo-kafka:9092,PLAINTEXT_HOST://0.0.0.0:29092,CONTROLLER://ec-demo-kafka:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ec-demo-kafka:9092,PLAINTEXT_HOST://${HOST_IP:-localhost}:29092,CONTROLLER://ec-demo-kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ec-demo-kafka:9092,PLAINTEXT_HOST://${HOST_IP:-localhost}:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
+      # JVM Memory / Heap settings (OOM防止 & リソース安定化)
+      KAFKA_HEAP_OPTS: "-Xms512m -Xmx512m"
+
       # Topic configuration
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_CREATE_TOPICS: "ec-demo.orders.events.v1:1:1"
+
+      # Log Retention settings (ディスク容量枯渇対策: 7日保持)
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
     volumes:
       - ec-demo-kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "cub kafka-ready 1 5 -b localhost:29092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 15s
     restart: unless-stopped
     networks:
       - jason-lab-net
 
+  # ==========================================
+  # Kafka UI (Webコンソール, v0.7.2 安定版)
+  # ==========================================
   ec-demo-kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    <<: *default-logging
+    image: provectuslabs/kafka-ui:v0.7.2
     container_name: ec-demo-kafka-ui
-    profiles: ["kafka"]
     depends_on:
-      - ec-demo-kafka
+      ec-demo-kafka:
+        condition: service_healthy
     ports:
       - "8090:8080"
     environment:
@@ -116,106 +152,111 @@ services:
     networks:
       - jason-lab-net
 
-  ec-demo-redis:
-    image: redis:7.2-alpine
-    container_name: ec-demo-redis
-    ports:
-      - "6379:6379"
-    command: ["redis-server", "/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD:-123456}"]
-    volumes:
-      - ${BASEPATH}/redis/conf/redis.conf:/etc/redis/redis.conf:ro
-      - ${BASEPATH}/redis/data:/data
-    restart: unless-stopped
-    networks:
-      - jason-lab-net
+  # ec-demo-redis (smart-dx-redis in smart-retail-dx に移行のためコメントアウト)
+#  ec-demo-redis:
+#    image: redis:7.2-alpine
+#    container_name: ec-demo-redis
+#    ports:
+#      - "6379:6379"
+#    command: ["redis-server", "/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD:-123456}"]
+#    volumes:
+#      - ${BASEPATH}/redis/conf/redis.conf:/etc/redis/redis.conf:ro
+#      - ${BASEPATH}/redis/data:/data
+#    restart: unless-stopped
+#    networks:
+#      - jason-lab-net
 
-  ec-demo-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
-    platform: ${PLATFORM:-linux/amd64}
-    container_name: ec-demo-elasticsearch9
-    profiles: ["elastic"]
-    restart: unless-stopped
+  # ec-demo-elasticsearch (smart-dx-opensearch in smart-retail-dx に移行のためコメントアウト)
+#  ec-demo-elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
+#    platform: ${PLATFORM:-linux/amd64}
+#    container_name: ec-demo-elasticsearch9
+#    profiles: ["elastic"]
+#    restart: unless-stopped
+#
+#    environment:
+#      - TZ=Asia/Tokyo
+#      - discovery.type=single-node
+#      - xpack.security.enabled=false
+#      - xpack.security.enrollment.enabled=false
+#      - ES_JAVA_OPTS=-Xms${ES_HEAP:-1g} -Xmx${ES_HEAP:-1g}
+#
+#    ports:
+#      - "${ES_HTTP_PORT:-9200}:9200"
+#      - "${ES_TRANSPORT_PORT:-9300}:9300"
+#
+#    ulimits:
+#      memlock:
+#        soft: -1
+#        hard: -1
+#      nofile:
+#        soft: 65536
+#        hard: 65536
+#
+#    volumes:
+#      # ⚠ disk watermark 対策：ホストの空き容量 10%以上必須
+#      - ec-demo-elasticsearch-data:/usr/share/elasticsearch/data
+#
+#    healthcheck:
+#      test: ["CMD-SHELL", "curl -fsS 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null || exit 1"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 60
+#
+#    networks:
+#      - jason-lab-net
 
-    environment:
-      - TZ=Asia/Tokyo
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - ES_JAVA_OPTS=-Xms${ES_HEAP:-1g} -Xmx${ES_HEAP:-1g}
-
-    ports:
-      - "${ES_HTTP_PORT:-9200}:9200"
-      - "${ES_TRANSPORT_PORT:-9300}:9300"
-
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-
-    volumes:
-      # ⚠ disk watermark 対策：ホストの空き容量 10%以上必須
-      - ec-demo-elasticsearch-data:/usr/share/elasticsearch/data
-
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 60
-
-    networks:
-      - jason-lab-net
-
-  ec-demo-kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.1
-    platform: ${PLATFORM:-linux/amd64}
-    container_name: ec-demo-kibana9
-    profiles: ["elastic"]
-    restart: unless-stopped
-
-    depends_on:
-      ec-demo-elasticsearch:
-        condition: service_healthy
-
-    environment:
-      - TZ=Asia/Tokyo
-      - SERVER_NAME=ec-demo-kibana
-      - SERVER_HOST=0.0.0.0
-      - ELASTICSEARCH_HOSTS=http://ec-demo-elasticsearch:9200
-      - xpack.security.enabled=false
-
-    ports:
-      - "${KIBANA_PORT:-5601}:5601"
-
-    networks:
-      - jason-lab-net
+  # ec-demo-kibana (smart-dx-opensearch-dashboards in smart-retail-dx に移行のためコメントアウト)
+#  ec-demo-kibana:
+#    image: docker.elastic.co/kibana/kibana:9.3.1
+#    platform: ${PLATFORM:-linux/amd64}
+#    container_name: ec-demo-kibana9
+#    profiles: ["elastic"]
+#    restart: unless-stopped
+#
+#    depends_on:
+#      ec-demo-elasticsearch:
+#        condition: service_healthy
+#
+#    environment:
+#      - TZ=Asia/Tokyo
+#      - SERVER_NAME=ec-demo-kibana
+#      - SERVER_HOST=0.0.0.0
+#      - ELASTICSEARCH_HOSTS=http://ec-demo-elasticsearch:9200
+#      - xpack.security.enabled=false
+#
+#    ports:
+#      - "${KIBANA_PORT:-5601}:5601"
+#
+#    networks:
+#      - jason-lab-net
 
   # =========================
   # MinIO (stable, version pinned)
   # =========================
-  ec-demo-minio:
-    image: minio/minio:RELEASE.2024-12-13T22-19-12Z
-    platform: ${PLATFORM:-linux/amd64}
-    container_name: ec-demo-minio
-    profiles: ["minio"]
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      - TZ=Asia/Tokyo
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin123}
-    ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
-    volumes:
-      - ${BASEPATH}/minio/data:/data
-    networks:
-      - jason-lab-net
+#  ec-demo-minio:
+#    image: minio/minio:RELEASE.2024-12-13T22-19-12Z
+#    platform: ${PLATFORM:-linux/amd64}
+#    container_name: ec-demo-minio
+#    profiles: ["minio"]
+#    restart: unless-stopped
+#    command: server /data --console-address ":9001"
+#    environment:
+#      - TZ=Asia/Tokyo
+#      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+#      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin123}
+#    ports:
+#      - "${MINIO_API_PORT:-9000}:9000"
+#      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+#    volumes:
+#      - ${BASEPATH}/minio/data:/data
+#    networks:
+#      - jason-lab-net
+
 
   # MongoDB 6.0 LTS for ec-demo
   ec-demo-mongodb:
+    <<: *default-logging
     image: mongo:6.0
     container_name: ec-demo-mongodb-6
     profiles: ["mongo"]

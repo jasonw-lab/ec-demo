@@ -3,9 +3,18 @@ networks:
     external: true
     name: jason-lab-net
 
+# 共通ロギング設定（コンテナログの肥大化防止: 最大20MB x 3世代 = 60MB）
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "20m"
+      max-file: "3"
+
 services:
   # Account Service
   ec-demo-account-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.account-service
@@ -31,6 +40,7 @@ services:
 
   # Storage Service
   ec-demo-storage-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.storage-service
@@ -57,6 +67,7 @@ services:
 
   # Order Service
   ec-demo-order-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.order-service
@@ -94,6 +105,7 @@ services:
 
   # Payment Service
   ec-demo-payment-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.payment-service
@@ -111,6 +123,7 @@ services:
 
   # BFF
   ec-demo-bff:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.bff
@@ -152,6 +165,7 @@ services:
   # es-service (Elasticsearch API)
   # =========================
   ec-demo-es-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.es-service
