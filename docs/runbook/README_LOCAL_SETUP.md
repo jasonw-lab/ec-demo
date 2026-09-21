@@ -71,7 +71,7 @@ MySQLコンテナ初回起動時に `platform/docker/demo/sql/mysql-init` 配下
 
 ```bash
 cd platform/docker/demo
-export BASEPATH=/Users/wangjw/Dev/_Env/_demo/seata-mode
+export BASEPATH=/Users/{user-name}/Dev/_Env/_demo/seata-mode
 ./setup-env.sh
 ```
 
@@ -79,7 +79,7 @@ export BASEPATH=/Users/wangjw/Dev/_Env/_demo/seata-mode
 
 ```bash
 cd platform/docker/demo
-export BASEPATH=/Users/wangjw/Dev/_Env/_demo/seata-mode
+export BASEPATH=/Users/{user-name}/Dev/_Env/_demo/seata-mode
 
 # 基本（MySQL, Seata, Redis, nginx）
 docker compose -f docker-compose-demo-env.yml up -d
@@ -101,7 +101,7 @@ docker compose -f docker-compose-demo-env.yml --profile kafka --profile elastic 
 
 ```bash
 cd platform/docker/demo
-export BASEPATH=/Users/wangjw/Dev/_Env/_demo/seata-mode
+export BASEPATH=/Users/{user-name}/Dev/_Env/_demo/seata-mode
 
 # 基本サービス（account, storage, order, payment, bff）
 docker compose -f docker-compose-demo-app.yml up -d

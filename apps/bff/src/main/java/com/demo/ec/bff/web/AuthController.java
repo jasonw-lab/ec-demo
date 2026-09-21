@@ -59,6 +59,10 @@ public class AuthController {
         FirebaseToken decodedToken;
         try {
             decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+        } catch (IllegalStateException e) {
+            log.warn("Firebase is not initialized (service account missing): {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(AuthStatusResponse.error("認証サービスが初期化されていません。"));
         } catch (FirebaseAuthException e) {
             log.warn("Failed to verify Firebase ID token: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

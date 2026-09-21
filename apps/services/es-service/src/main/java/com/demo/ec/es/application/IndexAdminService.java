@@ -1,14 +1,13 @@
 package com.demo.ec.es.application;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.mapping.Property;
-import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
-import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
-import co.elastic.clients.elasticsearch.indices.ExistsRequest;
-import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
-import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import com.demo.ec.es.config.EsServiceProperties;
 import com.demo.ec.es.domain.ElasticsearchOperationException;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.mapping.Property;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch.indices.CreateIndexRequest;
+import org.opensearch.client.opensearch.indices.UpdateAliasesRequest;
+import org.opensearch.client.opensearch.indices.update_aliases.Action;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,29 +16,21 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Service for managing Elasticsearch index lifecycle.
- * Handles index creation, alias management, and reindexing operations.
- */
 @Service
 public class IndexAdminService {
     private static final Logger log = LoggerFactory.getLogger(IndexAdminService.class);
 
-    private final ElasticsearchClient client;
+    private final OpenSearchClient client;
     private final EsServiceProperties properties;
 
-    public IndexAdminService(ElasticsearchClient client, EsServiceProperties properties) {
+    public IndexAdminService(OpenSearchClient client, EsServiceProperties properties) {
         this.client = client;
         this.properties = properties;
     }
 
-    /**
-     * Initializes the product index if it doesn't exist.
-     * Creates index with proper mappings and sets up alias.
-     */
     public void initIndexIfMissing() {
         String indexName = properties.getIndex().getName();
-        
+
         try {
             boolean exists = client.indices().exists(b -> b.index(indexName)).value();
             if (exists) {
@@ -51,7 +42,7 @@ public class IndexAdminService {
             createIndex(indexName);
             ensureAlias(indexName, properties.getIndex().getAlias());
             log.info("Index created successfully: {}", indexName);
-            
+
         } catch (IOException ex) {
             log.error("Failed to initialize index: {}", indexName, ex);
             throw new ElasticsearchOperationException("Failed to initialize index: " + indexName, ex);

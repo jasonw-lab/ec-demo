@@ -16,7 +16,7 @@ if [[ -f "$HOME/.bashrc" ]]; then
     # shellcheck source=/dev/null
     source "$HOME/.bashrc"
 fi
-BASEPATH="${BASEPATH:-/Users/wangjw/Dev/_Env/_demo/seata-mode}"
+BASEPATH="${BASEPATH:-$HOME/Dev/_Env/_demo/seata-mode}"
 BACKUP_DIR="${BASEPATH}/nginx/apps-env/ec-demo"
 
 # バックアップ対象ファイル（相対パス）

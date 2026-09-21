@@ -1,266 +1,86 @@
-# Repository Guidelines
+# ec-demo — エージェント向けガイド
 
-## Codex Autonomous Execution Policy
+このファイルは ec-demo 固有のルールのみを記載する。汎用ルールは `~/ai-rules` を参照。
 
-This repository is used for ec-demo feature development and portfolio demonstration. Codex should work autonomously as much as possible while protecting source code, data, secrets, and external environments.
+## 共通ルール（必読）
 
-### Basic Policy
-- In general, Codex may autonomously run commands required for investigation, implementation, verification, testing, formatting, and local development.
-- User confirmation should be required only for dangerous operations, destructive changes, external publication, secret exposure, production/VPS impact, or irreversible changes.
-- Before making changes, inspect related files and understand the impact scope.
-- After implementation, run build, test, lint, typecheck, or smoke checks where applicable.
-- Prioritize readability, maintainability, and explainability because this project is also used as a career portfolio.
-- If uncertainty is minor and the impact is limited, make a reasonable assumption and proceed autonomously.
-- If a change involves major architecture, specification, external exposure, permissions, or production-like environments, ask before proceeding.
+作業開始時に以下を読み、そのルールに従う。
 
-### Allowed Without Confirmation
+- `~/ai-rules/ai-common.md` — 言語方針、実装・テスト・コミット規約、自律実行ポリシー、完了報告フォーマット
+- `~/ai-rules/AGENTS.md` — Knowledge Base (`kb`) の定義
+- `~/ai-rules/PROJECTS.md` — 全体プロジェクトマップ
 
-Codex may run non-dangerous commands without asking for user confirmation.
+共通ルールと本ファイルが衝突する場合は、ユーザーの明示指示 > 本ファイル > 共通ルール の順で優先する。
 
-#### Investigation / Read-only Checks
-- File listing and file content inspection
-- `grep`, `rg`, `find`, and similar search commands
-- `git status`
-- `git diff`
-- `git log`
-- `git branch`
-- `git show`
-- `gh status`
-- `gh repo view`
-- `gh issue list`
-- `gh issue view`
-- `gh pr list`
-- `gh pr view`
-- `gh pr diff`
-- `gh pr checks`
-- `gh workflow list`
-- `gh run list`
-- `gh run view`
+## プロジェクト概要
 
-#### Development / Verification
-- Dependency installation
-- Build commands
-- Test commands
-- lint commands
-- formatter commands
-- typecheck commands
-- local development server startup
-- local verification scripts
-- smoke-test scripts
+PayPay 決済をマイクロサービスへ統合した EC デモ。分散トランザクションは **Seata Saga**、
+決済ステータス同期は **Webhook + Polling** のハイブリッド。ポートフォリオ用途も兼ねるため、
+可読性・保守性・説明可能性を優先する。
 
-Examples:
-- `npm install`
-- `npm ci`
-- `npm run dev`
-- `npm run build`
-- `npm run test`
-- `npm test`
-- `npm run lint`
-- `npm run format`
-- `npm run typecheck`
-- `pnpm install`
-- `pnpm dev`
-- `pnpm build`
-- `pnpm test`
-- `pnpm lint`
-- `mvn clean package -DskipTests`
-- `mvn test`
-- `./scripts/test-saga.sh 1 1`
+## リポジトリ構成
 
-#### Local Docker Operations
-
-Local development Docker operations are allowed without confirmation as long as they do not delete persistent data or affect production/VPS/external environments.
-
-Allowed examples:
-- `docker ps`
-- `docker images`
-- `docker logs`
-- `docker compose ps`
-- `docker compose logs`
-- `docker compose up`
-- `docker compose up -d`
-- `docker compose build`
-- `docker compose restart`
-- `docker compose stop`
-
-#### Git / GitHub Operations
-
-Non-dangerous Git and GitHub operations are allowed without confirmation.
-
-Allowed examples:
-- `git checkout -b <branch>`
-- `git switch -c <branch>`
-- `git add <files>`
-- `git commit`
-- `gh issue create`
-- `gh issue edit`
-- `gh pr create`
-
-### Must Ask Before Running
-
-Codex must ask for user confirmation before running any dangerous operation.
-
-#### Destructive File / Git Operations
-- `rm -rf`
-- Mass file deletion
-- Deleting non-generated source/config files
-- `git reset --hard`
-- `git clean -fd`
-- `git rebase`
-- Any operation that rewrites existing history
-- Any operation that is difficult to undo
-
-#### GitHub / External Publication Operations
-- `git push`
-- `git push --force`
-- `gh pr merge`
-- `gh workflow run`
-- `gh release create`
-- `gh repo delete`
-- GitHub repository settings changes
-- Branch protection changes
-- Actions secrets changes
-- Deploy key changes
-- Any permission, visibility, or publication-scope change
-
-#### DB / Data Operations
-- DB deletion
-- DB initialization that removes existing data
-- Existing data deletion
-- Migrations that modify existing data
-- Operations affecting production, shared, or external data
-
-#### Docker / Infrastructure Operations
-- `docker compose down -v`
-- `docker volume rm`
-- `docker system prune`
-- `docker builder prune`
-- Docker volume deletion
-- Any operation that deletes persistent data
-- Any operation that affects VPS, production, or external services
-
-#### Secrets / Sensitive Information
-- Displaying `.env` contents
-- Displaying API keys
-- Displaying access tokens
-- Displaying passwords
-- Displaying full environment variables
-- Displaying full logs that may contain secrets
-
-When secrets are needed for troubleshooting, check only whether variables exist, and mask actual values.
-
-#### Cost / Account / Permission Impact
-- Deployment to external services
-- Operations that may incur cost
-- Account changes
-- Permission changes
-- Production environment changes
-
-### Completion Report
-
-After work is completed, report the following briefly:
-- What was changed
-- Files changed
-- Main commands executed
-- Build/test/lint/smoke-check results
-- Remaining risks or follow-up items
-
-## Project Structure & Module Organization
-- `apps/bff`: Backend-for-Frontend (REST/WebSocket, auth/session handling).
-- `apps/services/*`: Domain microservices (`order-service`, `payment-service`, `storage-service`, `account-service`, `alert-service`, `es-service`).
-- `apps/web`: Vue 3 + TypeScript frontend (Vite).
-- `platform/docker/local`: local middleware stack (MySQL/Redis/Seata; optional Kafka/Elasticsearch).
-- `platform/docker/demo`: VPS/demo deployment compose files.
-- `docs/adr`, `docs/architecture`, `docs/runbook`: architecture decisions and operational docs.
-- `scripts/`: flow and smoke-test utilities (for example, `scripts/test-saga.sh`).
-
-## Build, Test, and Development Commands
-- `cd platform/docker/local && docker compose up -d`: start required local middleware.
-- `docker compose --profile kafka --profile elastic up -d`: add optional Kafka/Elasticsearch.
-- `mvn clean package -DskipTests`: build all backend modules.
-- `mvn test`: run backend tests across modules.
-- `mvn spring-boot:run -pl apps/bff`: run a single service (swap module path as needed).
-- `cd apps/web && pnpm install && pnpm dev`: run frontend in development.
-- `cd apps/web && pnpm build`: build frontend production assets.
-- `./scripts/test-saga.sh 1 1`: quick order/Saga flow smoke check.
-
-## Coding Style & Naming Conventions
-- Java baseline is 21; keep service code aligned with Hybrid Hexagonal layering: `web -> application -> domain <- gateway`.
-- Do not place Spring/DB framework annotations or infrastructure logic in `domain`.
-- Follow Google Java Style (4-space indentation, clear class names).
-- Frontend uses TypeScript + Vue SFCs with 2-space indentation; use `PascalCase` component/view file names (for example, `CheckoutView.vue`).
-- Name tests with suffixes like `*Test`, `*IntegrationTest`, or `*UnitTest`.
-
-## Testing Guidelines
-- Backend tests use Spring Boot Test (JUnit 5), with RestAssured and `spring-kafka-test` where needed.
-- Run all tests with `mvn test`; run module tests with `mvn test -pl apps/services/order-service`.
-- For Saga/payment changes, cover happy path, idempotency, and compensation/failure paths.
-- No enforced coverage gate is defined; new behavior should include regression tests.
-
-## Commit & Pull Request Guidelines
-- History follows mostly Conventional Commit prefixes: `feat:`, `fix:`, `refactor:` (scopes like `feat(search): ...` are encouraged).
-- Keep commits focused to one logical change and mention the affected module.
-- PRs should include: summary, impacted services, local verification commands/results, config/env updates, and UI screenshots for frontend changes.
-- Link related issue/ADR when changing architecture or cross-service contracts.
-
-## Security & Configuration Tips
-- Never commit secrets from `.env` or `apps/bff/src/main/resources/serviceAccountKey.json`.
-- Use `./init.sh pull` to sync local env files, then verify `/actuator/health` endpoints before running integration flows.
-
-## Docker Environment Configuration Rules
-
-### BASEPATH Rule
-- All middleware config files must be placed under `BASEPATH`, NOT in the repository
-- Default BASEPATH: `/Users/wangjw/Dev/_Env/_demo/seata-mode`
-- Environment variable: `export BASEPATH=/path/to/your/env`
-
-### Config File Management
-1. Source config templates are stored in `platform/docker/demo/conf/`
-2. If config does not exist in BASEPATH, copy from source
-3. Never commit runtime data or environment-specific configs to the repository
-
-### BASEPATH Directory Structure
 ```
-${BASEPATH}/
-  mysql/
-    conf/my.cnf          # MySQL configuration
-    data/                # MySQL data files
-    log/                 # MySQL logs
-  seata/
-    conf/application.yml # Seata server configuration
-    logs/                # Seata logs
-  redis/
-    conf/redis.conf      # Redis configuration
-    data/                # Redis persistence
-  kafka/
-    data/                # Kafka data
-  elasticsearch/
-    data/                # Elasticsearch indices
-  mongodb/
-    data/                # MongoDB data
-  minio/
-    data/                # MinIO object storage
+apps/bff              # BFF (REST/WebSocket, Firebase 認証, PayPay webhook, Redis セッション)
+apps/services/*       # order / storage / account / payment / alert / es
+apps/web              # Vue 3 + TypeScript (Vite)
+platform/docker/local # ローカル用ミドルウェア Compose
+platform/docker/demo  # デモ/VPS 用 Compose（アプリ含む）
+scripts/              # フロー・スモークテスト用スクリプト
+docs/                 # adr / architecture / runbook / proposals / worklog
 ```
 
-### Setup Process
+## 主要コマンド
+
 ```bash
-cd platform/docker/demo
-export BASEPATH=/Users/wangjw/Dev/_Env/_demo/seata-mode
-./setup-env.sh  # Creates directories and copies configs if missing
-docker compose -f docker-compose-demo-env.yml up -d
+mvn clean package -DskipTests           # バックエンド全モジュールのビルド
+mvn test                                # 全モジュールのテスト
+mvn test -pl apps/services/order-service # 単一モジュールのテスト
+mvn spring-boot:run -pl apps/bff        # 単一サービス起動（モジュールパスを差し替え）
+
+cd apps/web && pnpm install && pnpm dev # フロントエンド開発
+cd apps/web && pnpm build               # フロントエンド本番ビルド
+
+./scripts/test-saga.sh 1 1              # 注文/Saga フローのスモークチェック
+./init.sh pull                          # 環境ファイルの同期
+curl http://localhost:8080/actuator/health  # BFF ヘルスチェック
 ```
 
-### When Adding New Middleware
-1. Add source config to `platform/docker/demo/conf/<middleware>/conf/`
-2. Update `setup-env.sh` to copy the new config
-3. Update `docker-compose-demo-env.yml` with `${BASEPATH}/<middleware>/conf/` volume mount
-4. Update this document with the new directory structure
+## アーキテクチャ制約
 
-## Docker Service Port Mapping Rules
+Hybrid Hexagonal レイヤリング（各サービス `com.demo.ec.[service]` 配下）:
 
-### Application Service Ports (Internal)
-| Service | Internal Port | External Port | Environment Variable |
-|---------|--------------|---------------|---------------------|
+```
+web/ → application/ → domain/ ← gateway/    # domain は外側へ依存しない
+```
+
+禁止:
+- `domain/` への Spring / JPA / MyBatis など framework アノテーション、インフラロジック
+- Saga ステートマシンと `@GlobalTransactional` の併用
+- `web/` 層への業務ロジック、`application/` 層からの DB 直接アクセス
+
+必須:
+- domain エンティティは純粋な POJO
+- gateway インターフェースは `domain/` または `application/` に定義し、`gateway/` で実装
+- MyBatis-Plus は `LambdaQueryWrapper` を使う
+- DTO / ドメインイベントは `record`（Java 21）
+- Webhook は多重到達する前提で冪等に設計する
+
+## ドメイン固有の注意点
+
+- 注文状態遷移: `PENDING → WAITING_PAYMENT → PAID/FAILED`。`PAID` は終端で、遅延到着した失敗イベントは無視する
+- Saga 定義: `apps/services/order-service/src/main/resources/statelang/*.json`
+- 決済同期: Webhook（署名検証あり）が主、`WAITING_PAYMENT` 注文のポーリングがフォールバック。`payment_last_event_id` で重複処理を防ぐ
+- alert-service（Kafka Streams）の整合性ルール: A=決済成功だが注文未更新 / B=注文 PAID だが決済失敗 / C=同一 orderId の重複決済
+- テストは `*Test` / `*IntegrationTest` / `*UnitTest` 命名。Saga・決済の変更では正常系・冪等性・補償/失敗系をカバーする
+- コミットは Conventional Commits にモジュール名スコープを付ける（例: `feat(search): ...`）
+
+## Docker / ポート
+
+コンテナ間通信は **コンテナ名 + 内部ポート**、ホストからは **外部ポート**。
+
+| サービス | 内部 | 外部 | 環境変数 |
+|---|---:|---:|---|
 | BFF | 8080 | 18080 | - |
 | order-service | 8082 | 18081 | `ORDER_SERVICE_BASE_URL` |
 | storage-service | 8083 | 18082 | `STORAGE_SERVICE_BASE_URL` |
@@ -268,43 +88,36 @@ docker compose -f docker-compose-demo-env.yml up -d
 | payment-service | 8084 | 18090 | `PAYMENT_SERVICE_BASE_URL` |
 | es-service | 8086 | 8086 | `ES_SERVICE_BASE_URL` |
 
-### Service URL Configuration
-- Docker コンテナ間通信は**内部ポート**を使用
-- ホストからのアクセスは**外部ポート**を使用
-- 環境変数例: `ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8082`
+よくある誤り:
+- ❌ コンテナ間通信に `localhost` を使う（→ コンテナ名）
+- ❌ コンテナ間通信に外部ポートを使う（→ 内部ポート）
+- ❌ `application.yml` のポートと docker-compose のマッピング不一致
 
-### Common Mistakes to Avoid
-1. ❌ `localhost` をコンテナ間通信に使用しない（コンテナ名を使用）
-2. ❌ 外部ポートをコンテナ間通信に使用しない（内部ポートを使用）
-3. ❌ application.yml のデフォルトポートと docker-compose のポートマッピングの不一致
+設定ファイルの置き場所（BASEPATH ルール）:
+- ミドルウェアの設定ファイルはリポジトリではなく `BASEPATH` 配下に置く（既定: `/Users/{user-name}/Dev/_Env/_demo/seata-mode`）
+- テンプレートは `platform/docker/demo/conf/` に置き、`./setup-env.sh` で BASEPATH へコピーする
+- ミドルウェアを追加したら、conf テンプレート追加 → `setup-env.sh` 更新 → compose の volume 追加 をセットで行う
+- ランタイムデータや環境固有設定はコミットしない
 
-### nginx Proxy Configuration
-- `/ec-api/*` → `ec-demo-bff:8080` (BFF API)
-- `/ec-api/ws/*` → `ec-demo-bff:8080/ws/` (WebSocket)
-- `/ec-demo/*` → 静的ファイル (フロントエンド)
+デモ環境の初期化（ES インデックス / MinIO 画像）:
 
-## Elasticsearch & MinIO Initialization
-
-### ES Index Setup
 ```bash
 cd platform/docker/demo/elasticsearch
-./init-es-products-index.sh
+./init-es-products-index.sh      # products_v1 作成 + alias + CSV インポート
+./init-upload-product-minio.sh   # バケット ec-demo 作成 + product/images/ へアップロード
 ```
-- インデックス `products_v1` 作成
-- エイリアス `products` 設定
-- CSV からプロダクトデータインポート
 
-### MinIO Image Upload
-```bash
-cd platform/docker/demo/elasticsearch
-./init-upload-product-minio.sh
-```
-- バケット `ec-demo` 作成（public アクセス）
-- `product/images/` に画像アップロード
+※ OpenSearch は外部コンテナ `smart-property-opensearch` に依存する。
 
-### Full Demo Environment Setup Order
-1. `./setup-env.sh` - 設定ファイルコピー
-2. `docker compose -f docker-compose-demo-env.yml --profile kafka --profile elastic --profile mongo --profile minio up -d` - ミドルウェア起動
-3. `./init-es-products-index.sh` - ES インデックス作成
-4. `./init-upload-product-minio.sh` - MinIO 画像アップロード
-5. `docker compose -f docker-compose-demo-app.yml --profile elastic up -d` - アプリ起動
+起動順序・全ポート一覧・nginx ルーティング・ヘルスチェックの詳細は `docs/runbook/README_LOCAL_SETUP.md` を参照。
+
+## セキュリティ
+
+- `.env` と `apps/bff/src/main/resources/serviceAccountKey.json` は絶対にコミットしない
+
+## 参照ドキュメント
+
+- `docs/adr/` — 設計判断（アーキテクチャ変更前に必読）
+- `docs/architecture/README_ARCHITECTURE.md` — 全体設計
+- `docs/runbook/README_LOCAL_SETUP.md` — ローカル/デモ環境の起動手順
+- `docs/README.md` / `docs/docs-policy.md` — ドキュメント正本と編集ルール（feature ブランチから `architecture/` `adr/` `runbook/` を直接編集しない）

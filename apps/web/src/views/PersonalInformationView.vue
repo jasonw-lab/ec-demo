@@ -2,16 +2,32 @@
   <div class="personal-info-wrapper">
     <!-- ロゴ -->
     <div class="personal-info-logo-container">
-      <router-link to="/" style="display:flex;align-items:center;color:inherit;text-decoration:none;">
-        <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="personal-info-logo" />
+      <router-link
+        to="/"
+        style="display: flex; align-items: center; color: inherit; text-decoration: none"
+      >
+        <img
+          :src="getImageUrl('/mercari-logo-main.jpeg')"
+          alt="mercari"
+          class="personal-info-logo"
+        />
       </router-link>
     </div>
 
     <!-- 戻るボタン -->
     <div class="back-button-container">
       <button class="back-button" type="button" @click="goBack">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 18l-6-6 6-6"/>
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M15 18l-6-6 6-6" />
         </svg>
       </button>
     </div>
@@ -102,12 +118,7 @@
                 <span class="radio-text">女性</span>
               </label>
               <label class="radio-label">
-                <input
-                  v-model="formData.gender"
-                  type="radio"
-                  value="male"
-                  class="radio-input"
-                />
+                <input v-model="formData.gender" type="radio" value="male" class="radio-input" />
                 <span class="radio-text">男性</span>
               </label>
               <label class="radio-label">
@@ -126,18 +137,12 @@
           </div>
 
           <!-- 送信ボタン -->
-          <button
-            type="submit"
-            class="submit-button"
-            :disabled="loading"
-          >
+          <button type="submit" class="submit-button" :disabled="loading">
             {{ loading ? '処理中...' : '次へ' }}
           </button>
         </form>
 
-        <a href="#" class="info-link" @click.prevent="showInfo">
-          本人情報の登録について >
-        </a>
+        <a href="#" class="info-link" @click.prevent="showInfo"> 本人情報の登録について > </a>
       </main>
     </div>
 
@@ -154,14 +159,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { getImageUrl, apiBase } from '../store'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { getImageUrl, apiBase } from '../store';
 
-const router = useRouter()
+const router = useRouter();
 
 function goBack() {
-  router.back()
+  router.back();
 }
 
 const formData = ref({
@@ -171,51 +176,56 @@ const formData = ref({
   firstNameKana: '',
   birthDate: '',
   gender: '',
-})
+});
 
-const loading = ref(false)
-const showSuccessModal = ref(false)
+const loading = ref(false);
+const showSuccessModal = ref(false);
 
 function showInfo() {
-  window.alert('本人情報の登録についての詳細情報を表示します。')
+  window.alert('本人情報の登録についての詳細情報を表示します。');
 }
 
 function closeSuccessModal() {
-  showSuccessModal.value = false
+  showSuccessModal.value = false;
   // ホーム画面へ遷移
-  router.push('/')
+  router.push('/');
 }
 
 async function handleSubmit() {
-  if (!formData.value.lastName || !formData.value.firstName || 
-      !formData.value.lastNameKana || !formData.value.firstNameKana ||
-      !formData.value.birthDate || !formData.value.gender) {
-    window.alert('すべての項目を入力してください。')
-    return
+  if (
+    !formData.value.lastName ||
+    !formData.value.firstName ||
+    !formData.value.lastNameKana ||
+    !formData.value.firstNameKana ||
+    !formData.value.birthDate ||
+    !formData.value.gender
+  ) {
+    window.alert('すべての項目を入力してください。');
+    return;
   }
 
   // 生年月日の形式チェック
-  const datePattern = /^\d{4}\/\d{2}\/\d{2}$/
+  const datePattern = /^\d{4}\/\d{2}\/\d{2}$/;
   if (!datePattern.test(formData.value.birthDate)) {
-    window.alert('生年月日は yyyy/mm/dd 形式で入力してください。')
-    return
+    window.alert('生年月日は yyyy/mm/dd 形式で入力してください。');
+    return;
   }
 
   // 確認ダイアログを表示
-  const confirmed = window.confirm('登録してよろしいでしょうか。')
+  const confirmed = window.confirm('登録してよろしいでしょうか。');
   if (!confirmed) {
-    return
+    return;
   }
 
-  loading.value = true
+  loading.value = true;
   try {
     // APIエンドポイントを構築
-    const endpoint = apiBase.endsWith('/api') 
+    const endpoint = apiBase.endsWith('/api')
       ? apiBase + '/auth/personal-information'
-      : apiBase + '/api/auth/personal-information'
-    
-    console.log('Sending personal information to:', endpoint)
-    
+      : apiBase + '/api/auth/personal-information';
+
+    console.log('Sending personal information to:', endpoint);
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -230,25 +240,27 @@ async function handleSubmit() {
         birthDate: formData.value.birthDate,
         gender: formData.value.gender,
       }),
-    })
+    });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'サーバーエラーが発生しました。' }))
-      throw new Error(errorData.message || `サーバーエラー: ${response.status}`)
+      const errorData = await response
+        .json()
+        .catch(() => ({ message: 'サーバーエラーが発生しました。' }));
+      throw new Error(errorData.message || `サーバーエラー: ${response.status}`);
     }
 
-    const result = await response.json()
+    const result = await response.json();
     if (!result.success) {
-      throw new Error(result.message || '登録に失敗しました。')
+      throw new Error(result.message || '登録に失敗しました。');
     }
 
     // 登録完了ポップアップを表示
-    showSuccessModal.value = true
+    showSuccessModal.value = true;
   } catch (e: any) {
-    console.error('Personal information registration error:', e)
-    window.alert(e.message || '本人情報の登録に失敗しました。もう一度お試しください。')
+    console.error('Personal information registration error:', e);
+    window.alert(e.message || '本人情報の登録に失敗しました。もう一度お試しください。');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 </script>
@@ -481,4 +493,3 @@ async function handleSubmit() {
   background-color: #ff5a8a;
 }
 </style>
-

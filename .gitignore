@@ -21,7 +21,6 @@ dist-ssr
 *.local
 
 stats.html
-pnpm-lock.yaml
 package-lock.json
 .stylelintcache
 .eslintcache
@@ -82,14 +81,18 @@ dist/*/
 
 rule*
 ai*
+p*
 *.log
 update*.py
 update*.sh
 
+.review
+.claude
 
 
 # dotenv files
 .env
+/.env.*
 .run
 ec-demo-bff.env
 serviceAccountKey.json
@@ -101,3 +104,4 @@ feature-README.md
 /alert-streams-service/
 /alert-process-service/
 docs/interview.md
+target/

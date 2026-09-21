@@ -4,14 +4,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "es-service")
 public class EsServiceProperties {
-    private Elasticsearch elasticsearch = new Elasticsearch();
+    private Opensearch opensearch = new Opensearch();
     private Index index = new Index();
     private Minio minio = new Minio();
     private Thumbnail thumbnail = new Thumbnail();
     private Import importConfig = new Import();
 
-    public Elasticsearch getElasticsearch() {
-        return elasticsearch;
+    public Opensearch getOpensearch() {
+        return opensearch;
     }
 
     public Index getIndex() {
@@ -34,7 +34,7 @@ public class EsServiceProperties {
         this.importConfig = importConfig;
     }
 
-    public static class Elasticsearch {
+    public static class Opensearch {
         private String endpoint;
 
         public String getEndpoint() {

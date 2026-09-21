@@ -39,3 +39,5 @@ auth:
     cookie-name: sid
     secure: ${AUTH_COOKIE_SECURE:true}
     same-site: Lax
+firebase:
+  project-id: ${FIREBASE_PROJECT_ID:}

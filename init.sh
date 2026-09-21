@@ -22,7 +22,7 @@ IFS=$'\n\t'
 #     ローカルに環境ファイルが無ければチーム共通の DEST_BASE から pull で配布します。
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-DEST_BASE="/Users/wangjw/Dev/_Env/app-key"
+DEST_BASE="$HOME/Dev/_Env/app-key"
 APP_NAME="ec-demo"
 
 FILES=(

@@ -2,14 +2,27 @@
   <div class="registration-form-wrapper">
     <!-- ロゴ -->
     <div class="registration-form-logo-container">
-      <img :src="getImageUrl('/mercari-logo-main.jpeg')" alt="mercari" class="registration-form-logo" />
+      <img
+        :src="getImageUrl('/mercari-logo-main.jpeg')"
+        alt="mercari"
+        class="registration-form-logo"
+      />
     </div>
 
     <!-- 戻るボタン -->
     <div class="back-button-container">
       <button class="back-button" type="button" @click="goBack">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 18l-6-6 6-6"/>
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M15 18l-6-6 6-6" />
         </svg>
       </button>
     </div>
@@ -76,9 +89,9 @@
             </p>
             <div class="checkbox-wrapper">
               <input
+                id="receive-notifications"
                 v-model="formData.receiveNotifications"
                 type="checkbox"
-                id="receive-notifications"
                 class="checkbox"
               />
               <label for="receive-notifications" class="checkbox-label">
@@ -89,11 +102,7 @@
           </div>
 
           <!-- 送信ボタン -->
-          <button
-            type="submit"
-            class="submit-button"
-            :disabled="loading"
-          >
+          <button type="submit" class="submit-button" :disabled="loading">
             {{ loading ? '登録中...' : '次へ' }}
           </button>
         </form>
@@ -103,15 +112,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { getImageUrl } from '../store'
+import { ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { getImageUrl } from '../store';
 
-const router = useRouter()
-const route = useRoute()
+const router = useRouter();
+const route = useRoute();
 
 function goBack() {
-  router.back()
+  router.back();
 }
 
 const formData = ref({
@@ -119,47 +128,47 @@ const formData = ref({
   nickname: '',
   invitationCode: '',
   receiveNotifications: true,
-})
+});
 
-const loading = ref(false)
+const loading = ref(false);
 
 const nicknameLength = computed(() => {
-  return formData.value.nickname.length
-})
+  return formData.value.nickname.length;
+});
 
 // クエリパラメータから初期値を設定
 onMounted(() => {
   if (route.query.email) {
-    formData.value.email = route.query.email as string
+    formData.value.email = route.query.email as string;
   }
   if (route.query.name) {
-    formData.value.nickname = route.query.name as string
+    formData.value.nickname = route.query.name as string;
   }
-})
+});
 
 async function handleSubmit() {
   if (!formData.value.email || !formData.value.nickname) {
-    window.alert('メールアドレスとニックネームを入力してください。')
-    return
+    window.alert('メールアドレスとニックネームを入力してください。');
+    return;
   }
 
   if (formData.value.nickname.length > 20) {
-    window.alert('ニックネームは20文字以内で入力してください。')
-    return
+    window.alert('ニックネームは20文字以内で入力してください。');
+    return;
   }
 
-  loading.value = true
+  loading.value = true;
   try {
     // 会員登録情報を保存（必要に応じてバックエンドAPIを呼び出す）
-    console.log('Registration form data:', formData.value)
-    
+    console.log('Registration form data:', formData.value);
+
     // 本人情報の登録画面へ遷移
-    await router.push('/registration/personal-info')
+    await router.push('/registration/personal-info');
   } catch (e) {
-    console.error('Registration error:', e)
-    window.alert('会員登録に失敗しました。もう一度お試しください。')
+    console.error('Registration error:', e);
+    window.alert('会員登録に失敗しました。もう一度お試しください。');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 </script>
@@ -349,4 +358,3 @@ async function handleSubmit() {
   background-color: #cc0029;
 }
 </style>
-

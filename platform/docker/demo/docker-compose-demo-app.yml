@@ -3,9 +3,18 @@ networks:
     external: true
     name: jason-lab-net
 
+# 共通ロギング設定（コンテナログの肥大化防止: 最大20MB x 3世代 = 60MB）
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "20m"
+      max-file: "3"
+
 services:
   # Account Service
   ec-demo-account-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.account-service
@@ -31,6 +40,7 @@ services:
 
   # Storage Service
   ec-demo-storage-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.storage-service
@@ -44,7 +54,8 @@ services:
       - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
-      - REDIS_HOST=ec-demo-redis
+      - REDIS_HOST=smart-dx-redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=storage-service-saga
@@ -57,6 +68,7 @@ services:
 
   # Order Service
   ec-demo-order-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.order-service
@@ -94,6 +106,7 @@ services:
 
   # Payment Service
   ec-demo-payment-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.payment-service
@@ -111,6 +124,7 @@ services:
 
   # BFF
   ec-demo-bff:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.bff
@@ -149,9 +163,10 @@ services:
   #     - jason-lab-net
 
   # =========================
-  # es-service (Elasticsearch API)
+  # es-service (OpenSearch API)
   # =========================
   ec-demo-es-service:
+    <<: *default-logging
     build:
       context: ../../..
       dockerfile: platform/docker/demo/Dockerfile.es-service
@@ -160,7 +175,7 @@ services:
     profiles: ["elastic"]
     restart: unless-stopped
     environment:
-      - ELASTICSEARCH_ENDPOINT=http://ec-demo-elasticsearch:9200
+      - OPENSEARCH_ENDPOINT=http://smart-dx-opensearch:9200
       - ES_INDEX_NAME=${ES_INDEX_NAME:-products_v1}
       - ES_INDEX_ALIAS=${ES_INDEX_ALIAS:-products}
       - MINIO_ENDPOINT=http://ec-demo-minio:9000

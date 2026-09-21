@@ -27,88 +27,88 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
 defineProps<{
-  text: string
-}>()
+  text: string;
+}>();
 
-const triggerRef = ref<HTMLElement | null>(null)
-const bubbleRef = ref<HTMLElement | null>(null)
-const visible = ref(false)
-const placement = ref<'top' | 'bottom'>('top')
-const top = ref(0)
-const left = ref(0)
-const arrowLeft = ref(24)
+const triggerRef = ref<HTMLElement | null>(null);
+const bubbleRef = ref<HTMLElement | null>(null);
+const visible = ref(false);
+const placement = ref<'top' | 'bottom'>('top');
+const top = ref(0);
+const left = ref(0);
+const arrowLeft = ref(24);
 
-const VIEWPORT_PADDING = 12
-const TOOLTIP_OFFSET = 12
+const VIEWPORT_PADDING = 12;
+const TOOLTIP_OFFSET = 12;
 
 const bubbleStyle = computed(() => ({
   top: `${top.value}px`,
   left: `${left.value}px`,
   '--hover-hint-arrow-left': `${arrowLeft.value}px`,
-}))
+}));
 
 function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max)
+  return Math.min(Math.max(value, min), max);
 }
 
 async function updatePosition(): Promise<void> {
-  await nextTick()
+  await nextTick();
 
-  const trigger = triggerRef.value
-  const bubble = bubbleRef.value
-  if (!trigger || !bubble) return
+  const trigger = triggerRef.value;
+  const bubble = bubbleRef.value;
+  if (!trigger || !bubble) return;
 
-  const triggerRect = trigger.getBoundingClientRect()
-  const bubbleRect = bubble.getBoundingClientRect()
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
+  const triggerRect = trigger.getBoundingClientRect();
+  const bubbleRect = bubble.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
 
-  let nextLeft = triggerRect.left + triggerRect.width / 2 - bubbleRect.width / 2
-  nextLeft = clamp(nextLeft, VIEWPORT_PADDING, viewportWidth - bubbleRect.width - VIEWPORT_PADDING)
+  let nextLeft = triggerRect.left + triggerRect.width / 2 - bubbleRect.width / 2;
+  nextLeft = clamp(nextLeft, VIEWPORT_PADDING, viewportWidth - bubbleRect.width - VIEWPORT_PADDING);
 
-  const showAbove = triggerRect.top >= bubbleRect.height + TOOLTIP_OFFSET + VIEWPORT_PADDING
-  placement.value = showAbove ? 'top' : 'bottom'
+  const showAbove = triggerRect.top >= bubbleRect.height + TOOLTIP_OFFSET + VIEWPORT_PADDING;
+  placement.value = showAbove ? 'top' : 'bottom';
 
   top.value = showAbove
     ? triggerRect.top - bubbleRect.height - TOOLTIP_OFFSET
     : Math.min(
         triggerRect.bottom + TOOLTIP_OFFSET,
         viewportHeight - bubbleRect.height - VIEWPORT_PADDING
-      )
+      );
 
-  left.value = nextLeft
+  left.value = nextLeft;
 
-  const triggerCenter = triggerRect.left + triggerRect.width / 2
-  arrowLeft.value = clamp(triggerCenter - nextLeft, 16, bubbleRect.width - 16)
+  const triggerCenter = triggerRect.left + triggerRect.width / 2;
+  arrowLeft.value = clamp(triggerCenter - nextLeft, 16, bubbleRect.width - 16);
 }
 
 function handleViewportChange(): void {
   if (visible.value) {
-    void updatePosition()
+    void updatePosition();
   }
 }
 
 async function show(): Promise<void> {
-  visible.value = true
-  await updatePosition()
+  visible.value = true;
+  await updatePosition();
 }
 
 function hide(): void {
-  visible.value = false
+  visible.value = false;
 }
 
 onMounted(() => {
-  window.addEventListener('resize', handleViewportChange)
-  window.addEventListener('scroll', handleViewportChange, true)
-})
+  window.addEventListener('resize', handleViewportChange);
+  window.addEventListener('scroll', handleViewportChange, true);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleViewportChange)
-  window.removeEventListener('scroll', handleViewportChange, true)
-})
+  window.removeEventListener('resize', handleViewportChange);
+  window.removeEventListener('scroll', handleViewportChange, true);
+});
 </script>
 
 <style scoped>
@@ -172,7 +172,9 @@ onBeforeUnmount(() => {
 
 .hover-hint-fade-enter-active,
 .hover-hint-fade-leave-active {
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
 }
 
 .hover-hint-fade-enter-from,
