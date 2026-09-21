@@ -231,24 +231,25 @@ services:
   # =========================
   # MinIO (stable, version pinned)
   # =========================
-#  ec-demo-minio:
-#    image: minio/minio:RELEASE.2024-12-13T22-19-12Z
-#    platform: ${PLATFORM:-linux/amd64}
-#    container_name: ec-demo-minio
-#    profiles: ["minio"]
-#    restart: unless-stopped
-#    command: server /data --console-address ":9001"
-#    environment:
-#      - TZ=Asia/Tokyo
-#      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
-#      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin123}
-#    ports:
-#      - "${MINIO_API_PORT:-9000}:9000"
-#      - "${MINIO_CONSOLE_PORT:-9001}:9001"
-#    volumes:
-#      - ${BASEPATH}/minio/data:/data
-#    networks:
-#      - jason-lab-net
+  ec-demo-minio:
+    <<: *default-logging
+    image: quay.io/minio/minio:RELEASE.2024-12-13T22-19-12Z
+    platform: ${PLATFORM:-linux/amd64}
+    container_name: ec-demo-minio
+    profiles: ["minio"]
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - TZ=Asia/Tokyo
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - ${BASEPATH}/minio/data:/data
+    networks:
+      - jason-lab-net
 
 
   # MongoDB 6.0 LTS for ec-demo
