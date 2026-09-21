@@ -24,7 +24,7 @@ mkdir -p "${BASEPATH}/seata/logs"
 mkdir -p "${BASEPATH}/redis/conf"
 mkdir -p "${BASEPATH}/redis/data"
 mkdir -p "${BASEPATH}/kafka/data"
-mkdir -p "${BASEPATH}/elasticsearch/data"
+# OpenSearch は外部コンテナ (smart-property-opensearch) に依存するため、ローカルデータディレクトリ不要
 mkdir -p "${BASEPATH}/mongodb/data"
 mkdir -p "${BASEPATH}/minio/data"
 mkdir -p "${BASEPATH}/nginx/conf/conf.d/sub"

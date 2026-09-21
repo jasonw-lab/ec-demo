@@ -1,8 +1,5 @@
 package com.demo.ec.es.application;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import com.demo.ec.es.config.EsServiceProperties;
 import com.demo.ec.es.domain.ElasticsearchOperationException;
 import com.demo.ec.es.domain.ImportError;
@@ -12,6 +9,9 @@ import com.demo.ec.es.domain.ProductDocument;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.core.BulkRequest;
+import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,21 +24,17 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Service for importing product data from CSV files.
- * Handles CSV parsing, image upload to MinIO, and bulk indexing to Elasticsearch.
- */
 @Service
 public class ImportService {
     private static final Logger log = LoggerFactory.getLogger(ImportService.class);
 
-    private final ElasticsearchClient client;
+    private final OpenSearchClient client;
     private final EsServiceProperties properties;
     private final MinioStorageService minioStorageService;
     private final ThumbnailService thumbnailService;
     private final IndexAdminService indexAdminService;
 
-    public ImportService(ElasticsearchClient client,
+    public ImportService(OpenSearchClient client,
                          EsServiceProperties properties,
                          MinioStorageService minioStorageService,
                          ThumbnailService thumbnailService,
@@ -50,15 +46,9 @@ public class ImportService {
         this.indexAdminService = indexAdminService;
     }
 
-    /**
-     * Imports product data from CSV file with idempotent bulk upsert.
-     *
-     * @param request import request containing CSV path and images directory
-     * @return import result with success/failure counts and error details
-     */
     public ImportResult importCsv(ImportRequest request) {
         log.info("Starting CSV import: {}", request);
-        
+
         indexAdminService.initIndexIfMissing();
         minioStorageService.ensureBucket();
 
@@ -87,7 +77,7 @@ public class ImportService {
 
                 try {
                     ProductDocument doc = parseAndUploadProduct(record, imagesDir, lineNo);
-                    
+
                     operations.add(BulkOperation.of(op -> op
                             .index(i -> i.index(index).id(doc.productId().toString()).document(doc))));
                     bulkItems.add(new ImportError(lineNo, doc.productId().toString(), null));
@@ -137,10 +127,8 @@ public class ImportService {
         String origObject = "products/" + productId + "/orig." + ext;
         String thumbObject = "products/" + productId + "/thumb.jpg";
 
-        // Upload original image
         minioStorageService.uploadFile(origObject, imagePath.toString(), contentTypeForExt(ext));
-        
-        // Generate and upload thumbnail
+
         byte[] thumbBytes;
         try (var in = Files.newInputStream(imagePath)) {
             thumbBytes = thumbnailService.createThumbnail(in);
@@ -161,7 +149,7 @@ public class ImportService {
         try {
             var response = client.bulk(request);
             long success = operations.size();
-            
+
             if (response.errors()) {
                 for (int i = 0; i < response.items().size(); i++) {
                     var item = response.items().get(i);
@@ -174,7 +162,7 @@ public class ImportService {
                     }
                 }
             }
-            
+
             operations.clear();
             bulkItems.clear();
             return success;

@@ -21,7 +21,7 @@ services:
     container_name: ec-demo-account-service
     restart: unless-stopped
     ports:
-      - "18083:8083"
+      - "18083:8081"
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
@@ -137,7 +137,7 @@ services:
       - TZ=Asia/Tokyo
       - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8082
       - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
-      - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
+      - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8081
       - ES_SERVICE_BASE_URL=http://ec-demo-es-service:8086
       - LOGGING_LEVEL_ORG_APACHE_KAFKA=WARN
     volumes:
@@ -162,7 +162,7 @@ services:
   #     - jason-lab-net
 
   # =========================
-  # es-service (Elasticsearch API)
+  # es-service (OpenSearch API)
   # =========================
   ec-demo-es-service:
     <<: *default-logging
@@ -174,7 +174,7 @@ services:
     profiles: ["elastic"]
     restart: unless-stopped
     environment:
-      - ELASTICSEARCH_ENDPOINT=http://ec-demo-elasticsearch:9200
+      - OPENSEARCH_ENDPOINT=http://smart-property-opensearch:9200
       - ES_INDEX_NAME=${ES_INDEX_NAME:-products_v1}
       - ES_INDEX_ALIAS=${ES_INDEX_ALIAS:-products}
       - MINIO_ENDPOINT=http://ec-demo-minio:9000

@@ -1,15 +1,16 @@
 package com.demo.ec.es.application;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.json.JsonData;
 import com.demo.ec.es.config.EsServiceProperties;
 import com.demo.ec.es.domain.ElasticsearchOperationException;
 import com.demo.ec.es.domain.ProductCard;
 import com.demo.ec.es.domain.ProductDocument;
 import com.demo.ec.es.domain.SearchResponse;
 import com.demo.ec.es.domain.SearchSort;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.SortOrder;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,33 +19,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Service for searching products in Elasticsearch.
- * Supports full-text search with fuzziness, price filtering, and multiple sort options.
- */
 @Service
 public class SearchService {
     private static final Logger log = LoggerFactory.getLogger(SearchService.class);
 
-    private final ElasticsearchClient client;
+    private final OpenSearchClient client;
     private final EsServiceProperties properties;
 
-    public SearchService(ElasticsearchClient client, EsServiceProperties properties) {
+    public SearchService(OpenSearchClient client, EsServiceProperties properties) {
         this.client = client;
         this.properties = properties;
     }
 
-    /**
-     * Searches products with multi_match query, filters, and sorting.
-     *
-     * @param q        search query (optional, searches title^3 and description)
-     * @param minPrice minimum price filter (optional)
-     * @param maxPrice maximum price filter (optional)
-     * @param sort     sort option (relevance, newest, price_asc, price_desc)
-     * @param page     page number (0-indexed)
-     * @param size     page size
-     * @return search response with products, pagination, and total count
-     */
     public SearchResponse search(String q, Long minPrice, Long maxPrice, SearchSort sort, int page, int size) {
         int from = Math.max(page, 0) * Math.max(size, 1);
 
@@ -62,25 +48,18 @@ public class SearchService {
                 return mm;
             }));
         }
-        bool.filter(f -> f.term(t -> t.field("status").value("ACTIVE")));
+        bool.filter(f -> f.term(t -> t.field("status").value(FieldValue.of("ACTIVE"))));
         if (minPrice != null || maxPrice != null) {
             bool.filter(f -> f.range(r -> {
-                r.number(n -> {
-                    n.field("price");
-                    if (minPrice != null) {
-                        n.gte(minPrice.doubleValue());
-                    }
-                    if (maxPrice != null) {
-                        n.lte(maxPrice.doubleValue());
-                    }
-                    return n;
-                });
+                r.field("price");
+                if (minPrice != null) r.gte(JsonData.of(minPrice.doubleValue()));
+                if (maxPrice != null) r.lte(JsonData.of(maxPrice.doubleValue()));
                 return r;
             }));
         }
 
         try {
-            co.elastic.clients.elasticsearch.core.SearchResponse<ProductDocument> response = client.search(s -> {
+            org.opensearch.client.opensearch.core.SearchResponse<ProductDocument> response = client.search(s -> {
                 s.index(properties.getIndex().getAlias());
                 s.from(from);
                 s.size(size);
@@ -96,7 +75,7 @@ public class SearchService {
                     s.sort(so -> so.field(f -> f.field("price").order(SortOrder.Desc)));
                 }
                 return s;
-        }, ProductDocument.class);
+            }, ProductDocument.class);
 
             List<ProductCard> items = new ArrayList<>();
             response.hits().hits().forEach(hit -> {
@@ -108,10 +87,10 @@ public class SearchService {
             });
 
             long total = response.hits().total() == null ? items.size() : response.hits().total().value();
-            
+
             log.debug("Search completed: hits={}, total={}", items.size(), total);
             return new SearchResponse(items, total, page, size, null);
-            
+
         } catch (IOException ex) {
             log.error("Search failed", ex);
             throw new ElasticsearchOperationException("Search operation failed", ex);

@@ -7,7 +7,6 @@
 # 含まれるサービス:
 #   - MySQL, Seata Server, Redis
 #   - Kafka, Kafka UI (profile: kafka)
-#   - Elasticsearch, Kibana (profile: elastic)
 #   - MinIO (profile: minio)
 #   - MongoDB (profile: mongo)
 # =============================================================================
@@ -122,9 +121,8 @@ echo -e "  --profile kafka:"
 echo -e "    Kafka (外部):   ${YELLOW}${HOST_IP}:29092${NC}"
 echo -e "    Kafka (内部):   ${YELLOW}ec-demo-kafka:9092${NC}"
 echo -e "    Kafka UI:       ${YELLOW}http://localhost:8090${NC}"
-echo -e "  --profile elastic:"
-echo -e "    Elasticsearch:  ${YELLOW}http://localhost:9200${NC}"
-echo -e "    Kibana:         ${YELLOW}http://localhost:5601${NC}"
+echo -e "  OpenSearch:     ${YELLOW}外部コンテナ (smart-property-opensearch:9200)${NC}"
+echo -e "                  ${YELLOW}このcomposeでは起動しません${NC}"
 echo -e "  --profile minio:"
 echo -e "    MinIO Console:  ${YELLOW}http://localhost:9001${NC} (minioadmin/minioadmin123)"
 echo -e "    MinIO API:      ${YELLOW}http://localhost:9000${NC}"
@@ -133,8 +131,9 @@ echo -e "    MongoDB:        ${YELLOW}localhost:27017${NC}"
 echo ""
 echo -e "${GREEN}使用例:${NC}"
 echo -e "  ./start-demo-env.sh                    # 基本サービスのみ起動"
-echo -e "  ./start-demo-env.sh kafka elastic      # Kafka と Elasticsearch も起動"
-echo -e "  ./start-demo-env.sh kafka elastic minio mongo  # 全サービス起動"
+echo -e "  ./start-demo-env.sh kafka minio        # Kafka と MinIO も起動"
+echo -e "  ./start-demo-env.sh kafka minio mongo  # 全サービス起動"
+echo -e "  ${YELLOW}※ OpenSearch は外部コンテナ (smart-property-opensearch) を別途起動してください${NC}"
 echo ""
 echo -e "${GREEN}✓ サービスが起動しました${NC}"
 echo ""

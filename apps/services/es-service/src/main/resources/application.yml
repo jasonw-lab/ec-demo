@@ -23,8 +23,8 @@ context:
     classes: com.demo.ec.es.config.DotenvInitializer
 
 es-service:
-  elasticsearch:
-    endpoint: ${ELASTICSEARCH_ENDPOINT:http://localhost:9200}
+  opensearch:
+    endpoint: ${OPENSEARCH_ENDPOINT:http://localhost:9200}
   index:
     name: ${ES_INDEX_NAME:products_v1}
     alias: ${ES_INDEX_ALIAS:products}
