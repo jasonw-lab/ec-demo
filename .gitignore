@@ -92,6 +92,7 @@ update*.sh
 
 # dotenv files
 .env
+/.env.*
 .run
 ec-demo-bff.env
 serviceAccountKey.json
