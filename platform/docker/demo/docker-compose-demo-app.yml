@@ -21,7 +21,7 @@ services:
     container_name: ec-demo-account-service
     restart: unless-stopped
     ports:
-      - "18083:8081"
+      - "18083:8083"
     environment:
       - TZ=Asia/Tokyo
       - SPRING_PROFILES_ACTIVE=saga
@@ -54,7 +54,8 @@ services:
       - DATASOURCE_URL=jdbc:mysql://ec-demo-mysql:3306/seata_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - DATASOURCE_USERNAME=root
       - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
-      - REDIS_HOST=ec-demo-redis
+      - REDIS_HOST=smart-dx-redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - SEATA_GROUPLIST_DEFAULT=ec-demo-seata-server:8091
       - SEATA_ENABLED=true
       - SEATA_APPLICATION_ID=storage-service-saga
@@ -137,7 +138,7 @@ services:
       - TZ=Asia/Tokyo
       - ORDER_SERVICE_BASE_URL=http://ec-demo-order-service:8082
       - STORAGE_SERVICE_BASE_URL=http://ec-demo-storage-service:8083
-      - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8081
+      - ACCOUNT_SERVICE_BASE_URL=http://ec-demo-account-service:8083
       - ES_SERVICE_BASE_URL=http://ec-demo-es-service:8086
       - LOGGING_LEVEL_ORG_APACHE_KAFKA=WARN
     volumes:
@@ -174,7 +175,7 @@ services:
     profiles: ["elastic"]
     restart: unless-stopped
     environment:
-      - OPENSEARCH_ENDPOINT=http://smart-property-opensearch:9200
+      - OPENSEARCH_ENDPOINT=http://smart-dx-opensearch:9200
       - ES_INDEX_NAME=${ES_INDEX_NAME:-products_v1}
       - ES_INDEX_ALIAS=${ES_INDEX_ALIAS:-products}
       - MINIO_ENDPOINT=http://ec-demo-minio:9000
