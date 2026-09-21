@@ -12,25 +12,31 @@ SKIP_BUILD="${SKIP_BUILD:-false}"
 
 mkdir -p "$RUN_DIR" "$LOG_DIR"
 
-declare -A MODULES=(
-  [bff]="apps/bff"
-  [order-service]="apps/services/order-service"
-  [account-service]="apps/services/account-service"
-  [storage-service]="apps/services/storage-service"
-  [payment-service]="apps/services/payment-service"
-  [alert-service]="apps/services/alert-service"
-  [es-service]="apps/services/es-service"
-)
+module_of() {
+  case "$1" in
+    bff) echo "apps/bff" ;;
+    order-service) echo "apps/services/order-service" ;;
+    account-service) echo "apps/services/account-service" ;;
+    storage-service) echo "apps/services/storage-service" ;;
+    payment-service) echo "apps/services/payment-service" ;;
+    alert-service) echo "apps/services/alert-service" ;;
+    es-service) echo "apps/services/es-service" ;;
+    *) return 1 ;;
+  esac
+}
 
-declare -A PORTS=(
-  [bff]="8080"
-  [order-service]="8082"
-  [account-service]="8081"
-  [storage-service]="8083"
-  [payment-service]="8084"
-  [alert-service]="8085"
-  [es-service]="8086"
-)
+port_of() {
+  case "$1" in
+    bff) echo "8080" ;;
+    order-service) echo "8082" ;;
+    account-service) echo "8081" ;;
+    storage-service) echo "8083" ;;
+    payment-service) echo "8084" ;;
+    alert-service) echo "8085" ;;
+    es-service) echo "8086" ;;
+    *) return 1 ;;
+  esac
+}
 
 SERVICES=(
   account-service
@@ -135,7 +141,7 @@ if [[ $# -eq 0 || "${1:-}" == "all" ]]; then
   REQUESTED=("${SERVICES[@]}")
 else
   for service in "$@"; do
-    if [[ -z "${MODULES[$service]:-}" ]]; then
+    if ! module_of "$service" >/dev/null 2>&1; then
       echo "Unknown service: $service" >&2
       usage >&2
       exit 1
@@ -154,7 +160,7 @@ for service in "${REQUESTED[@]}"; do
     continue
   fi
   rm -f "$pid_file"
-  BUILD_MODULES+=("${MODULES[$service]}")
+  BUILD_MODULES+=("$(module_of "$service")")
 done
 
 if [[ ${#BUILD_MODULES[@]} -eq 0 ]]; then
@@ -171,7 +177,7 @@ if [[ "$SKIP_BUILD" != "true" ]]; then
       if is_running "$pid_file"; then
         continue
       fi
-      if [[ -z "$(find_jar "${MODULES[$service]}")" ]]; then
+      if [[ -z "$(find_jar "$(module_of "$service")")" ]]; then
         missing_jars+=("$service")
       fi
     done
@@ -198,7 +204,7 @@ for service in "${REQUESTED[@]}"; do
     continue
   fi
 
-  module="${MODULES[$service]}"
+  module="$(module_of "$service")"
   jar_file="$(find_jar "$module")"
   if [[ -z "$jar_file" ]]; then
     echo "Jar not found for $service under $module/target" >&2
@@ -206,7 +212,7 @@ for service in "${REQUESTED[@]}"; do
   fi
 
   log_file="$LOG_DIR/$service.log"
-  port="${PORTS[$service]}"
+  port="$(port_of "$service")"
 
   if [[ -n "${JAVA_HOME:-}" && -x "$JAVA_HOME/bin/java" ]]; then
     JAVA_BIN="$JAVA_HOME/bin/java"
