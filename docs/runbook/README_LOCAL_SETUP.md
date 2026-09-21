@@ -27,7 +27,7 @@ docker compose up -d
 
 ### 2.2 追加（任意）
 
-Kafka / Elasticsearch は重いので任意にしています。
+Kafka / OpenSearch は重いので任意にしています。
 
 ```bash
 cd platform/docker/local
@@ -43,7 +43,7 @@ docker compose --profile kafka --profile elastic up -d
 | Seata Server | 8092 | Saga Coordinator |
 | Redis | 6379 | BFFセッション |
 | Kafka | 9092 | `--profile kafka` |
-| Elasticsearch | 9200 | `--profile elastic` |
+| OpenSearch | 9200 | `--profile elastic` |
 
 ### 2.4 ヘルスチェック（例）
 
@@ -87,7 +87,7 @@ docker compose -f docker-compose-demo-env.yml up -d
 # Kafka追加
 docker compose -f docker-compose-demo-env.yml --profile kafka up -d
 
-# Elasticsearch追加
+# OpenSearch追加（外部コンテナ smart-dx-opensearch を使う場合は不要）
 docker compose -f docker-compose-demo-env.yml --profile elastic up -d
 
 # MongoDB追加
@@ -106,7 +106,7 @@ export BASEPATH=/Users/{user-name}/Dev/_Env/_demo/seata-mode
 # 基本サービス（account, storage, order, payment, bff）
 docker compose -f docker-compose-demo-app.yml up -d
 
-# es-service追加（Elasticsearch連携）
+# es-service追加（OpenSearch連携）
 docker compose -f docker-compose-demo-app.yml --profile elastic up -d
 ```
 
@@ -123,8 +123,9 @@ docker compose -f docker-compose-demo-app.yml --profile elastic up -d
 | Redis | 6379 | 6379 | BFFセッション |
 | Kafka | 29092 | 29092 | `--profile kafka` |
 | Kafka UI | 8090 | 8080 | `--profile kafka` |
-| Elasticsearch | 9200, 9300 | 9200, 9300 | `--profile elastic` |
-| Kibana | 5601 | 5601 | `--profile elastic` |
+| OpenSearch | 9200, 9301 | 9200, 9300 | 外部コンテナ `smart-dx-opensearch` を利用 |
+| OpenSearch Dashboards | 5601 | 5601 | 外部コンテナ `smart-dx-opensearch-dashboards` を利用 |
+| MinIO | 9000, 9001 | 9000, 9001 | `--profile minio` |
 | MongoDB | 27017 | 27017 | `--profile mongo` |
 
 #### アプリケーション
@@ -150,7 +151,7 @@ docker compose -f docker-compose-demo-app.yml --profile elastic up -d
 
 ```bash
 # ミドルウェア
-curl http://localhost:9200/_cluster/health  # Elasticsearch
+curl http://localhost:9200/_cluster/health  # OpenSearch
 curl http://localhost:7092                   # Seata Console
 
 # アプリケーション（nginx経由）

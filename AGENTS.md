@@ -107,7 +107,7 @@ cd platform/docker/demo/elasticsearch
 ./init-upload-product-minio.sh   # バケット ec-demo 作成 + product/images/ へアップロード
 ```
 
-※ OpenSearch は外部コンテナ `smart-property-opensearch` に依存する。
+※ OpenSearch は外部コンテナ `smart-dx-opensearch` に依存する。
 
 起動順序・全ポート一覧・nginx ルーティング・ヘルスチェックの詳細は `docs/runbook/README_LOCAL_SETUP.md` を参照。
 

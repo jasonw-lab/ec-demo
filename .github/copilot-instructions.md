@@ -68,7 +68,7 @@ Alerts published to `alerts.order_payment_inconsistency.v1` topic with `AlertRai
 cd platform/docker/local
 docker compose up -d
 
-# 2. Optional: Add Kafka + Elasticsearch (heavy - only when needed)
+# 2. Optional: Add Kafka + OpenSearch (heavy - only when needed)
 docker compose --profile kafka --profile elastic up -d
 
 # 3. Initialize environment files (if needed)
@@ -81,7 +81,7 @@ mvn spring-boot:run -pl apps/services/order-service
 ```
 
 **Port mapping (local dev)**:
-- MySQL: 3307, Seata: 8092/7092, Redis: 6379, Kafka: 9092 (optional), Elasticsearch: 9200 (optional)
+- MySQL: 3307, Seata: 8092/7092, Redis: 6379, Kafka: 9092 (optional), OpenSearch: 9200 (optional)
 - BFF: 8080, order-service: 8082, storage-service: 8083, account-service: 8081, payment-service: 8084, alert-service: 8085, es-service: 8086
 
 ### Testing Critical Flows
@@ -157,7 +157,7 @@ mvn test
 - **Firebase Authentication** (ID token verification in BFF)
 - **Redis** for session storage (fail-safe: return 503 if Redis unavailable)
 - **Kafka Streams** for event-driven consistency checks
-- **Elasticsearch 8.x** for product search (handled by es-service)
+- **OpenSearch 2.x** for product search (handled by es-service)
 
 ## Coding Rules
 - Follow Google Java Style

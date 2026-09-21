@@ -59,7 +59,7 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 - **alert-service** (port 8085)
   - Kafka Streams inconsistency detection and alert emission
 - **es-service** (port 8086)
-  - Elasticsearch integration (product search and autocomplete)
+  - OpenSearch integration (product search and autocomplete)
 
 ## Tech stack (kept in README)
 
@@ -85,7 +85,7 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 - **MinIO** - S3-compatible object storage (product image management)
 - **Firebase Authentication**
 - **Kafka / Kafka Streams** - Detect Rule A/B/C and emit `AlertRaised` to `alerts.order_payment_inconsistency.v1`
-- **Elasticsearch 8.x**
+- **OpenSearch 2.x**
 - **MyBatis-Plus**
 
 ### Observability

@@ -67,7 +67,7 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
     - `AlertRaised` イベントをconsumeしMySQL (sys_pay_alert) へUPSERT
     - 重複受信に強い (at-least-once 配信を考慮)
 - **es-service**（port 8086）
-  - Elasticsearch連携（商品検索とオートコンプリート）
+  - OpenSearch連携（商品検索とオートコンプリート）
 
 ## 技術スタック
 
@@ -95,7 +95,7 @@ PayPay決済を統合したECサイトのマイクロサービス実装デモで
   - トピック: `ec-demo.orders.events.v1` (注文イベント), `ec-demo.payments.events.v1` (決済イベント)
   - Kafka Streams: alert-serviceでRule A/B/C検知、`alerts.order_payment_inconsistency.v1`へ`AlertRaised`出力
   - StateStore: RocksDBによる `orderId` 単位の状態管理、Punctuatorで定期チェック
-- **Elasticsearch 8.x** - 商品検索とオートコンプリート
+- **OpenSearch 2.x** - 商品検索とオートコンプリート
 - **MinIO** - S3互換オブジェクトストレージ（商品画像管理）
 
 ### 監視・運用

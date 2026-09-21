@@ -59,7 +59,7 @@
 - **alert-service**（8085）
   - Kafka Streams 不一致检测与告警输出
 - **es-service**（8086）
-  - Elasticsearch 集成（商品检索与自动完成）
+  - OpenSearch 集成（商品检索与自动完成）
 
 ## 技术栈（保留在 README）
 
@@ -85,7 +85,7 @@
 - **MinIO** - S3 兼容对象存储（商品图片管理）
 - **Firebase Authentication**
 - **Kafka / Kafka Streams**：检测 Rule A/B/C 并向 `alerts.order_payment_inconsistency.v1` 输出 `AlertRaised`
-- **Elasticsearch 8.x**
+- **OpenSearch 2.x**
 - **MyBatis-Plus**
 
 ### 可观测性

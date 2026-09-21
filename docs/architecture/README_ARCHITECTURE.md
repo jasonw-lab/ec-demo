@@ -6,7 +6,7 @@
 
 ## 全体像と主要データフロー（要約）
 
-- **全体像**: Front → BFF → 各サービス（order/storage/account）に加え、Seata・MySQL・Redis・Elasticsearch・Kafka Streams・PayPayが連携
+- **全体像**: Front → BFF → 各サービス（order/storage/account）に加え、Seata・MySQL・Redis・OpenSearch・Kafka Streams・PayPayが連携
 - **主要フロー**: 注文作成 → 決済作成 → Webhook/ポーリングで結果取得 → 状態遷移 → WebSocket通知 / kafka-alert
 
 ## アーキテクチャの特徴と設計思想
