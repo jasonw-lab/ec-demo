@@ -1,8 +1,8 @@
 package com.demo.ec.es.application;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.demo.ec.es.config.EsServiceProperties;
 import com.demo.ec.es.domain.ProductDocument;
+import org.opensearch.client.opensearch.OpenSearchClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,12 +14,12 @@ import java.util.Map;
 public class ImageUploadService {
     private static final Logger log = LoggerFactory.getLogger(ImageUploadService.class);
 
-    private final ElasticsearchClient client;
+    private final OpenSearchClient client;
     private final EsServiceProperties properties;
     private final MinioStorageService minioStorageService;
     private final ThumbnailService thumbnailService;
 
-    public ImageUploadService(ElasticsearchClient client,
+    public ImageUploadService(OpenSearchClient client,
                               EsServiceProperties properties,
                               MinioStorageService minioStorageService,
                               ThumbnailService thumbnailService) {
@@ -59,7 +59,7 @@ public class ImageUploadService {
                     .docAsUpsert(false),
                     ProductDocument.class);
         } catch (Exception ex) {
-            log.warn("Failed to update thumbnail in ES productId={} error={}", productId, ex.getMessage());
+            log.warn("Failed to update thumbnail in OpenSearch productId={} error={}", productId, ex.getMessage());
         }
 
         return thumbnailUrl;

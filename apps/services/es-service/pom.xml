@@ -14,7 +14,7 @@
     <name>es-service</name>
 
     <properties>
-        <elasticsearch-java.version>9.0.0</elasticsearch-java.version>
+        <opensearch-java.version>2.10.0</opensearch-java.version>
         <minio.version>8.6.0</minio.version>
         <thumbnailator.version>0.4.20</thumbnailator.version>
         <commons-csv.version>1.10.0</commons-csv.version>
@@ -42,23 +42,16 @@
         </dependency>
 
         <dependency>
-            <groupId>co.elastic.clients</groupId>
-            <artifactId>elasticsearch-java</artifactId>
-            <version>${elasticsearch-java.version}</version>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>opensearch-java</artifactId>
+            <version>${opensearch-java.version}</version>
         </dependency>
 
-        <!-- Apache HttpClient for Elasticsearch transport -->
+        <!-- OpenSearch low-level REST client (transport layer) -->
         <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <version>5.2.1</version>
-        </dependency>
-
-        <!-- Elasticsearch REST client -->
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-client</artifactId>
-            <version>9.0.0</version>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>opensearch-rest-client</artifactId>
+            <version>${opensearch-java.version}</version>
         </dependency>
 
         <dependency>

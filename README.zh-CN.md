@@ -4,9 +4,7 @@
 
 > 日本語: `README.md` / English: `README.en.md`
 
-## 🤖 AI-Assisted Development
 
-本项目采用 **AI（Cursor、GitHub Copilot）** 辅助开发。设计决策记录在 [ADR](./docs/adr/) 中，保持 Hybrid Hexagonal 架构一致性。
 
 ## 设计要点
 
@@ -41,12 +39,6 @@
 | 支付成功/失败顺序颠倒到达 | `PAID` 后失败到来等 | `PAID` 后失败仅记录不改变状态 |
 | Saga中途失败（库存/订单/支付不一致） | 最终一致性崩溃 | 补偿事务回滚，kafka-alert检测 |
 | Redis会话故障 | 认证/授权劣化 | `/api/**` 返回 503（安全侧）促恢复 |
-
-## 演示亮点（3步骤）
-
-1. **购买请求**: `./test-saga.sh` 创建订单（`PENDING → WAITING_PAYMENT`）
-2. **支付事件反映**: Webhook（优先）或轮询（兜底）收敛到 `PAID/FAILED`
-3. **观测**: WebSocket即时反映到画面，（kafka-alert运行时）确认主题中的 Rule A/B/C `AlertRaised`
 
 ## 服务组成
 
@@ -105,3 +97,9 @@
 - 本地启动手册：`docs/runbook/README_LOCAL_SETUP.md`
 - 架构深挖（Saga 范围、状态机、kafka-alert 契约、非功能）：`docs/architecture/README_ARCHITECTURE.md`
 - 部署手册（偏 VPS）：`docs/docker/demo/deploy.md`
+
+
+## 🤖 AI-Assisted Development
+
+本项目采用 **AI（Cursor、GitHub Copilot、Codex）** 辅助开发。设计决策记录在 [ADR](./docs/adr/) 中，保持 Hybrid Hexagonal 架构一致性。
+

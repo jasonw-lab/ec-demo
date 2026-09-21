@@ -1,0 +1,56 @@
+name: Reusable Deploy
+
+on:
+  workflow_call:
+    inputs:
+      deploy_web:
+        description: Whether to deploy the web frontend
+        required: true
+        type: boolean
+      backend_services:
+        description: Space-separated back.sh service arguments
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy Changed Apps
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -euo pipefail
+
+            echo "Working directory: ${{ secrets.PROJECT_PATH }}"
+            cd "${{ secrets.PROJECT_PATH }}"
+
+            TARGET_BRANCH="${{ github.ref_name }}"
+            TARGET_SHA="${{ github.sha }}"
+
+            echo "Preparing repository for ${TARGET_BRANCH} @ ${TARGET_SHA}"
+            BEFORE_SHA=$(git rev-parse HEAD)
+            git fetch --all --prune
+            git checkout "$TARGET_BRANCH"
+            git reset --hard "$TARGET_SHA"
+            AFTER_SHA=$(git rev-parse HEAD)
+            echo "Repository updated: ${BEFORE_SHA} -> ${AFTER_SHA}"
+
+            if [[ "${{ inputs.deploy_web }}" == "true" ]]; then
+              echo "Starting frontend deploy"
+              bash ./front.sh
+            fi
+
+            if [[ -n "${{ inputs.backend_services }}" ]]; then
+              echo "Starting backend deploy for: ${{ inputs.backend_services }}"
+              # shellcheck disable=SC2086
+              bash ./back.sh ${{ inputs.backend_services }}
+            fi

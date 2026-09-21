@@ -4,11 +4,9 @@ This is a microservices demo of an EC payment flow integrating PayPay. It is des
 
 > 日本語: `README.md` / 中文: `README.zh-CN.md`
 
-## 🤖 AI-Assisted Development
 
-This project uses **AI (Cursor, GitHub Copilot)** for development assistance. Design decisions are recorded in [ADR](./docs/adr/), maintaining Hybrid Hexagonal architecture consistency.
 
-## Tech-lead design highlights
+## Design highlights
 
 - **BFF + WebSocket**: Concentrates UI-optimized APIs and realtime notifications in the BFF to maximize change resilience and UX
 - **Seata Saga**: Implements cross-service consistency with a state machine + compensations (operationally manageable eventual consistency)
@@ -41,12 +39,6 @@ This project uses **AI (Cursor, GitHub Copilot)** for development assistance. De
 | Success/failure events arrive out-of-order | Failure arrives after `PAID`, etc. | Record-only for failures after `PAID`, no state change |
 | Saga mid-failure (stock/order/payment inconsistency) | Eventual consistency breakdown | Compensation rollback, kafka-alert detection |
 | Redis session failure | Auth/authorization degradation | Return 503 for `/api/**` (fail safe) to prompt recovery |
-
-## Demo highlights (3 steps)
-
-1. **Purchase request**: Create order with `./test-saga.sh` (`PENDING → WAITING_PAYMENT`)
-2. **Payment event reflection**: Webhook (priority) or polling (fallback) converges to `PAID/FAILED`
-3. **Observation**: Immediate screen updates via WebSocket, confirm Rule A/B/C `AlertRaised` in topics (when kafka-alert is running)
 
 ## Services
 
@@ -105,3 +97,9 @@ This project uses **AI (Cursor, GitHub Copilot)** for development assistance. De
 - Local startup guide: `docs/runbook/README_LOCAL_SETUP.md`
 - Architecture deep dive (Saga scope, state machine, kafka-alert contract, non-functional): `docs/architecture/README_ARCHITECTURE.md`
 - Deployment guide (VPS-oriented): `docs/docker/demo/deploy.md`
+
+
+## 🤖 AI-Assisted Development
+
+This project uses **AI (Cursor, GitHub Copilot, Codex)** for development assistance. Design decisions are recorded in [ADR](./docs/adr/), maintaining Hybrid Hexagonal architecture consistency.
+

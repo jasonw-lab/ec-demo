@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./start-demo-env.sh all *)",
+      "Bash(docker compose *)",
+      "Bash(xargs docker *)",
+      "Bash(bash -n start-demo-env.sh)"
+    ]
+  }
+}

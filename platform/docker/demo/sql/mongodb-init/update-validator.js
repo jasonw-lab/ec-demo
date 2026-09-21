@@ -1,5 +1,8 @@
 // MongoDB order_audit バリデーションルール更新スクリプト
-// 使用方法: mongosh ec_demo < update-validator.js
+// 使用方法: mongosh < update-validator.js
+
+// ec_demo データベースに切り替え
+db = db.getSiblingDB('ec_demo');
 
 print("🔄 Updating validator for order_audit collection...");
 
