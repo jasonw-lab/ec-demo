@@ -17,7 +17,7 @@ sql/mongodb-init/
 #### ステップ1: Docker Compose 起動
 
 ```bash
-cd /Users/wangjw/Dev/Git/ross-dev2024/ec-demo-dev/feature-kafka-alert/_docs/docker/demo
+cd /Users/{user-name}/Dev/Git/ross-dev2024/ec-demo-dev/feature-kafka-alert/_docs/docker/demo
 
 # MongoDB を起動（初回起動時に自動で初期化スクリプトが実行される）
 docker-compose -f docker-compose-demo-env.yml up -d ec-demo-mongodb

@@ -36,7 +36,7 @@ if [ -f "${ENV_FILE}" ]; then
 fi
 
 # BASEPATH のデフォルト値設定
-BASEPATH="${BASEPATH:-/Users/wangjw/Dev/_Env/_demo/seata-mode}"
+BASEPATH="${BASEPATH:-$HOME/Dev/_Env/_demo/seata-mode}"
 export BASEPATH
 
 # DATASOURCE_PASSWORD のデフォルト値設定

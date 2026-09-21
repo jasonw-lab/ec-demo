@@ -7,7 +7,7 @@
 set -e
 
 # Default BASEPATH
-BASEPATH="${BASEPATH:-/Users/wangjw/Dev/_Env/_demo/seata-mode}"
+BASEPATH="${BASEPATH:-$HOME/Dev/_Env/_demo/seata-mode}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONF_SRC="${SCRIPT_DIR}/conf"
 
